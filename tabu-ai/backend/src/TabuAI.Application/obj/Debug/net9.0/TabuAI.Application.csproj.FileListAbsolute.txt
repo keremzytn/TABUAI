@@ -1,0 +1,16 @@
+/workspace/tabu-ai/backend/src/TabuAI.Application/obj/Debug/net9.0/TabuAI.Application.csproj.AssemblyReference.cache
+/workspace/tabu-ai/backend/src/TabuAI.Application/obj/Debug/net9.0/TabuAI.Application.GeneratedMSBuildEditorConfig.editorconfig
+/workspace/tabu-ai/backend/src/TabuAI.Application/obj/Debug/net9.0/TabuAI.Application.AssemblyInfoInputs.cache
+/workspace/tabu-ai/backend/src/TabuAI.Application/obj/Debug/net9.0/TabuAI.Application.AssemblyInfo.cs
+/workspace/tabu-ai/backend/src/TabuAI.Application/obj/Debug/net9.0/TabuAI.Application.csproj.CoreCompileInputs.cache
+/workspace/tabu-ai/backend/src/TabuAI.Application/obj/Debug/net9.0/TabuAI.Application.sourcelink.json
+/workspace/tabu-ai/backend/src/TabuAI.Application/bin/Debug/net9.0/TabuAI.Application.deps.json
+/workspace/tabu-ai/backend/src/TabuAI.Application/bin/Debug/net9.0/TabuAI.Application.dll
+/workspace/tabu-ai/backend/src/TabuAI.Application/bin/Debug/net9.0/TabuAI.Application.pdb
+/workspace/tabu-ai/backend/src/TabuAI.Application/bin/Debug/net9.0/TabuAI.Domain.dll
+/workspace/tabu-ai/backend/src/TabuAI.Application/bin/Debug/net9.0/TabuAI.Domain.pdb
+/workspace/tabu-ai/backend/src/TabuAI.Application/obj/Debug/net9.0/TabuAI.A.E81C22A8.Up2Date
+/workspace/tabu-ai/backend/src/TabuAI.Application/obj/Debug/net9.0/TabuAI.Application.dll
+/workspace/tabu-ai/backend/src/TabuAI.Application/obj/Debug/net9.0/refint/TabuAI.Application.dll
+/workspace/tabu-ai/backend/src/TabuAI.Application/obj/Debug/net9.0/TabuAI.Application.pdb
+/workspace/tabu-ai/backend/src/TabuAI.Application/obj/Debug/net9.0/ref/TabuAI.Application.dll
