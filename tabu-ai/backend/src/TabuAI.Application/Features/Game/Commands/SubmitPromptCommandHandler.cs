@@ -18,8 +18,14 @@ public class SubmitPromptCommandHandler : IRequestHandler<SubmitPromptCommand, G
 
     public async Task<GameResultDto> Handle(SubmitPromptCommand request, CancellationToken cancellationToken)
     {
+        // Parse GameSessionId
+        if (!Guid.TryParse(request.GameSessionId, out var gameSessionId))
+        {
+            throw new ArgumentException("Invalid game session ID format");
+        }
+
         // Get game session with word
-        var gameSession = await _unitOfWork.GameSessions.GetByIdAsync(request.GameSessionId);
+        var gameSession = await _unitOfWork.GameSessions.GetByIdAsync(gameSessionId);
         if (gameSession == null)
         {
             throw new InvalidOperationException("Game session not found");

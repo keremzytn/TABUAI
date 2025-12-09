@@ -25,14 +25,14 @@ export interface GameSession {
 }
 
 export interface StartGameRequest {
-  userId: string;
+  userId: string;  // Will be converted to Guid on backend
   gameMode: string;
   category?: string;
   difficulty?: number;
 }
 
 export interface SubmitPromptRequest {
-  gameSessionId: string;
+  gameSessionId: string;  // Will be converted to Guid on backend
   prompt: string;
 }
 

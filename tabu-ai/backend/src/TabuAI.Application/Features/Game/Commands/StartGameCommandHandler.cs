@@ -42,10 +42,30 @@ public class StartGameCommandHandler : IRequestHandler<StartGameCommand, GameSes
         var selectedWord = words[random.Next(words.Count)];
 
         // Create game session
+        var userId = Guid.TryParse(request.UserId, out var parsedUserId) ? parsedUserId : Guid.NewGuid();
+        
+        // Ensure user exists
+        var user = await _unitOfWork.Users.GetByIdAsync(userId);
+        if (user == null)
+        {
+            // Create a new user for demo/testing purposes
+            user = new User
+            {
+                Id = userId,
+                Username = $"user_{userId.ToString()[..8]}",
+                Email = $"user_{userId.ToString()[..8]}@demo.tabuai.local",
+                DisplayName = "Demo User",
+                Level = PlayerLevel.Rookie,
+                CreatedAt = DateTime.UtcNow
+            };
+            await _unitOfWork.Users.AddAsync(user);
+            await _unitOfWork.SaveChangesAsync();
+        }
+        
         var gameSession = new GameSession
         {
             Id = Guid.NewGuid(),
-            UserId = request.UserId,
+            UserId = userId,
             WordId = selectedWord.Id,
             Mode = Enum.Parse<GameMode>(request.GameMode),
             StartedAt = DateTime.UtcNow,

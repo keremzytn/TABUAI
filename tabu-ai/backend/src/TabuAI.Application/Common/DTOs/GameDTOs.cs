@@ -43,7 +43,7 @@ public class UserDto
 
 public class StartGameRequest
 {
-    public Guid UserId { get; set; }
+    public string UserId { get; set; } = string.Empty;
     public string GameMode { get; set; } = "Solo";
     public string? Category { get; set; }
     public int? Difficulty { get; set; }
@@ -51,7 +51,7 @@ public class StartGameRequest
 
 public class SubmitPromptRequest
 {
-    public Guid GameSessionId { get; set; }
+    public string GameSessionId { get; set; } = string.Empty;
     public string Prompt { get; set; } = string.Empty;
 }
 

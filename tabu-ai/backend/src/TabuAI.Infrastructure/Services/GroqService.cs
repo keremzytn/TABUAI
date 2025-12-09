@@ -21,7 +21,7 @@ public class GroqService : IAiService
     {
         var apiKey = configuration["Groq:ApiKey"] ?? throw new ArgumentNullException(nameof(configuration), "Groq API key is not configured");
         var baseUrl = configuration["Groq:BaseUrl"] ?? "https://api.groq.com/openai/v1";
-        _model = configuration["Groq:Model"] ?? "llama3-8b-8192";
+        _model = configuration["Groq:Model"] ?? "llama-3.1-8b-instant";
 
         var options = new OpenAIClientOptions
         {

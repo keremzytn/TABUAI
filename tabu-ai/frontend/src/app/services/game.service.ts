@@ -8,15 +8,15 @@ import { environment } from '../../environments/environment';
   providedIn: 'root'
 })
 export class GameService {
-  private readonly baseUrl = environment.production ? '/api' : 'http://localhost:5000/api';
-  
+  private readonly baseUrl = environment.apiUrl;
+
   private currentGameSubject = new BehaviorSubject<GameSession | null>(null);
   public currentGame$ = this.currentGameSubject.asObservable();
 
   private gameStateSubject = new BehaviorSubject<'idle' | 'playing' | 'completed'>('idle');
   public gameState$ = this.gameStateSubject.asObservable();
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   startGame(request: StartGameRequest): Observable<GameSession> {
     return this.http.post<GameSession>(`${this.baseUrl}/game/start`, request);
@@ -75,7 +75,7 @@ export class GameService {
 
   // Demo mode için mock prompt submission
   submitDemoPrompt(prompt: string, targetWord: string, tabuWords: string[]): Observable<GameResult> {
-    const containsTabu = tabuWords.some(tabu => 
+    const containsTabu = tabuWords.some(tabu =>
       prompt.toLowerCase().includes(tabu.toLowerCase())
     );
 
@@ -84,14 +84,14 @@ export class GameService {
     const mockResult: GameResult = {
       isCorrect,
       aiGuess: isCorrect ? targetWord : 'Araba',
-      aiFeedback: containsTabu 
-        ? 'Tabu kelimeler kullandınız!' 
-        : isCorrect 
-          ? 'Harika! Mükemmel bir tanımlama yaptınız.' 
+      aiFeedback: containsTabu
+        ? 'Tabu kelimeler kullandınız!'
+        : isCorrect
+          ? 'Harika! Mükemmel bir tanımlama yaptınız.'
           : 'İyi bir deneme, ancak daha spesifik olabilirsiniz.',
       score: isCorrect ? Math.floor(Math.random() * 50) + 50 : 0,
       promptQuality: containsTabu ? 1 : Math.floor(Math.random() * 3) + 2,
-      suggestions: isCorrect 
+      suggestions: isCorrect
         ? ['Tebrikler! Başarılı bir prompt yazdınız.', 'Farklı açılardan yaklaşmayı deneyin.']
         : ['Daha spesifik detaylar ekleyin.', 'Nesnenin kullanım alanlarını belirtin.'],
       gameCompleted: isCorrect
