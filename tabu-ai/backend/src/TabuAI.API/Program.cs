@@ -33,8 +33,8 @@ builder.Services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
 // MediatR
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(StartGameCommand).Assembly));
 
-// AI Service
-builder.Services.AddScoped<IAiService, OpenAIService>();
+// AI Service (Groq)
+builder.Services.AddScoped<IAiService, GroqService>();
 
 // CORS Configuration
 builder.Services.AddCors(options =>

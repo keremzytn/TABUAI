@@ -11,84 +11,78 @@ import { GameSession, GameResult } from '../../models/game.models';
   imports: [CommonModule, FormsModule],
   template: `
     <div class="container">
-      <!-- Game not started -->
+      <!-- Game Start Screen -->
       <div *ngIf="gameState === 'idle'" class="game-start fade-in">
         <div class="start-card">
-          <h1>🎯 TABU.AI Oyunu</h1>
+          <h1>🎯 Oyuna Başla</h1>
           <p>Prompt engineering becerilerinizi test etmeye hazır mısınız?</p>
           
           <div class="game-modes">
-            <h3>Oyun Modu Seçin:</h3>
-            <div class="mode-options">
-              <button 
-                class="mode-btn"
-                [class.selected]="selectedMode === 'demo'"
-                (click)="selectedMode = 'demo'">
-                🎮 Demo Modu
-                <span class="mode-desc">Hemen başlayın, kayıt gerektirmez</span>
-              </button>
-              <button 
-                class="mode-btn"
-                [class.selected]="selectedMode === 'real'"
-                (click)="selectedMode = 'real'">
-                🤖 AI Modu
-                <span class="mode-desc">Gerçek AI değerlendirmesi (API Key gerekli)</span>
-              </button>
-            </div>
+            <button 
+              class="mode-btn"
+              [class.selected]="selectedMode === 'demo'"
+              (click)="selectedMode = 'demo'">
+              <div class="mode-icon">🎮</div>
+              <div class="mode-title">Demo Modu</div>
+              <div class="mode-desc">Hemen başlayın</div>
+            </button>
+            <button 
+              class="mode-btn"
+              [class.selected]="selectedMode === 'real'"
+              (click)="selectedMode = 'real'">
+              <div class="mode-icon">🤖</div>
+              <div class="mode-title">AI Modu</div>
+              <div class="mode-desc">Gerçek AI değerlendirmesi</div>
+            </button>
           </div>
 
           <button 
-            class="btn btn-primary btn-large pulse"
+            class="btn btn-primary btn-large"
             (click)="startGame()"
             [disabled]="loading">
             <span *ngIf="loading" class="loading"></span>
-            {{ loading ? 'Oyun Başlatılıyor...' : '🚀 Oyunu Başlat' }}
+            {{ loading ? 'Başlatılıyor...' : '🚀 Başla' }}
           </button>
         </div>
       </div>
 
-      <!-- Game in progress -->
+      <!-- Game Playing Screen -->
       <div *ngIf="gameState === 'playing' && currentGame" class="game-board fade-in">
-        <!-- Game Header -->
+        <!-- Game Stats -->
         <div class="game-header">
-          <div class="game-info">
-            <h2>🎯 Oyun Devam Ediyor</h2>
-            <div class="game-stats">
-              <div class="stat">
-                <span class="stat-label">Kategori:</span>
-                <span class="stat-value">{{ currentGame.word.category }}</span>
-              </div>
-              <div class="stat">
-                <span class="stat-label">Zorluk:</span>
-                <span class="stat-value">{{ getDifficultyText(currentGame.word.difficulty) }}</span>
-              </div>
-              <div class="stat">
-                <span class="stat-label">Deneme:</span>
-                <span class="stat-value">{{ currentGame.attemptNumber }}/3</span>
-              </div>
-              <div class="stat">
-                <span class="stat-label">Süre:</span>
-                <span class="stat-value">{{ gameTime }}</span>
-              </div>
+          <div class="stats-row">
+            <div class="stat">
+              <span class="stat-label">Kategori</span>
+              <span class="stat-value">{{ currentGame.word.category }}</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Zorluk</span>
+              <span class="stat-value">{{ getDifficultyText(currentGame.word.difficulty) }}</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Deneme</span>
+              <span class="stat-value">{{ currentGame.attemptNumber }}/3</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Süre</span>
+              <span class="stat-value">{{ gameTime }}</span>
             </div>
           </div>
           <div class="score-display">
-            💎 {{ currentGame.score }} Puan
+            💎 {{ currentGame.score }}
           </div>
         </div>
 
         <!-- Game Content -->
         <div class="game-content">
-          <!-- Target Word -->
+          <!-- Target Word Section -->
           <div class="word-section">
-            <div class="target-word-card">
+            <div class="target-card">
               <h3>🎯 Hedef Kelime</h3>
               <div class="target-word">{{ currentGame.word.targetWord }}</div>
-              <p>Bu kelimeyi AI'ya tarif edin, ancak aşağıdaki yasaklı kelimeleri kullanmayın!</p>
             </div>
 
-            <!-- Tabu Words -->
-            <div class="tabu-section">
+            <div class="tabu-card">
               <h4>🚫 Yasaklı Kelimeler</h4>
               <div class="tabu-words">
                 <span 
@@ -100,15 +94,14 @@ import { GameSession, GameResult } from '../../models/game.models';
             </div>
           </div>
 
-          <!-- Prompt Input -->
+          <!-- Prompt Section -->
           <div class="prompt-section">
             <h3>✍️ Promptunuzu Yazın</h3>
-            <p>AI'nın "{{ currentGame.word.targetWord }}" kelimesini tahmin edebilmesi için açıklayıcı bir prompt yazın.</p>
             
             <textarea
               [(ngModel)]="currentPrompt"
               class="prompt-input"
-              placeholder="Örnek: Bu, insanların bir yerden başka bir yere gitmeyi sağlayan, metalden yapılmış, dört tekerlekli bir araçtır..."
+              placeholder="AI'nın hedef kelimeyi tahmin edebilmesi için açıklayıcı bir prompt yazın..."
               [disabled]="submitting"></textarea>
 
             <div class="prompt-actions">
@@ -117,60 +110,48 @@ import { GameSession, GameResult } from '../../models/game.models';
                 (click)="submitPrompt()"
                 [disabled]="!currentPrompt.trim() || submitting">
                 <span *ngIf="submitting" class="loading"></span>
-                {{ submitting ? 'AI Düşünüyor...' : '🤖 AI\'ya Gönder' }}
+                {{ submitting ? 'AI Düşünüyor...' : '🤖 Gönder' }}
               </button>
               <button 
                 class="btn btn-secondary"
                 (click)="clearPrompt()"
                 [disabled]="submitting">
-                🗑️ Temizle
+                Temizle
               </button>
-            </div>
-
-            <div class="prompt-tips">
-              <h4>💡 İpuçları:</h4>
-              <ul>
-                <li>Yasaklı kelimeleri kullanmayın</li>
-                <li>Spesifik ve açıklayıcı olun</li>
-                <li>Nesnenin kullanım alanlarını belirtin</li>
-                <li>Fiziksel özelliklerini tanımlayın</li>
-              </ul>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Game Result -->
+      <!-- Game Result Screen -->
       <div *ngIf="lastResult" class="game-result fade-in">
         <div class="result-card" [class.success]="lastResult.isCorrect" [class.failure]="!lastResult.isCorrect">
-          <div class="result-header">
-            <div class="result-icon">{{ lastResult.isCorrect ? '🎉' : '😔' }}</div>
-            <h2>{{ lastResult.isCorrect ? 'Tebrikler!' : 'Maalesef!' }}</h2>
-            <p>{{ lastResult.isCorrect ? 'AI doğru tahmin etti!' : 'AI yanlış tahmin etti.' }}</p>
-          </div>
+          <div class="result-icon">{{ lastResult.isCorrect ? '🎉' : '😔' }}</div>
+          <h2>{{ lastResult.isCorrect ? 'Tebrikler!' : 'Tekrar Deneyin' }}</h2>
+          <p class="result-subtitle">{{ lastResult.isCorrect ? 'AI doğru tahmin etti!' : 'AI yanlış tahmin etti.' }}</p>
 
           <div class="result-details">
             <div class="detail">
-              <span class="detail-label">AI Tahmini:</span>
-              <span class="detail-value ai-guess">{{ lastResult.aiGuess }}</span>
+              <span class="detail-label">AI Tahmini</span>
+              <span class="detail-value">{{ lastResult.aiGuess }}</span>
             </div>
             <div class="detail">
-              <span class="detail-label">Kazanılan Puan:</span>
+              <span class="detail-label">Puan</span>
               <span class="detail-value score">+{{ lastResult.score }}</span>
             </div>
             <div class="detail">
-              <span class="detail-label">Prompt Kalitesi:</span>
-              <span class="detail-value quality">{{ getQualityText(lastResult.promptQuality) }}</span>
+              <span class="detail-label">Kalite</span>
+              <span class="detail-value">{{ getQualityText(lastResult.promptQuality) }}</span>
             </div>
           </div>
 
-          <div class="ai-feedback">
-            <h4>🤖 AI Geri Bildirimi:</h4>
+          <div class="feedback-box">
+            <h4>💬 Geri Bildirim</h4>
             <p>{{ lastResult.aiFeedback }}</p>
           </div>
 
-          <div *ngIf="lastResult.suggestions.length > 0" class="suggestions">
-            <h4>💡 İyileştirme Önerileri:</h4>
+          <div *ngIf="lastResult.suggestions.length > 0" class="suggestions-box">
+            <h4>💡 Öneriler</h4>
             <ul>
               <li *ngFor="let suggestion of lastResult.suggestions">{{ suggestion }}</li>
             </ul>
@@ -178,7 +159,7 @@ import { GameSession, GameResult } from '../../models/game.models';
 
           <div class="result-actions">
             <button 
-              *ngIf="!lastResult.gameCompleted && currentGame?.attemptNumber < 3"
+              *ngIf="!lastResult.gameCompleted && (currentGame?.attemptNumber ?? 0) < 3"
               class="btn btn-primary"
               (click)="continueGame()">
               🔄 Tekrar Dene
@@ -199,42 +180,37 @@ import { GameSession, GameResult } from '../../models/game.models';
     </div>
   `,
   styles: [`
+    /* Start Screen */
     .game-start {
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 70vh;
+      min-height: 60vh;
     }
 
     .start-card {
       background: white;
-      border-radius: 20px;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
       padding: 40px;
       text-align: center;
       max-width: 600px;
       width: 100%;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
     }
 
     .start-card h1 {
-      font-size: 2.5rem;
-      margin-bottom: 16px;
-      background: linear-gradient(45deg, #667eea, #764ba2);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: #1a202c;
+    }
+
+    .start-card > p {
+      color: #718096;
+      margin-bottom: 32px;
     }
 
     .game-modes {
-      margin: 32px 0;
-    }
-
-    .game-modes h3 {
-      margin-bottom: 20px;
-      color: #333;
-    }
-
-    .mode-options {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 16px;
@@ -242,34 +218,47 @@ import { GameSession, GameResult } from '../../models/game.models';
     }
 
     .mode-btn {
-      padding: 20px;
-      border: 2px solid #e9ecef;
-      border-radius: 12px;
+      padding: 24px 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
       background: white;
       cursor: pointer;
-      transition: all 0.3s ease;
-      text-align: center;
+      transition: all 0.2s ease;
     }
 
     .mode-btn.selected {
       border-color: #667eea;
-      background: rgba(102, 126, 234, 0.1);
+      background: #f7fafc;
     }
 
     .mode-btn:hover {
-      border-color: #667eea;
-      transform: translateY(-2px);
+      border-color: #cbd5e0;
+    }
+
+    .mode-icon {
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+
+    .mode-title {
+      font-weight: 600;
+      color: #2d3748;
+      margin-bottom: 4px;
     }
 
     .mode-desc {
-      display: block;
-      font-size: 0.9rem;
-      color: #6c757d;
-      margin-top: 8px;
+      font-size: 0.875rem;
+      color: #718096;
     }
 
+    .btn-large {
+      padding: 14px 32px;
+      font-size: 1rem;
+    }
+
+    /* Game Board */
     .game-board {
-      max-width: 1200px;
+      max-width: 1100px;
       margin: 0 auto;
     }
 
@@ -277,79 +266,74 @@ import { GameSession, GameResult } from '../../models/game.models';
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(20px);
-      border-radius: 20px;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
       padding: 24px;
-      margin-bottom: 32px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      margin-bottom: 24px;
+      gap: 24px;
     }
 
-    .game-info h2 {
-      margin-bottom: 16px;
-      color: #333;
-    }
-
-    .game-stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: 16px;
+    .stats-row {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
     }
 
     .stat {
-      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
     }
 
     .stat-label {
-      display: block;
-      font-size: 0.9rem;
-      color: #6c757d;
+      font-size: 0.875rem;
+      color: #718096;
     }
 
     .stat-value {
-      display: block;
-      font-weight: bold;
-      color: #333;
-      margin-top: 4px;
+      font-weight: 600;
+      color: #2d3748;
     }
 
     .game-content {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 32px;
+      gap: 24px;
     }
 
     .word-section, .prompt-section {
       background: white;
-      border-radius: 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
       padding: 24px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     }
 
-    .target-word-card {
+    .target-card {
       text-align: center;
       margin-bottom: 24px;
     }
 
-    .target-word-card h3 {
+    .target-card h3 {
       margin-bottom: 16px;
-      color: #333;
+      color: #2d3748;
+      font-size: 1.125rem;
     }
 
     .target-word {
       font-size: 2.5rem;
-      font-weight: bold;
+      font-weight: 700;
       color: #667eea;
-      background: rgba(102, 126, 234, 0.1);
-      border-radius: 12px;
+      background: #f7fafc;
+      border-radius: 8px;
       padding: 20px;
-      margin: 16px 0;
     }
 
-    .tabu-section h4 {
+    .tabu-card h4 {
       margin-bottom: 16px;
-      color: #333;
+      color: #2d3748;
       text-align: center;
+      font-size: 1rem;
     }
 
     .tabu-words {
@@ -361,70 +345,45 @@ import { GameSession, GameResult } from '../../models/game.models';
 
     .prompt-section h3 {
       margin-bottom: 16px;
-      color: #333;
+      color: #2d3748;
+      font-size: 1.125rem;
     }
 
     .prompt-input {
       width: 100%;
-      min-height: 150px;
-      margin: 16px 0;
+      min-height: 200px;
+      margin-bottom: 16px;
     }
 
     .prompt-actions {
       display: flex;
       gap: 12px;
-      margin: 16px 0;
     }
 
-    .prompt-tips {
-      background: rgba(102, 126, 234, 0.05);
-      border-radius: 8px;
-      padding: 16px;
-      margin-top: 24px;
-    }
-
-    .prompt-tips h4 {
-      margin-bottom: 12px;
-      color: #333;
-    }
-
-    .prompt-tips ul {
-      margin: 0;
-      padding-left: 20px;
-    }
-
-    .prompt-tips li {
-      margin-bottom: 8px;
-      color: #6c757d;
-    }
-
+    /* Result Screen */
     .game-result {
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 70vh;
+      min-height: 60vh;
     }
 
     .result-card {
       background: white;
-      border-radius: 20px;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
       padding: 40px;
       max-width: 600px;
       width: 100%;
       text-align: center;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
     }
 
     .result-card.success {
-      border: 3px solid #51cf66;
+      border-color: #48bb78;
     }
 
     .result-card.failure {
-      border: 3px solid #ff6b6b;
-    }
-
-    .result-header {
-      margin-bottom: 32px;
+      border-color: #fc8181;
     }
 
     .result-icon {
@@ -432,65 +391,73 @@ import { GameSession, GameResult } from '../../models/game.models';
       margin-bottom: 16px;
     }
 
-    .result-header h2 {
+    .result-card h2 {
       margin-bottom: 8px;
-      color: #333;
+      color: #1a202c;
+      font-size: 1.75rem;
+    }
+
+    .result-subtitle {
+      color: #718096;
+      margin-bottom: 32px;
     }
 
     .result-details {
       display: grid;
-      gap: 16px;
-      margin-bottom: 32px;
+      gap: 12px;
+      margin-bottom: 24px;
       text-align: left;
     }
 
     .detail {
       display: flex;
       justify-content: space-between;
-      align-items: center;
       padding: 12px 16px;
-      background: #f8f9fa;
-      border-radius: 8px;
+      background: #f7fafc;
+      border-radius: 6px;
     }
 
     .detail-label {
+      color: #718096;
       font-weight: 500;
-      color: #6c757d;
     }
 
     .detail-value {
-      font-weight: bold;
-    }
-
-    .ai-guess {
-      color: #667eea;
+      font-weight: 600;
+      color: #2d3748;
     }
 
     .score {
-      color: #51cf66;
+      color: #48bb78;
     }
 
-    .ai-feedback, .suggestions {
+    .feedback-box, .suggestions-box {
       text-align: left;
       margin-bottom: 24px;
       padding: 16px;
-      background: #f8f9fa;
+      background: #f7fafc;
       border-radius: 8px;
     }
 
-    .ai-feedback h4, .suggestions h4 {
+    .feedback-box h4, .suggestions-box h4 {
       margin-bottom: 12px;
-      color: #333;
+      color: #2d3748;
+      font-size: 1rem;
     }
 
-    .suggestions ul {
+    .feedback-box p {
+      color: #4a5568;
+      line-height: 1.6;
+    }
+
+    .suggestions-box ul {
       margin: 0;
       padding-left: 20px;
     }
 
-    .suggestions li {
+    .suggestions-box li {
       margin-bottom: 8px;
-      color: #6c757d;
+      color: #4a5568;
     }
 
     .result-actions {
@@ -500,27 +467,32 @@ import { GameSession, GameResult } from '../../models/game.models';
       flex-wrap: wrap;
     }
 
+    /* Responsive */
     @media (max-width: 768px) {
-      .mode-options {
+      .game-modes {
         grid-template-columns: 1fr;
       }
 
       .game-header {
         flex-direction: column;
-        gap: 20px;
-        text-align: center;
+        align-items: stretch;
+      }
+
+      .stats-row {
+        justify-content: space-between;
+        gap: 16px;
       }
 
       .game-content {
         grid-template-columns: 1fr;
       }
 
-      .game-stats {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
       .result-actions {
         flex-direction: column;
+      }
+
+      .result-actions button {
+        width: 100%;
       }
     }
   `]
@@ -531,21 +503,19 @@ export class GameComponent implements OnInit, OnDestroy {
   selectedMode: 'demo' | 'real' = 'demo';
   currentPrompt = '';
   lastResult: GameResult | null = null;
-  
+
   loading = false;
   submitting = false;
   gameTime = '00:00';
-  
+
   private gameTimer: Subscription | null = null;
   private startTime: Date | null = null;
 
-  constructor(private gameService: GameService) {}
+  constructor(private gameService: GameService) { }
 
   ngOnInit() {
-    // Reset game state when component loads
     this.gameService.setCurrentGame(null);
-    
-    // Subscribe to game state changes
+
     this.gameService.gameState$.subscribe(state => {
       this.gameState = state;
     });
@@ -565,15 +535,15 @@ export class GameComponent implements OnInit, OnDestroy {
   startGame() {
     this.loading = true;
     this.lastResult = null;
-    
+
     const request = {
-      userId: 'demo-user', // In real app, get from auth service
+      userId: 'demo-user',
       gameMode: 'Solo',
       category: undefined,
       difficulty: undefined
     };
 
-    const gameObservable = this.selectedMode === 'demo' 
+    const gameObservable = this.selectedMode === 'demo'
       ? this.gameService.startDemoGame()
       : this.gameService.startGame(request);
 
@@ -585,7 +555,6 @@ export class GameComponent implements OnInit, OnDestroy {
       error: (error) => {
         console.error('Game start error:', error);
         this.loading = false;
-        // Show error message
       }
     });
   }
@@ -594,30 +563,29 @@ export class GameComponent implements OnInit, OnDestroy {
     if (!this.currentGame || !this.currentPrompt.trim()) return;
 
     this.submitting = true;
-    
+
     const submitObservable = this.selectedMode === 'demo'
       ? this.gameService.submitDemoPrompt(
-          this.currentPrompt,
-          this.currentGame.word.targetWord,
-          this.currentGame.word.tabuWords
-        )
+        this.currentPrompt,
+        this.currentGame.word.targetWord,
+        this.currentGame.word.tabuWords
+      )
       : this.gameService.submitPrompt({
-          gameSessionId: this.currentGame.id,
-          prompt: this.currentPrompt
-        });
+        gameSessionId: this.currentGame.id,
+        prompt: this.currentPrompt
+      });
 
     submitObservable.subscribe({
       next: (result) => {
         this.lastResult = result;
         this.submitting = false;
-        
-        // Update game state
+
         if (this.currentGame) {
           this.currentGame.score += result.score;
           this.currentGame.userPrompt = this.currentPrompt;
           this.currentGame.aiResponse = result.aiGuess;
           this.currentGame.isCorrectGuess = result.isCorrect;
-          
+
           if (result.gameCompleted) {
             this.gameService.completeGame();
             this.stopGameTimer();
@@ -648,7 +616,6 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   goHome() {
-    // Navigate to home - in real app use Router
     window.location.href = '/';
   }
 
@@ -664,7 +631,7 @@ export class GameComponent implements OnInit, OnDestroy {
   getQualityText(quality: number): string {
     const qualities = {
       1: '⭐ Zayıf',
-      2: '⭐⭐ Vasat', 
+      2: '⭐⭐ Vasat',
       3: '⭐⭐⭐ İyi',
       4: '⭐⭐⭐⭐ Çok İyi',
       5: '⭐⭐⭐⭐⭐ Mükemmel'
@@ -688,12 +655,12 @@ export class GameComponent implements OnInit, OnDestroy {
 
   private updateGameTime() {
     if (!this.startTime) return;
-    
+
     const now = new Date();
     const elapsed = Math.floor((now.getTime() - this.startTime.getTime()) / 1000);
     const minutes = Math.floor(elapsed / 60);
     const seconds = elapsed % 60;
-    
+
     this.gameTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   }
 }

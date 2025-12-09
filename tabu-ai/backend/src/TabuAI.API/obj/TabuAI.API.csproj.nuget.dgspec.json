@@ -1,36 +1,37 @@
 {
   "format": 1,
   "restore": {
-    "/workspace/tabu-ai/backend/src/TabuAI.API/TabuAI.API.csproj": {}
+    "/Users/kerem/Documents/GitHub/TABUAI/tabu-ai/backend/src/TabuAI.API/TabuAI.API.csproj": {}
   },
   "projects": {
-    "/workspace/tabu-ai/backend/src/TabuAI.API/TabuAI.API.csproj": {
+    "/Users/kerem/Documents/GitHub/TABUAI/tabu-ai/backend/src/TabuAI.API/TabuAI.API.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/workspace/tabu-ai/backend/src/TabuAI.API/TabuAI.API.csproj",
+        "projectUniqueName": "/Users/kerem/Documents/GitHub/TABUAI/tabu-ai/backend/src/TabuAI.API/TabuAI.API.csproj",
         "projectName": "TabuAI.API",
-        "projectPath": "/workspace/tabu-ai/backend/src/TabuAI.API/TabuAI.API.csproj",
-        "packagesPath": "/home/ubuntu/.nuget/packages/",
-        "outputPath": "/workspace/tabu-ai/backend/src/TabuAI.API/obj/",
+        "projectPath": "/Users/kerem/Documents/GitHub/TABUAI/tabu-ai/backend/src/TabuAI.API/TabuAI.API.csproj",
+        "packagesPath": "/Users/kerem/.nuget/packages/",
+        "outputPath": "/Users/kerem/Documents/GitHub/TABUAI/tabu-ai/backend/src/TabuAI.API/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/ubuntu/.nuget/NuGet/NuGet.Config"
+          "/Users/kerem/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
         ],
         "sources": {
+          "/usr/local/share/dotnet/library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net9.0": {
             "targetAlias": "net9.0",
             "projectReferences": {
-              "/workspace/tabu-ai/backend/src/TabuAI.Application/TabuAI.Application.csproj": {
-                "projectPath": "/workspace/tabu-ai/backend/src/TabuAI.Application/TabuAI.Application.csproj"
+              "/Users/kerem/Documents/GitHub/TABUAI/tabu-ai/backend/src/TabuAI.Application/TabuAI.Application.csproj": {
+                "projectPath": "/Users/kerem/Documents/GitHub/TABUAI/tabu-ai/backend/src/TabuAI.Application/TabuAI.Application.csproj"
               },
-              "/workspace/tabu-ai/backend/src/TabuAI.Infrastructure/TabuAI.Infrastructure.csproj": {
-                "projectPath": "/workspace/tabu-ai/backend/src/TabuAI.Infrastructure/TabuAI.Infrastructure.csproj"
+              "/Users/kerem/Documents/GitHub/TABUAI/tabu-ai/backend/src/TabuAI.Infrastructure/TabuAI.Infrastructure.csproj": {
+                "projectPath": "/Users/kerem/Documents/GitHub/TABUAI/tabu-ai/backend/src/TabuAI.Infrastructure/TabuAI.Infrastructure.csproj"
               }
             }
           }
@@ -79,34 +80,35 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/home/ubuntu/.dotnet/sdk/9.0.304/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.300/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "/workspace/tabu-ai/backend/src/TabuAI.Application/TabuAI.Application.csproj": {
+    "/Users/kerem/Documents/GitHub/TABUAI/tabu-ai/backend/src/TabuAI.Application/TabuAI.Application.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/workspace/tabu-ai/backend/src/TabuAI.Application/TabuAI.Application.csproj",
+        "projectUniqueName": "/Users/kerem/Documents/GitHub/TABUAI/tabu-ai/backend/src/TabuAI.Application/TabuAI.Application.csproj",
         "projectName": "TabuAI.Application",
-        "projectPath": "/workspace/tabu-ai/backend/src/TabuAI.Application/TabuAI.Application.csproj",
-        "packagesPath": "/home/ubuntu/.nuget/packages/",
-        "outputPath": "/workspace/tabu-ai/backend/src/TabuAI.Application/obj/",
+        "projectPath": "/Users/kerem/Documents/GitHub/TABUAI/tabu-ai/backend/src/TabuAI.Application/TabuAI.Application.csproj",
+        "packagesPath": "/Users/kerem/.nuget/packages/",
+        "outputPath": "/Users/kerem/Documents/GitHub/TABUAI/tabu-ai/backend/src/TabuAI.Application/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/ubuntu/.nuget/NuGet/NuGet.Config"
+          "/Users/kerem/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
         ],
         "sources": {
+          "/usr/local/share/dotnet/library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net9.0": {
             "targetAlias": "net9.0",
             "projectReferences": {
-              "/workspace/tabu-ai/backend/src/TabuAI.Domain/TabuAI.Domain.csproj": {
-                "projectPath": "/workspace/tabu-ai/backend/src/TabuAI.Domain/TabuAI.Domain.csproj"
+              "/Users/kerem/Documents/GitHub/TABUAI/tabu-ai/backend/src/TabuAI.Domain/TabuAI.Domain.csproj": {
+                "projectPath": "/Users/kerem/Documents/GitHub/TABUAI/tabu-ai/backend/src/TabuAI.Domain/TabuAI.Domain.csproj"
               }
             }
           }
@@ -156,26 +158,27 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/home/ubuntu/.dotnet/sdk/9.0.304/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.300/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "/workspace/tabu-ai/backend/src/TabuAI.Domain/TabuAI.Domain.csproj": {
+    "/Users/kerem/Documents/GitHub/TABUAI/tabu-ai/backend/src/TabuAI.Domain/TabuAI.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/workspace/tabu-ai/backend/src/TabuAI.Domain/TabuAI.Domain.csproj",
+        "projectUniqueName": "/Users/kerem/Documents/GitHub/TABUAI/tabu-ai/backend/src/TabuAI.Domain/TabuAI.Domain.csproj",
         "projectName": "TabuAI.Domain",
-        "projectPath": "/workspace/tabu-ai/backend/src/TabuAI.Domain/TabuAI.Domain.csproj",
-        "packagesPath": "/home/ubuntu/.nuget/packages/",
-        "outputPath": "/workspace/tabu-ai/backend/src/TabuAI.Domain/obj/",
+        "projectPath": "/Users/kerem/Documents/GitHub/TABUAI/tabu-ai/backend/src/TabuAI.Domain/TabuAI.Domain.csproj",
+        "packagesPath": "/Users/kerem/.nuget/packages/",
+        "outputPath": "/Users/kerem/Documents/GitHub/TABUAI/tabu-ai/backend/src/TabuAI.Domain/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/ubuntu/.nuget/NuGet/NuGet.Config"
+          "/Users/kerem/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
         ],
         "sources": {
+          "/usr/local/share/dotnet/library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -215,34 +218,35 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/home/ubuntu/.dotnet/sdk/9.0.304/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.300/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "/workspace/tabu-ai/backend/src/TabuAI.Infrastructure/TabuAI.Infrastructure.csproj": {
+    "/Users/kerem/Documents/GitHub/TABUAI/tabu-ai/backend/src/TabuAI.Infrastructure/TabuAI.Infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/workspace/tabu-ai/backend/src/TabuAI.Infrastructure/TabuAI.Infrastructure.csproj",
+        "projectUniqueName": "/Users/kerem/Documents/GitHub/TABUAI/tabu-ai/backend/src/TabuAI.Infrastructure/TabuAI.Infrastructure.csproj",
         "projectName": "TabuAI.Infrastructure",
-        "projectPath": "/workspace/tabu-ai/backend/src/TabuAI.Infrastructure/TabuAI.Infrastructure.csproj",
-        "packagesPath": "/home/ubuntu/.nuget/packages/",
-        "outputPath": "/workspace/tabu-ai/backend/src/TabuAI.Infrastructure/obj/",
+        "projectPath": "/Users/kerem/Documents/GitHub/TABUAI/tabu-ai/backend/src/TabuAI.Infrastructure/TabuAI.Infrastructure.csproj",
+        "packagesPath": "/Users/kerem/.nuget/packages/",
+        "outputPath": "/Users/kerem/Documents/GitHub/TABUAI/tabu-ai/backend/src/TabuAI.Infrastructure/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/ubuntu/.nuget/NuGet/NuGet.Config"
+          "/Users/kerem/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
         ],
         "sources": {
+          "/usr/local/share/dotnet/library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net9.0": {
             "targetAlias": "net9.0",
             "projectReferences": {
-              "/workspace/tabu-ai/backend/src/TabuAI.Application/TabuAI.Application.csproj": {
-                "projectPath": "/workspace/tabu-ai/backend/src/TabuAI.Application/TabuAI.Application.csproj"
+              "/Users/kerem/Documents/GitHub/TABUAI/tabu-ai/backend/src/TabuAI.Application/TabuAI.Application.csproj": {
+                "projectPath": "/Users/kerem/Documents/GitHub/TABUAI/tabu-ai/backend/src/TabuAI.Application/TabuAI.Application.csproj"
               }
             }
           }
@@ -298,7 +302,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/home/ubuntu/.dotnet/sdk/9.0.304/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.300/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

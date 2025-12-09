@@ -672,32 +672,33 @@
     ]
   },
   "packageFolders": {
-    "/home/ubuntu/.nuget/packages/": {}
+    "/Users/kerem/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/workspace/tabu-ai/backend/src/TabuAI.Application/TabuAI.Application.csproj",
+      "projectUniqueName": "/Users/kerem/Documents/GitHub/TABUAI/tabu-ai/backend/src/TabuAI.Application/TabuAI.Application.csproj",
       "projectName": "TabuAI.Application",
-      "projectPath": "/workspace/tabu-ai/backend/src/TabuAI.Application/TabuAI.Application.csproj",
-      "packagesPath": "/home/ubuntu/.nuget/packages/",
-      "outputPath": "/workspace/tabu-ai/backend/src/TabuAI.Application/obj/",
+      "projectPath": "/Users/kerem/Documents/GitHub/TABUAI/tabu-ai/backend/src/TabuAI.Application/TabuAI.Application.csproj",
+      "packagesPath": "/Users/kerem/.nuget/packages/",
+      "outputPath": "/Users/kerem/Documents/GitHub/TABUAI/tabu-ai/backend/src/TabuAI.Application/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/home/ubuntu/.nuget/NuGet/NuGet.Config"
+        "/Users/kerem/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net9.0"
       ],
       "sources": {
+        "/usr/local/share/dotnet/library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net9.0": {
           "targetAlias": "net9.0",
           "projectReferences": {
-            "/workspace/tabu-ai/backend/src/TabuAI.Domain/TabuAI.Domain.csproj": {
-              "projectPath": "/workspace/tabu-ai/backend/src/TabuAI.Domain/TabuAI.Domain.csproj"
+            "/Users/kerem/Documents/GitHub/TABUAI/tabu-ai/backend/src/TabuAI.Domain/TabuAI.Domain.csproj": {
+              "projectPath": "/Users/kerem/Documents/GitHub/TABUAI/tabu-ai/backend/src/TabuAI.Domain/TabuAI.Domain.csproj"
             }
           }
         }
@@ -747,7 +748,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/home/ubuntu/.dotnet/sdk/9.0.304/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.300/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

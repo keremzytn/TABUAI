@@ -2,21 +2,33 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OpenAI;
 using OpenAI.Chat;
+using System.ClientModel;
 using System.Text.Json;
 using TabuAI.Domain.Interfaces;
 
 namespace TabuAI.Infrastructure.Services;
 
-public class OpenAIService : IAiService
+/// <summary>
+/// AI Service implementation using Groq API (OpenAI-compatible)
+/// </summary>
+public class GroqService : IAiService
 {
-    private readonly OpenAIClient _openAiClient;
-    private readonly ILogger<OpenAIService> _logger;
-    private const string MODEL = "gpt-4o-mini";
+    private readonly OpenAIClient _groqClient;
+    private readonly ILogger<GroqService> _logger;
+    private readonly string _model;
 
-    public OpenAIService(IConfiguration configuration, ILogger<OpenAIService> logger)
+    public GroqService(IConfiguration configuration, ILogger<GroqService> logger)
     {
-        var apiKey = configuration["OpenAI:ApiKey"] ?? throw new ArgumentNullException(nameof(configuration), "OpenAI API key is not configured");
-        _openAiClient = new OpenAIClient(apiKey);
+        var apiKey = configuration["Groq:ApiKey"] ?? throw new ArgumentNullException(nameof(configuration), "Groq API key is not configured");
+        var baseUrl = configuration["Groq:BaseUrl"] ?? "https://api.groq.com/openai/v1";
+        _model = configuration["Groq:Model"] ?? "llama3-8b-8192";
+
+        var options = new OpenAIClientOptions
+        {
+            Endpoint = new Uri(baseUrl)
+        };
+
+        _groqClient = new OpenAIClient(new ApiKeyCredential(apiKey), options);
         _logger = logger;
     }
 
@@ -35,7 +47,7 @@ Kurallar:
 
 Tabu kelimeler (bunlar ipucu değil, sadece bilgi amaçlı): {string.Join(", ", tabuWords)}";
 
-            var chatClient = _openAiClient.GetChatClient(MODEL);
+            var chatClient = _groqClient.GetChatClient(_model);
             var response = await chatClient.CompleteChatAsync(
                 new ChatMessage[]
                 {
@@ -151,7 +163,7 @@ Cevabını JSON formatında ver:
     ""weaknesses"": [""Zayıf yön 1"", ""Zayıf yön 2""]
 }}";
 
-            var chatClient = _openAiClient.GetChatClient(MODEL);
+            var chatClient = _groqClient.GetChatClient(_model);
             var response = await chatClient.CompleteChatAsync(
                 new ChatMessage[]
                 {
@@ -230,7 +242,7 @@ Cevabını JSON formatında ver:
     ""suggestions"": [""Öneri 1"", ""Öneri 2"", ""Öneri 3""]
 }}";
 
-            var chatClient = _openAiClient.GetChatClient(MODEL);
+            var chatClient = _groqClient.GetChatClient(_model);
             var response = await chatClient.CompleteChatAsync(
                 new ChatMessage[]
                 {
