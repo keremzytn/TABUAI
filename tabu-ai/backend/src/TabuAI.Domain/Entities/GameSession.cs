@@ -39,7 +39,8 @@ public enum GameStatus
     InProgress = 1,
     Completed = 2,
     Abandoned = 3,
-    TimeOut = 4
+    TimeOut = 4,
+    Failed = 5
 }
 
 public enum PromptQuality

@@ -1,107 +1,216 @@
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { ToastComponent } from './components/toast/toast.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, CommonModule],
+  imports: [RouterOutlet, CommonModule, RouterLink, RouterLinkActive, ToastComponent],
   template: `
-    <div class="app-container">
-      <header class="app-header">
-        <div class="container">
-          <nav class="navbar">
-            <div class="navbar-brand">
-              <h1>🎯 TABU.AI</h1>
-            </div>
-            <div class="navbar-menu">
-              <a routerLink="/" class="nav-link">Ana Sayfa</a>
-              <a routerLink="/game" class="nav-link">Oyun</a>
-              <a routerLink="/leaderboard" class="nav-link">Liderlik</a>
-            </div>
+    <div class="app-layout">
+      <!-- Desktop Header -->
+      <header class="desktop-header glass-card">
+        <div class="container nav-container">
+          <div class="brand">
+            <span class="logo-icon">🎯</span>
+            <h1>TABU<span class="text-gradient">.AI</span></h1>
+          </div>
+          <nav class="desktop-nav">
+            <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link">
+              Ana Sayfa
+            </a>
+            <a routerLink="/game" routerLinkActive="active" class="nav-link">
+              Oyna
+            </a>
+            <a routerLink="/leaderboard" routerLinkActive="active" class="nav-link">
+              Liderlik
+            </a>
           </nav>
         </div>
       </header>
 
-      <main class="app-main">
+      <!-- Main Content -->
+      <main class="main-content">
         <router-outlet></router-outlet>
       </main>
+
+      <!-- Mobile Bottom Navigation -->
+      <nav class="mobile-nav glass-card">
+        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="mobile-link">
+          <span class="icon">🏠</span>
+          <span class="label">Başla</span>
+        </a>
+        <a routerLink="/game" routerLinkActive="active" class="mobile-link">
+          <span class="icon">🎮</span>
+          <span class="label">Oyna</span>
+        </a>
+        <a routerLink="/leaderboard" routerLinkActive="active" class="mobile-link">
+          <span class="icon">🏆</span>
+          <span class="label">Liderler</span>
+        </a>
+      </nav>
+
+      <!-- Toast Notifications -->
+      <app-toast></app-toast>
     </div>
   `,
   styles: [`
-    .app-container {
+    .app-layout {
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      position: relative;
     }
 
-    .app-header {
-      background: white;
-      border-bottom: 1px solid #e2e8f0;
+    /* Desktop Header */
+    .desktop-header {
       position: sticky;
-      top: 0;
-      z-index: 1000;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      top: 20px;
+      margin: 0 20px;
+      z-index: 100;
+      border-radius: 16px;
+      padding: 12px 0;
+      display: none; /* Mobile first hidden */
     }
 
-    .navbar {
+    @media (min-width: 768px) {
+      .desktop-header {
+        display: block;
+      }
+    }
+
+    .nav-container {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 16px 0;
     }
 
-    .navbar-brand h1 {
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-left: 16px;
+    }
+
+    .brand h1 {
       font-size: 24px;
-      font-weight: 700;
-      color: #667eea;
+      font-weight: 800;
+      letter-spacing: -0.5px;
       margin: 0;
+      color: white;
     }
 
-    .navbar-menu {
+    .logo-icon {
+      font-size: 28px;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    .desktop-nav {
       display: flex;
       gap: 8px;
+      padding-right: 16px;
     }
 
     .nav-link {
+      color: var(--text-muted);
       text-decoration: none;
-      color: #4a5568;
-      font-weight: 500;
-      font-size: 15px;
-      padding: 8px 16px;
-      border-radius: 6px;
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-weight: 600;
       transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .nav-link:hover {
-      background: #f7fafc;
-      color: #667eea;
+      background: rgba(255, 255, 255, 0.05);
+      color: white;
     }
 
-    .app-main {
+    .nav-link.active {
+      background: rgba(139, 92, 246, 0.2);
+      color: var(--primary);
+      box-shadow: 0 0 15px rgba(139, 92, 246, 0.1);
+    }
+
+    /* Main Content */
+    .main-content {
       flex: 1;
-      padding: 32px 0;
+      padding: 20px 0 100px 0; /* Extra padding for bottom nav */
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
     }
 
-    @media (max-width: 768px) {
-      .navbar {
-        flex-direction: column;
-        gap: 12px;
-        text-align: center;
+    @media (min-width: 768px) {
+      .main-content {
+        padding-top: 40px;
+        padding-bottom: 40px;
       }
+    }
 
-      .navbar-brand h1 {
-        font-size: 20px;
-      }
+    /* Mobile Bottom Nav */
+    .mobile-nav {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      right: 20px;
+      height: 70px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 1000;
+      border-radius: 20px;
+    }
 
-      .navbar-menu {
-        width: 100%;
-        justify-content: center;
+    @media (min-width: 768px) {
+      .mobile-nav {
+        display: none;
       }
+    }
 
-      .app-main {
-        padding: 24px 0;
-      }
+    .mobile-link {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      color: var(--text-muted);
+      gap: 4px;
+      padding: 8px 16px;
+      border-radius: 12px;
+      transition: all 0.2s;
+    }
+
+    .mobile-link .icon {
+      font-size: 24px;
+      margin-bottom: 2px;
+      transition: transform 0.2s;
+    }
+
+    .mobile-link .label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .mobile-link.active {
+      color: var(--primary);
+    }
+
+    .mobile-link.active .icon {
+      transform: translateY(-4px);
+    }
+
+    .mobile-link:active {
+      transform: scale(0.95);
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
     }
   `]
 })

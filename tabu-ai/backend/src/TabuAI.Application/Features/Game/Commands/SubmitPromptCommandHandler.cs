@@ -1,5 +1,6 @@
 using MediatR;
 using TabuAI.Application.Common.DTOs;
+using TabuAI.Application.Common.Services;
 using TabuAI.Domain.Entities;
 using TabuAI.Domain.Interfaces;
 
@@ -9,11 +10,13 @@ public class SubmitPromptCommandHandler : IRequestHandler<SubmitPromptCommand, G
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IAiService _aiService;
+    private readonly IBadgeService _badgeService;
 
-    public SubmitPromptCommandHandler(IUnitOfWork unitOfWork, IAiService aiService)
+    public SubmitPromptCommandHandler(IUnitOfWork unitOfWork, IAiService aiService, IBadgeService badgeService)
     {
         _unitOfWork = unitOfWork;
         _aiService = aiService;
+        _badgeService = badgeService;
     }
 
     public async Task<GameResultDto> Handle(SubmitPromptCommand request, CancellationToken cancellationToken)
@@ -78,10 +81,35 @@ public class SubmitPromptCommandHandler : IRequestHandler<SubmitPromptCommand, G
             gameSession.CompletedAt = DateTime.UtcNow;
             gameSession.Status = GameStatus.Completed;
             gameSession.TimeSpent = gameSession.CompletedAt.Value - gameSession.StartedAt;
+
+            // Update user stats
+            var user = await _unitOfWork.Users.GetByIdAsync(gameSession.UserId);
+            if (user != null)
+            {
+                user.TotalScore += score;
+                user.GamesPlayed++;
+                user.GamesWon++;
+                await _unitOfWork.Users.UpdateAsync(user);
+            }
         }
         else
         {
             gameSession.AttemptNumber++;
+
+            // If max attempts reached, mark as failed
+            if (gameSession.AttemptNumber > 3)
+            {
+                gameSession.CompletedAt = DateTime.UtcNow;
+                gameSession.Status = GameStatus.Failed;
+                gameSession.TimeSpent = gameSession.CompletedAt.Value - gameSession.StartedAt;
+
+                var user = await _unitOfWork.Users.GetByIdAsync(gameSession.UserId);
+                if (user != null)
+                {
+                    user.GamesPlayed++;
+                    await _unitOfWork.Users.UpdateAsync(user);
+                }
+            }
         }
 
         // Generate suggestions
@@ -97,6 +125,20 @@ public class SubmitPromptCommandHandler : IRequestHandler<SubmitPromptCommand, G
         await _unitOfWork.GameSessions.UpdateAsync(gameSession);
         await _unitOfWork.SaveChangesAsync();
 
+        // Check for badges and level up (async, non-blocking)
+        if (aiResult.IsCorrect)
+        {
+            try
+            {
+                await _badgeService.UpdateUserLevelAsync(gameSession.UserId);
+                await _badgeService.CheckAndAwardBadgesAsync(gameSession.UserId);
+            }
+            catch
+            {
+                // Badge check should not fail the game result
+            }
+        }
+
         return new GameResultDto
         {
             IsCorrect = aiResult.IsCorrect,
@@ -105,7 +147,7 @@ public class SubmitPromptCommandHandler : IRequestHandler<SubmitPromptCommand, G
             Score = score,
             PromptQuality = promptAnalysis.PromptQuality,
             Suggestions = suggestions,
-            GameCompleted = aiResult.IsCorrect
+            GameCompleted = aiResult.IsCorrect || gameSession.AttemptNumber > 3
         };
     }
 

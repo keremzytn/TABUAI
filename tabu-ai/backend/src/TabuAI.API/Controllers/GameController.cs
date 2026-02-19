@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using TabuAI.Application.Common.DTOs;
 using TabuAI.Application.Features.Game.Commands;
+using TabuAI.Application.Features.Game.Queries;
 
 namespace TabuAI.API.Controllers;
 
@@ -85,11 +86,22 @@ public class GameController : ControllerBase
     [HttpGet("{gameSessionId}")]
     [ProducesResponseType(typeof(GameSessionDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public Task<ActionResult<GameSessionDto>> GetGameSession(Guid gameSessionId)
+    public async Task<ActionResult<GameSessionDto>> GetGameSession(Guid gameSessionId)
     {
-        // Bu endpoint için ayrı bir query oluşturulabilir
-        // Şimdilik basit bir implementasyon
-        return Task.FromResult<ActionResult<GameSessionDto>>(NotFound(new { message = "Endpoint henüz implement edilmedi" }));
+        try
+        {
+            var command = new GetGameSessionQuery { GameSessionId = gameSessionId };
+            var result = await _mediator.Send(command);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Oyun bilgileri getirilemedi", error = ex.Message });
+        }
     }
 
     /// <summary>

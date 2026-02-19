@@ -1,6 +1,7 @@
 using AutoMapper;
 using TabuAI.Application.Common.DTOs;
 using TabuAI.Application.Features.Game.Commands;
+using TabuAI.Application.Features.Users.DTOs;
 using TabuAI.Domain.Entities;
 
 namespace TabuAI.Application.Common.Mappings;
@@ -21,5 +22,7 @@ public class MappingProfile : Profile
 
         CreateMap<StartGameRequest, StartGameCommand>();
         CreateMap<SubmitPromptRequest, SubmitPromptCommand>();
+
+        CreateMap<User, UserProfileDto>();
     }
 }

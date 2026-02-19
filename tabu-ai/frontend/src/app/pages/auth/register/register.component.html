@@ -1,0 +1,47 @@
+<div class="login-container">
+    <div class="card glass-panel">
+        <div class="card-header">
+            <h2>Kayıt Ol</h2>
+            <p class="subtitle">Yeni bir maceraya başla!</p>
+        </div>
+
+        <form (ngSubmit)="onSubmit()" #registerForm="ngForm">
+            <div class="form-group">
+                <label for="username">Kullanıcı Adı *</label>
+                <input type="text" id="username" name="username" [(ngModel)]="registerData.username" required
+                    class="form-control glass-input" placeholder="Kullanıcı adınız">
+            </div>
+
+            <div class="form-group">
+                <label for="displayName">Görnen İsim</label>
+                <input type="text" id="displayName" name="displayName" [(ngModel)]="registerData.displayName"
+                    class="form-control glass-input" placeholder="Profilinizde görünecek isim">
+            </div>
+
+            <div class="form-group">
+                <label for="email">E-posta *</label>
+                <input type="email" id="email" name="email" [(ngModel)]="registerData.email" required email
+                    class="form-control glass-input" placeholder="E-posta adresiniz">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Şifre *</label>
+                <input type="password" id="password" name="password" [(ngModel)]="registerData.password" required
+                    minlength="6" class="form-control glass-input" placeholder="En az 6 karakter">
+            </div>
+
+            <div *ngIf="error" class="error-message">
+                {{ error }}
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" [disabled]="isLoading">
+                <span *ngIf="!isLoading">Kayıt Ol</span>
+                <span *ngIf="isLoading" class="spinner"></span>
+            </button>
+        </form>
+
+        <div class="card-footer">
+            <p>Zaten hesabın var mı? <a routerLink="/login">Giriş Yap</a></p>
+        </div>
+    </div>
+</div>

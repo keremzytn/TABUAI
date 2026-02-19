@@ -1,10 +1,15 @@
+using FluentValidation;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
+using TabuAI.Application.Common.Behaviors;
 using TabuAI.Application.Common.Mappings;
+using TabuAI.Application.Common.Validators;
 using TabuAI.Application.Features.Game.Commands;
 using TabuAI.Domain.Interfaces;
 using TabuAI.Infrastructure.Data;
 using TabuAI.Infrastructure.Repositories;
 using TabuAI.Infrastructure.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,18 +35,49 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 // AutoMapper
 builder.Services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
 
-// MediatR
+// MediatR + Validation Pipeline
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(StartGameCommand).Assembly));
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+
+// FluentValidation - tüm validator'ları otomatik kaydet
+builder.Services.AddValidatorsFromAssemblyContaining<LoginCommandValidator>();
 
 // AI Service (Groq)
 builder.Services.AddScoped<IAiService, GroqService>();
+
+// Badge Service
+builder.Services.AddScoped<TabuAI.Application.Common.Services.IBadgeService, TabuAI.Application.Common.Services.BadgeService>();
+
+// Token Service
+builder.Services.AddScoped<TabuAI.Application.Common.Interfaces.ITokenService, TabuAI.Infrastructure.Services.TokenService>();
+
+// Authentication
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "TabuAI",
+        ValidAudience = builder.Configuration["Jwt:Audience"] ?? "TabuAIUsers",
+        IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(
+            System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "super_secret_key_tabuia_secure_2024!"))
+    };
+});
 
 // CORS Configuration
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularDev", policy =>
     {
-        policy.WithOrigins("http://localhost:4200")
+        policy.WithOrigins("http://localhost:4200", "http://192.168.0.100:4200")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -66,9 +102,26 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 app.UseCors("AllowAngularDev");
 
+// Global Validation Exception Handler
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next();
+    }
+    catch (FluentValidation.ValidationException ex)
+    {
+        context.Response.StatusCode = 400;
+        context.Response.ContentType = "application/json";
+        var errors = ex.Errors.Select(e => new { field = e.PropertyName, message = e.ErrorMessage });
+        await context.Response.WriteAsJsonAsync(new { message = "Doğrulama hatası", errors });
+    }
+});
+
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

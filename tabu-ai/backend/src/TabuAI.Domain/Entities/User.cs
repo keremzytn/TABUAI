@@ -14,6 +14,7 @@ public class User
     public DateTime CreatedAt { get; set; }
     public DateTime? LastLoginAt { get; set; }
     public bool IsActive { get; set; } = true;
+    public string PasswordHash { get; set; } = string.Empty;
     
     // Navigation properties
     public ICollection<GameSession> GameSessions { get; set; } = new List<GameSession>();

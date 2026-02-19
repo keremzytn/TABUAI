@@ -1,0 +1,95 @@
+<div class="profile-page fade-in">
+  <div class="profile-wrapper">
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="loading-ring">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+      <p>Profil yükleniyor...</p>
+    </div>
+
+    <div *ngIf="!isLoading && profile" class="content">
+      <!-- Compact Header -->
+      <div class="profile-header glass-card">
+        <div class="avatar">{{ profile.username.charAt(0).toUpperCase() }}</div>
+        <div class="info">
+          <h1>{{ profile.displayName || profile.username }}</h1>
+          <span class="level-pill">{{ getLevelText(profile.level) }}</span>
+        </div>
+        <div class="header-score">
+          <span class="score-num">{{ profile.totalScore }}</span>
+          <span class="score-lbl">XP</span>
+        </div>
+      </div>
+
+      <!-- XP Bar -->
+      <div class="xp-row glass-card">
+        <div class="xp-info">
+          <span class="xp-current">{{ getLevelText(profile.level) }}</span>
+          <span class="xp-next">{{ getNextLevelText() }}</span>
+        </div>
+        <div class="xp-track">
+          <div class="xp-fill" [style.width.%]="getLevelProgress()"></div>
+        </div>
+        <span class="xp-pct">{{ getLevelProgress() | number:'1.0-0' }}%</span>
+      </div>
+
+      <!-- Mini Stats Row -->
+      <div class="stats-row">
+        <div class="mini-stat glass-card">
+          <span class="ms-val text-gradient">{{ profile.gamesPlayed }}</span>
+          <span class="ms-lbl">Oyun</span>
+        </div>
+        <div class="mini-stat glass-card">
+          <span class="ms-val text-gradient">{{ profile.gamesWon }}</span>
+          <span class="ms-lbl">Galibiyet</span>
+        </div>
+        <div class="mini-stat glass-card">
+          <span class="ms-val text-gradient">{{ profile.winRate | number:'1.0-0' }}%</span>
+          <span class="ms-lbl">Başarı</span>
+        </div>
+      </div>
+
+      <!-- Badges -->
+      <div class="section glass-card" *ngIf="profile.badges && profile.badges.length > 0">
+        <h3 class="section-title">🏅 Rozetler</h3>
+        <div class="badge-list">
+          <div class="badge-chip" *ngFor="let badge of profile.badges" [title]="badge.description">
+            <span class="b-emoji">{{ getBadgeEmoji(badge.name) }}</span>
+            <span class="b-name">{{ badge.name }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section glass-card" *ngIf="!profile.badges || profile.badges.length === 0">
+        <h3 class="section-title">🏅 Rozetler</h3>
+        <p class="empty-text">Henüz rozet yok — oyna ve kazan! 🎮</p>
+      </div>
+
+      <!-- Game History -->
+      <div class="section glass-card">
+        <h3 class="section-title">📜 Son Oyunlar</h3>
+        <div class="history" *ngIf="gameHistory.length > 0">
+          <div class="h-row" *ngFor="let g of gameHistory" [class.win]="g.isWin" [class.loss]="!g.isWin">
+            <span class="h-word">{{ g.targetWord }}</span>
+            <span class="h-score">{{ g.score }}</span>
+            <span class="h-badge" [class.w]="g.isWin" [class.l]="!g.isWin">{{ g.isWin ? '✓' : '✗' }}</span>
+          </div>
+        </div>
+        <p class="empty-text" *ngIf="gameHistory.length === 0">Henüz oyun yok.</p>
+      </div>
+
+      <!-- Join Date -->
+      <p class="footer-info">Katılım: {{ profile.createdAt | date:'mediumDate' }}</p>
+    </div>
+
+    <div *ngIf="!isLoading && !profile" class="error-state">
+      <p>😕 Profil bulunamadı.</p>
+      <a routerLink="/" class="btn btn-secondary">Ana Sayfa</a>
+    </div>
+  </div>
+</div>
