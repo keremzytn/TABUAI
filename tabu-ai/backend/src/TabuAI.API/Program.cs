@@ -68,7 +68,8 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "TabuAI",
         ValidAudience = builder.Configuration["Jwt:Audience"] ?? "TabuAIUsers",
         IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(
-            System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "super_secret_key_tabuia_secure_2024!"))
+            System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "super_secret_key_tabuia_secure_2024!")),
+        RoleClaimType = System.Security.Claims.ClaimTypes.Role
     };
 });
 
@@ -133,8 +134,8 @@ if (app.Environment.IsDevelopment())
     var context = scope.ServiceProvider.GetRequiredService<TabuAIDbContext>();
     try
     {
-        await context.Database.EnsureCreatedAsync();
-        app.Logger.LogInformation("Database ensured created");
+        await context.Database.MigrateAsync();
+        app.Logger.LogInformation("Database migrations applied");
     }
     catch (Exception ex)
     {

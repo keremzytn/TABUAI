@@ -4,6 +4,7 @@ export interface UserProfile {
     email: string;
     displayName?: string;
     level: string;
+    role: string;
     totalScore: number;
     gamesPlayed: number;
     gamesWon: number;

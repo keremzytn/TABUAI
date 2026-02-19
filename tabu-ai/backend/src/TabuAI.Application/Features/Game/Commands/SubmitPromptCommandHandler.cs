@@ -90,14 +90,16 @@ public class SubmitPromptCommandHandler : IRequestHandler<SubmitPromptCommand, G
                 user.GamesPlayed++;
                 user.GamesWon++;
                 await _unitOfWork.Users.UpdateAsync(user);
+                await UpdateDetailedStatsAsync(user);
             }
         }
         else
         {
             gameSession.AttemptNumber++;
 
-            // If max attempts reached, mark as failed
-            if (gameSession.AttemptNumber > 3)
+            // If max attempts reached (3), mark as failed
+            // Current attempts are counted from 1. After 3 increment, it's finished.
+            if (gameSession.AttemptNumber >= 3)
             {
                 gameSession.CompletedAt = DateTime.UtcNow;
                 gameSession.Status = GameStatus.Failed;
@@ -108,6 +110,7 @@ public class SubmitPromptCommandHandler : IRequestHandler<SubmitPromptCommand, G
                 {
                     user.GamesPlayed++;
                     await _unitOfWork.Users.UpdateAsync(user);
+                    await UpdateDetailedStatsAsync(user);
                 }
             }
         }
@@ -149,6 +152,59 @@ public class SubmitPromptCommandHandler : IRequestHandler<SubmitPromptCommand, G
             Suggestions = suggestions,
             GameCompleted = aiResult.IsCorrect || gameSession.AttemptNumber > 3
         };
+    }
+
+    private async Task UpdateDetailedStatsAsync(User user)
+    {
+        // 1. Update Success Rate
+        var successRateStat = (await _unitOfWork.UserStatistics
+            .FindAsync(s => s.UserId == user.Id && s.Type == StatisticType.SuccessRate))
+            .FirstOrDefault();
+
+        if (successRateStat == null)
+        {
+            await _unitOfWork.UserStatistics.AddAsync(new UserStatistic
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                MetricName = "Başarı Oranı",
+                Value = user.WinRate,
+                Type = StatisticType.SuccessRate,
+                RecordedAt = DateTime.UtcNow
+            });
+        }
+        else
+        {
+            successRateStat.Value = user.WinRate;
+            successRateStat.RecordedAt = DateTime.UtcNow;
+            await _unitOfWork.UserStatistics.UpdateAsync(successRateStat);
+        }
+
+        // 2. Update Total Games
+        var gamesPlayedStat = (await _unitOfWork.UserStatistics
+            .FindAsync(s => s.UserId == user.Id && s.Type == StatisticType.TotalScore)) // Reusing type mapping for display
+            .FirstOrDefault(s => s.MetricName == "Oyun Sayısı");
+
+        if (gamesPlayedStat == null)
+        {
+            await _unitOfWork.UserStatistics.AddAsync(new UserStatistic
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                MetricName = "Oyun Sayısı",
+                Value = user.GamesPlayed,
+                Type = StatisticType.TotalScore,
+                RecordedAt = DateTime.UtcNow
+            });
+        }
+        else
+        {
+            gamesPlayedStat.Value = user.GamesPlayed;
+            gamesPlayedStat.RecordedAt = DateTime.UtcNow;
+            await _unitOfWork.UserStatistics.UpdateAsync(gamesPlayedStat);
+        }
+
+        await _unitOfWork.SaveChangesAsync();
     }
 
     private static int CalculateScore(bool isCorrect, int promptQuality, int attemptNumber)

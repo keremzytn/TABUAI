@@ -23,6 +23,9 @@ public class MappingProfile : Profile
         CreateMap<StartGameRequest, StartGameCommand>();
         CreateMap<SubmitPromptRequest, SubmitPromptCommand>();
 
-        CreateMap<User, UserProfileDto>();
+        CreateMap<User, UserProfileDto>()
+            .ForMember(dest => dest.WinRate, opt => opt.MapFrom(src => src.WinRate))
+            .ForMember(dest => dest.Level, opt => opt.MapFrom(src => src.Level.ToString()))
+            .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.Role.ToString()));
     }
 }

@@ -8,7 +8,8 @@ public class UserProfileDto
     public string Username { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string? DisplayName { get; set; }
-    public PlayerLevel Level { get; set; }
+    public string Level { get; set; } = string.Empty;
+    public string Role { get; set; } = string.Empty;
     public int TotalScore { get; set; }
     public int GamesPlayed { get; set; }
     public int GamesWon { get; set; }

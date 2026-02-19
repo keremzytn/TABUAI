@@ -13,8 +13,15 @@ export class AuthGuard implements CanActivate {
         private toastService: ToastService
     ) { }
 
-    canActivate(): boolean | UrlTree {
-        if (this.authService.currentUserValue) {
+    canActivate(route: import('@angular/router').ActivatedRouteSnapshot): boolean | UrlTree {
+        const user = this.authService.currentUserValue;
+        if (user) {
+            // Check if route has restricted roles
+            const expectedRole = route.data['role'];
+            if (expectedRole && user.role !== expectedRole) {
+                this.toastService.error('Bu sayfaya erişim yetkiniz yok.');
+                return this.router.createUrlTree(['/home']);
+            }
             return true;
         }
 

@@ -1,0 +1,93 @@
+<div class="admin-container">
+    <div class="admin-header">
+        <h1>Kelime Yönetimi</h1>
+        <div class="header-actions">
+            <button class="btn-primary" (click)="openModal()">
+                <i class="fas fa-plus"></i> Yeni Kelime Ekle
+            </button>
+            <button class="btn-refresh" (click)="loadWords()" [disabled]="isLoading">
+                <i class="fas fa-sync-alt" [class.fa-spin]="isLoading"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="table-container shadow-premium" [class.loading]="isLoading">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Hedef Kelime</th>
+                    <th>Tabu Kelimeler</th>
+                    <th>Kategori</th>
+                    <th>Zorluk</th>
+                    <th>İşlemler</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let word of words">
+                    <td class="target-word">{{ word.targetWord }}</td>
+                    <td>
+                        <div class="tabu-word-list">
+                            <span class="tabu-chip" *ngFor="let tabu of word.tabuWords">{{ tabu }}</span>
+                        </div>
+                    </td>
+                    <td>{{ word.category }}</td>
+                    <td>
+                        <span class="difficulty-level" [ngClass]="'diff-' + word.difficulty">
+                            {{ word.difficulty === 1 ? 'Kolay' : word.difficulty === 2 ? 'Orta' : word.difficulty === 3
+                            ? 'Zor' : 'Uzman' }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="row-actions">
+                            <button class="btn-icon" (click)="openModal(word)" title="Düzenle">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-icon btn-danger" (click)="deleteWord(word.id)" title="Sil">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" *ngIf="isModalOpen">
+        <div class="modal-content shadow-premium">
+            <div class="modal-header">
+                <h2>{{ currentWord.id ? 'Kelime Düzenle' : 'Yeni Kelime Ekle' }}</h2>
+                <button class="btn-close" (click)="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Hedef Kelime</label>
+                    <input type="text" [(ngModel)]="currentWord.targetWord" placeholder="Örn: Uçak">
+                </div>
+                <div class="form-group">
+                    <label>Tabu Kelimeler (Virgülle ayırın)</label>
+                    <input type="text" [(ngModel)]="tabuWordsString" placeholder="hava, kanat, yolcu, pilot, uçmak">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Kategori</label>
+                        <input type="text" [(ngModel)]="currentWord.category" placeholder="Örn: Ulaşım">
+                    </div>
+                    <div class="form-group">
+                        <label>Zorluk (1-4)</label>
+                        <select [(ngModel)]="currentWord.difficulty">
+                            <option [ngValue]="1">Kolay</option>
+                            <option [ngValue]="2">Orta</option>
+                            <option [ngValue]="3">Zor</option>
+                            <option [ngValue]="4">Uzman</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" (click)="closeModal()">İptal</button>
+                <button class="btn-primary" (click)="saveWord()" [disabled]="!currentWord.targetWord">Kaydet</button>
+            </div>
+        </div>
+    </div>
+</div>

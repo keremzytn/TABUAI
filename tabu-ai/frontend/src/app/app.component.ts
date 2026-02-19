@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ToastComponent } from './components/toast/toast.component';
+import { AuthService } from './services/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -26,6 +27,20 @@ import { ToastComponent } from './components/toast/toast.component';
             <a routerLink="/leaderboard" routerLinkActive="active" class="nav-link">
               Liderlik
             </a>
+            <ng-container *ngIf="(authService.currentUser | async)?.role === 'Admin'">
+              <a routerLink="/admin/users" routerLinkActive="active" class="nav-link admin-link">
+                Kullanıcılar
+              </a>
+              <a routerLink="/admin/words" routerLinkActive="active" class="nav-link admin-link">
+                Kelimeler
+              </a>
+            </ng-container>
+            <a *ngIf="!(authService.currentUser | async)" routerLink="/login" routerLinkActive="active" class="nav-link">
+              Giriş
+            </a>
+            <a *ngIf="(authService.currentUser | async)" routerLink="/profile" routerLinkActive="active" class="nav-link">
+              Profil
+            </a>
           </nav>
         </div>
       </header>
@@ -45,9 +60,17 @@ import { ToastComponent } from './components/toast/toast.component';
           <span class="icon">🎮</span>
           <span class="label">Oyna</span>
         </a>
+        <a *ngIf="(authService.currentUser | async)?.role === 'Admin'" routerLink="/admin/words" routerLinkActive="active" class="mobile-link">
+          <span class="icon">📝</span>
+          <span class="label">Admin</span>
+        </a>
         <a routerLink="/leaderboard" routerLinkActive="active" class="mobile-link">
           <span class="icon">🏆</span>
           <span class="label">Liderler</span>
+        </a>
+        <a routerLink="/profile" routerLinkActive="active" class="mobile-link">
+          <span class="icon">👤</span>
+          <span class="label">Profil</span>
         </a>
       </nav>
 
@@ -135,6 +158,10 @@ import { ToastComponent } from './components/toast/toast.component';
       box-shadow: 0 0 15px rgba(139, 92, 246, 0.1);
     }
 
+    .admin-link {
+        border: 1px dashed var(--primary);
+    }
+
     /* Main Content */
     .main-content {
       flex: 1;
@@ -216,4 +243,5 @@ import { ToastComponent } from './components/toast/toast.component';
 })
 export class AppComponent {
   title = 'TABU.AI';
+  constructor(public authService: AuthService) { }
 }

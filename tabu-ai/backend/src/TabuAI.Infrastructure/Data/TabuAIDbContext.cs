@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TabuAI.Domain.Entities;
+using TabuAI.Domain.Enums;
 using System.Text.Json;
 
 namespace TabuAI.Infrastructure.Data;
@@ -28,6 +29,7 @@ public class TabuAIDbContext : DbContext
             entity.Property(e => e.Username).IsRequired().HasMaxLength(50);
             entity.Property(e => e.Email).IsRequired().HasMaxLength(254);
             entity.Property(e => e.DisplayName).HasMaxLength(100);
+            entity.Property(e => e.Role).IsRequired().HasDefaultValue(UserRole.User);
             entity.HasIndex(e => e.Username).IsUnique();
             entity.HasIndex(e => e.Email).IsUnique();
         });
@@ -128,6 +130,21 @@ public class TabuAIDbContext : DbContext
 
     private static void SeedData(ModelBuilder modelBuilder)
     {
+        // Seed Admin User
+        var adminUser = new User
+        {
+            Id = Guid.Parse("00000000-0000-0000-0000-000000000001"),
+            Username = "admin",
+            Email = "admin@tabuai.com",
+            DisplayName = "Admin User",
+            Role = UserRole.Admin,
+            PasswordHash = "$2a$11$N9qo8uLOickgx2ZMRZoMyeIjZAgwd966VQRfAk5U5Z6.t.15v8vS6", // admin123
+            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+            IsActive = true
+        };
+
+        modelBuilder.Entity<User>().HasData(adminUser);
+
         // Seed Words
         var words = new List<Word>
         {

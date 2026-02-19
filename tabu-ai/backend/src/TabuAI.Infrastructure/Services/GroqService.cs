@@ -58,10 +58,11 @@ Tabu kelimeler (bunlar ipucu değil, sadece bilgi amaçlı): {string.Join(", ", 
             var content = response.Value.Content[0].Text;
             _logger.LogInformation("AI Response: {Response}", content);
 
-            // Try to parse JSON response
+            // Extract and parse JSON
+            var jsonContent = ExtractJson(content);
             try
             {
-                var jsonResponse = JsonSerializer.Deserialize<AiResponse>(content, new JsonSerializerOptions 
+                var jsonResponse = JsonSerializer.Deserialize<AiResponse>(jsonContent, new JsonSerializerOptions 
                 { 
                     PropertyNameCaseInsensitive = true 
                 });
@@ -79,18 +80,19 @@ Tabu kelimeler (bunlar ipucu değil, sadece bilgi amaçlı): {string.Join(", ", 
                     };
                 }
             }
-            catch (JsonException)
+            catch (JsonException ex)
             {
-                // If JSON parsing fails, treat the whole response as the guessed word
+                _logger.LogWarning(ex, "Failed to parse AI guess JSON response. Using fallback.");
+                // Fallback logic
                 var cleanedResponse = content.Trim().Trim('"');
-                var isCorrect = string.Equals(cleanedResponse, targetWord.Trim(), StringComparison.OrdinalIgnoreCase);
+                if (cleanedResponse.Length > 50) cleanedResponse = cleanedResponse[..50]; // Prevention for DB limits
                 
                 return new AiGuessResult
                 {
                     GuessedWord = cleanedResponse,
-                    IsCorrect = isCorrect,
-                    Confidence = 0.5,
-                    Reasoning = "AI basit tahmin yaptı"
+                    IsCorrect = false,
+                    Confidence = 0.1,
+                    Reasoning = "AI anlamsız giriş tespit etti veya format hatası oluştu"
                 };
             }
 
@@ -176,7 +178,8 @@ Cevabını JSON formatında ver:
 
             try
             {
-                var analysisResponse = JsonSerializer.Deserialize<PromptAnalysisResponse>(content, new JsonSerializerOptions 
+                var jsonContent = ExtractJson(content);
+                var analysisResponse = JsonSerializer.Deserialize<PromptAnalysisResponse>(jsonContent, new JsonSerializerOptions 
                 { 
                     PropertyNameCaseInsensitive = true 
                 });
@@ -255,7 +258,8 @@ Cevabını JSON formatında ver:
 
             try
             {
-                var suggestionsResponse = JsonSerializer.Deserialize<SuggestionsResponse>(content, new JsonSerializerOptions 
+                var jsonContent = ExtractJson(content);
+                var suggestionsResponse = JsonSerializer.Deserialize<SuggestionsResponse>(jsonContent, new JsonSerializerOptions 
                 { 
                     PropertyNameCaseInsensitive = true 
                 });
@@ -295,6 +299,21 @@ Cevabını JSON formatında ver:
                 "Daha sonra tekrar deneyin."
             };
         }
+    }
+
+    private string ExtractJson(string content)
+    {
+        if (string.IsNullOrWhiteSpace(content)) return "{}";
+        
+        var firstBrace = content.IndexOf('{');
+        var lastBrace = content.LastIndexOf('}');
+        
+        if (firstBrace != -1 && lastBrace != -1 && lastBrace > firstBrace)
+        {
+            return content.Substring(firstBrace, lastBrace - firstBrace + 1);
+        }
+        
+        return content;
     }
 
     private class AiResponse

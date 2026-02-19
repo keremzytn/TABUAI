@@ -1,3 +1,5 @@
+using TabuAI.Domain.Enums;
+
 namespace TabuAI.Domain.Entities;
 
 public class User
@@ -7,6 +9,7 @@ public class User
     public string Email { get; set; } = string.Empty;
     public string? DisplayName { get; set; }
     public PlayerLevel Level { get; set; } = PlayerLevel.Rookie;
+    public UserRole Role { get; set; } = UserRole.User;
     public int TotalScore { get; set; } = 0;
     public int GamesPlayed { get; set; } = 0;
     public int GamesWon { get; set; } = 0;

@@ -44,10 +44,6 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponse>
         bool verified = false;
         if (string.IsNullOrEmpty(existingUser.PasswordHash))
         {
-            // For older accounts with no password, maybe check against empty password or fail?
-            // Let's assume fail.
-            // OR allow login if password provided is 'password' and update hash? 
-            // Let's just fail and say User not found or migrate manually.
             if (request.Password == "password") // Temporary migration hack
             {
                verified = true;

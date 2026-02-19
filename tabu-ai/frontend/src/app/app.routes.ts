@@ -28,6 +28,26 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/auth/register/register.component').then(m => m.RegisterComponent)
   },
   {
+    path: 'admin',
+    canActivate: [AuthGuard],
+    data: { role: 'Admin' },
+    children: [
+      {
+        path: 'users',
+        loadComponent: () => import('./admin/components/user-management/user-management.component').then(m => m.UserManagementComponent)
+      },
+      {
+        path: 'words',
+        loadComponent: () => import('./admin/components/word-management/word-management.component').then(m => m.WordManagementComponent)
+      },
+      {
+        path: '',
+        redirectTo: 'users',
+        pathMatch: 'full'
+      }
+    ]
+  },
+  {
     path: '**',
     redirectTo: '/'
   }
