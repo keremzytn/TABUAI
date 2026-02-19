@@ -1,21 +1,21 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:15
-    environment:
-      POSTGRES_DB: tabuai_db
-      POSTGRES_USER: tabuai_user
-      POSTGRES_PASSWORD: tabuai_password
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U tabuai_user -d tabuai_db"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+  # postgres:
+  #   image: postgres:15
+  #   environment:
+  #     POSTGRES_DB: tabuai_db
+  #     POSTGRES_USER: tabuai_user
+  #     POSTGRES_PASSWORD: tabuai_password
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U tabuai_user -d tabuai_db"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
 
   backend:
     build:
@@ -25,11 +25,11 @@ services:
       - "5000:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Host=postgres;Database=tabuai_db;Username=tabuai_user;Password=tabuai_password
+      - ConnectionStrings__DefaultConnection=Host=host.docker.internal;Database=tabuai_db;Username=postgres;Password=postgres
       - OpenAI__ApiKey=${OPENAI_API_KEY}
-    depends_on:
-      postgres:
-        condition: service_healthy
+    # depends_on:
+    #   postgres:
+    #     condition: service_healthy
     volumes:
       - ./backend:/app
     restart: unless-stopped
