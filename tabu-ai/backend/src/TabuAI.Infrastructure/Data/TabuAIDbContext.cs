@@ -19,6 +19,8 @@ public class TabuAIDbContext : DbContext
     public DbSet<UserBadge> UserBadges { get; set; }
     public DbSet<UserStatistic> UserStatistics { get; set; }
 
+    public DbSet<Friendship> Friendships { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -135,6 +137,25 @@ public class TabuAIDbContext : DbContext
                 .WithMany(e => e.UserStatistics)
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Friendship Configuration
+        modelBuilder.Entity<Friendship>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.HasOne(e => e.Requester)
+                .WithMany(e => e.SentFriendRequests)
+                .HasForeignKey(e => e.RequesterId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Addressee)
+                .WithMany(e => e.ReceivedFriendRequests)
+                .HasForeignKey(e => e.AddresseeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // A user can only send one request to another user
+            entity.HasIndex(e => new { e.RequesterId, e.AddresseeId }).IsUnique();
         });
 
         // Seed Data

@@ -11,6 +11,7 @@ public interface IUnitOfWork : IDisposable
     IRepository<Badge> Badges { get; }
     IRepository<UserBadge> UserBadges { get; }
     IRepository<UserStatistic> UserStatistics { get; }
+    IRepository<Friendship> Friendships { get; }
     
     Task<int> SaveChangesAsync();
     Task BeginTransactionAsync();

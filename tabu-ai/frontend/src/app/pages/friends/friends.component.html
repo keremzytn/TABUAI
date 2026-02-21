@@ -1,0 +1,133 @@
+<div class="friends-page fade-in">
+    <div class="friends-wrapper">
+
+        <!-- Page Title -->
+        <div class="page-header glass-card">
+            <h1>👥 Arkadaşlar</h1>
+        </div>
+
+        <!-- Tab Bar -->
+        <div class="tab-bar glass-card">
+            <button class="tab-btn" [class.active]="activeTab === 'friends'" (click)="switchTab('friends')">
+                <span class="tab-icon">🤝</span>
+                <span class="tab-label">Arkadaşlarım</span>
+                <span class="tab-count" *ngIf="friends.length > 0">{{ friends.length }}</span>
+            </button>
+            <button class="tab-btn" [class.active]="activeTab === 'pending'" (click)="switchTab('pending')">
+                <span class="tab-icon">📨</span>
+                <span class="tab-label">İstekler</span>
+                <span class="tab-count pending" *ngIf="pendingRequests.length > 0">{{ pendingRequests.length }}</span>
+            </button>
+            <button class="tab-btn" [class.active]="activeTab === 'search'" (click)="switchTab('search')">
+                <span class="tab-icon">🔍</span>
+                <span class="tab-label">Ara</span>
+            </button>
+        </div>
+
+        <!-- Friends List Tab -->
+        <div class="tab-content" *ngIf="activeTab === 'friends'">
+            <div *ngIf="isLoading" class="loading-state">
+                <div class="loading-ring">
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                </div>
+                <p>Yükleniyor...</p>
+            </div>
+
+            <div *ngIf="!isLoading && friends.length === 0" class="empty-state glass-card">
+                <span class="empty-icon">😕</span>
+                <p>Henüz arkadaşın yok</p>
+                <span class="empty-hint">Kullanıcı Ara tabından arkadaş ekle!</span>
+            </div>
+
+            <div class="friend-list" *ngIf="!isLoading && friends.length > 0">
+                <div class="friend-card glass-card" *ngFor="let friend of friends">
+                    <div class="friend-avatar">{{ getInitial(friend.username) }}</div>
+                    <div class="friend-info">
+                        <span class="friend-name">{{ friend.displayName || friend.username }}</span>
+                        <span class="friend-meta">
+                            <span class="friend-level">{{ getLevelText(friend.level) }}</span>
+                            <span class="friend-score">{{ friend.totalScore }} XP</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Requests Tab -->
+        <div class="tab-content" *ngIf="activeTab === 'pending'">
+            <div *ngIf="pendingRequests.length === 0" class="empty-state glass-card">
+                <span class="empty-icon">📭</span>
+                <p>Bekleyen istek yok</p>
+            </div>
+
+            <div class="request-list" *ngIf="pendingRequests.length > 0">
+                <div class="request-card glass-card" *ngFor="let req of pendingRequests">
+                    <div class="friend-avatar req">{{ getInitial(req.fromUsername) }}</div>
+                    <div class="request-info">
+                        <span class="friend-name">{{ req.fromDisplayName || req.fromUsername }}</span>
+                        <span class="request-date">{{ req.sentAt | date:'dd MMM yyyy' }}</span>
+                    </div>
+                    <div class="request-actions">
+                        <button class="action-btn accept" (click)="acceptRequest(req.requestId)"
+                            title="Kabul Et">✓</button>
+                        <button class="action-btn reject" (click)="rejectRequest(req.requestId)"
+                            title="Reddet">✕</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Tab -->
+        <div class="tab-content" *ngIf="activeTab === 'search'">
+            <div class="search-box glass-card">
+                <span class="search-icon">🔍</span>
+                <input type="text" [(ngModel)]="searchTerm" (input)="onSearchInput()"
+                    placeholder="Kullanıcı adı ile ara..." class="search-input" autocomplete="off" />
+            </div>
+
+            <div *ngIf="isSearching" class="loading-state mini">
+                <div class="loading-ring small">
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                </div>
+            </div>
+
+            <div *ngIf="!isSearching && searchTerm.length >= 2 && searchResults.length === 0"
+                class="empty-state glass-card">
+                <span class="empty-icon">🔎</span>
+                <p>Kullanıcı bulunamadı</p>
+            </div>
+
+            <div class="search-results" *ngIf="searchResults.length > 0">
+                <div class="search-card glass-card" *ngFor="let user of searchResults">
+                    <div class="friend-avatar search">{{ getInitial(user.username) }}</div>
+                    <div class="friend-info">
+                        <span class="friend-name">{{ user.displayName || user.username }}</span>
+                        <span class="friend-level">{{ getLevelText(user.level) }}</span>
+                    </div>
+                    <div class="search-action">
+                        <button *ngIf="!user.friendshipStatus" class="send-btn" (click)="sendRequest(user.userId)">
+                            İstek Gönder
+                        </button>
+                        <span *ngIf="user.friendshipStatus === 'Pending'" class="status-badge pending">
+                            Bekliyor
+                        </span>
+                        <span *ngIf="user.friendshipStatus === 'Accepted'" class="status-badge accepted">
+                            Arkadaş ✓
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div *ngIf="searchTerm.length < 2 && searchResults.length === 0" class="search-hint glass-card">
+                <p>En az 2 karakter yazarak arama yapabilirsiniz</p>
+            </div>
+        </div>
+
+    </div>
+</div>

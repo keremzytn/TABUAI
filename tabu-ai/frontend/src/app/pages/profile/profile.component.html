@@ -54,6 +54,13 @@
         </div>
       </div>
 
+      <!-- Friends Link -->
+      <a routerLink="/friends" class="friends-link glass-card">
+        <span class="fl-icon">👥</span>
+        <span class="fl-text">Arkadaşlar</span>
+        <span class="fl-arrow">→</span>
+      </a>
+
       <!-- Badges -->
       <div class="section glass-card" *ngIf="profile.badges && profile.badges.length > 0">
         <h3 class="section-title">🏅 Rozetler</h3>
@@ -74,7 +81,8 @@
       <div class="section glass-card">
         <h3 class="section-title">📜 Son Oyunlar</h3>
         <div class="history" *ngIf="gameHistory.length > 0">
-          <div class="h-row" *ngFor="let g of gameHistory" [class.win]="g.isWin" [class.loss]="!g.isWin">
+          <div class="h-row" *ngFor="let g of gameHistory" [class.win]="g.isWin" [class.loss]="!g.isWin"
+            (click)="openGamePopup(g)">
             <span class="h-word">{{ g.targetWord }}</span>
             <span class="h-score">{{ g.score }}</span>
             <span class="h-badge" [class.w]="g.isWin" [class.l]="!g.isWin">{{ g.isWin ? '✓' : '✗' }}</span>
@@ -91,5 +99,57 @@
       <p>😕 Profil bulunamadı.</p>
       <a routerLink="/" class="btn btn-secondary">Ana Sayfa</a>
     </div>
+  </div>
+</div>
+
+<!-- Game Detail Popup Modal -->
+<div class="popup-overlay" *ngIf="selectedGame" (click)="closeGamePopup()">
+  <div class="popup-card" (click)="$event.stopPropagation()">
+    <!-- Close Button -->
+    <button class="popup-close" (click)="closeGamePopup()">✕</button>
+
+    <!-- Popup Header -->
+    <div class="popup-header" [class.win]="selectedGame.isWin" [class.loss]="!selectedGame.isWin">
+      <div class="popup-result-icon" [class.w]="selectedGame.isWin" [class.l]="!selectedGame.isWin">
+        {{ selectedGame.isWin ? '🎉' : '😔' }}
+      </div>
+      <h2 class="popup-word">{{ selectedGame.targetWord }}</h2>
+      <span class="popup-result-text" [class.w]="selectedGame.isWin" [class.l]="!selectedGame.isWin">
+        {{ selectedGame.isWin ? 'Kazandın!' : 'Kaybettin' }}
+      </span>
+    </div>
+
+    <!-- Score Display -->
+    <div class="popup-score-ring">
+      <span class="popup-score-value">{{ selectedGame.score }}</span>
+      <span class="popup-score-label">PUAN</span>
+    </div>
+
+    <!-- Detail Grid -->
+    <div class="popup-details">
+      <div class="popup-detail-item">
+        <span class="pd-icon">📅</span>
+        <span class="pd-label">Tarih</span>
+        <span class="pd-value">{{ selectedGame.playedAt | date:'dd MMM yyyy, HH:mm' }}</span>
+      </div>
+      <div class="popup-detail-item">
+        <span class="pd-icon">⏱️</span>
+        <span class="pd-label">Süre</span>
+        <span class="pd-value">{{ formatTimeSpent(selectedGame.timeSpent) }}</span>
+      </div>
+      <div class="popup-detail-item">
+        <span class="pd-icon">🔄</span>
+        <span class="pd-label">Deneme</span>
+        <span class="pd-value">{{ selectedGame.attemptNumber }}</span>
+      </div>
+      <div class="popup-detail-item">
+        <span class="pd-icon">🎮</span>
+        <span class="pd-label">Mod</span>
+        <span class="pd-value">{{ getModeName(selectedGame.mode) }}</span>
+      </div>
+    </div>
+
+    <!-- Close Action -->
+    <button class="popup-btn" (click)="closeGamePopup()">Tamam</button>
   </div>
 </div>

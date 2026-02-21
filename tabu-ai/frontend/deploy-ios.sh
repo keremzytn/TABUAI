@@ -1,5 +1,5 @@
 #!/bin/zsh
-
+#./deploy-ios.sh çalıştırmak için bunu kullan
 # TabuAI iOS Deployment Script 🚀
 
 echo "📦 Web projesi derleniyor (ng build)..."

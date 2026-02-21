@@ -20,6 +20,7 @@ export class ProfileComponent implements OnInit {
     statistics: UserStatistic[] = [];
     gameHistory: GameHistory[] = [];
     isLoading = true;
+    selectedGame: GameHistory | null = null;
 
     // Level thresholds
     private levelThresholds: Record<string, { min: number; max: number; next: string }> = {
@@ -132,5 +133,37 @@ export class ProfileComponent implements OnInit {
             'Kategori Kralı': '👑'
         };
         return emojiMap[badgeName] || '🏅';
+    }
+
+    openGamePopup(game: GameHistory): void {
+        this.selectedGame = game;
+    }
+
+    closeGamePopup(): void {
+        this.selectedGame = null;
+    }
+
+    formatTimeSpent(timeSpent: string): string {
+        if (!timeSpent) return '—';
+        // TimeSpan format: "HH:mm:ss" or "d.HH:mm:ss"
+        const parts = timeSpent.split(':');
+        if (parts.length >= 3) {
+            const hours = parseInt(parts[0], 10);
+            const minutes = parseInt(parts[1], 10);
+            const seconds = parseInt(parts[2], 10);
+            if (hours > 0) return `${hours}sa ${minutes}dk ${seconds}sn`;
+            if (minutes > 0) return `${minutes}dk ${seconds}sn`;
+            return `${seconds}sn`;
+        }
+        return timeSpent;
+    }
+
+    getModeName(mode: number): string {
+        const modeMap: Record<number, string> = {
+            0: 'Klasik',
+            1: 'Zamana Karşı',
+            2: 'Zorluk Modu'
+        };
+        return modeMap[mode] ?? 'Klasik';
     }
 }

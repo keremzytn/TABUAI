@@ -23,6 +23,8 @@ public class User
     public ICollection<GameSession> GameSessions { get; set; } = new List<GameSession>();
     public ICollection<UserBadge> UserBadges { get; set; } = new List<UserBadge>();
     public ICollection<UserStatistic> UserStatistics { get; set; } = new List<UserStatistic>();
+    public ICollection<Friendship> SentFriendRequests { get; set; } = new List<Friendship>();
+    public ICollection<Friendship> ReceivedFriendRequests { get; set; } = new List<Friendship>();
 }
 
 public enum PlayerLevel

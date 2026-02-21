@@ -71,8 +71,8 @@
             </div>
         </div>
 
-        <!-- Leaderboard List -->
-        <div class="ranking-list glass-card fade-in" *ngIf="remainingPlayers.length > 0">
+        <!-- Full Ranking List -->
+        <div class="ranking-list glass-card fade-in" *ngIf="allEntries.length > 0">
             <div class="list-header">
                 <div class="col-rank">#</div>
                 <div class="col-player">Oyuncu</div>
@@ -80,18 +80,22 @@
                 <div class="col-stats mobile-hide">Oyun / Başarı</div>
             </div>
 
-            <div *ngFor="let player of remainingPlayers" class="list-row"
-                [class.is-you]="currentUserEntry && player.userId === currentUserEntry.userId">
+            <div *ngFor="let player of allEntries" class="list-row"
+                [class.is-you]="currentUserEntry && player.userId === currentUserEntry.userId"
+                [class.top-1]="player.rank === 1" [class.top-2]="player.rank === 2" [class.top-3]="player.rank === 3">
                 <div class="col-rank">
-                    <span class="rank-num">{{ player.rank }}</span>
+                    <span class="rank-medal" *ngIf="player.rank === 1">🥇</span>
+                    <span class="rank-medal" *ngIf="player.rank === 2">🥈</span>
+                    <span class="rank-medal" *ngIf="player.rank === 3">🥉</span>
+                    <span class="rank-num" *ngIf="player.rank > 3">{{ player.rank }}</span>
                 </div>
                 <div class="col-player">
                     <span class="name">{{ player.displayName || player.username }}</span>
-                    <span class="level mobile-show">{{ getLevelText(player.level) }}</span>
+                    <span class="level">{{ getLevelText(player.level) }}</span>
                 </div>
                 <div class="col-score">{{ player.totalScore | number }}</div>
                 <div class="col-stats mobile-hide">
-                    {{ player.gamesPlayed }} / {{ player.winRate | number:'1.0-0' }}%
+                    {{ player.gamesPlayed }} oyun · {{ player.winRate | number:'1.0-0' }}%
                 </div>
             </div>
         </div>
