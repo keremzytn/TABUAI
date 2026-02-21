@@ -14,6 +14,7 @@ public class TabuAIDbContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<Word> Words { get; set; }
     public DbSet<GameSession> GameSessions { get; set; }
+    public DbSet<GameAttempt> GameAttempts { get; set; }
     public DbSet<Badge> Badges { get; set; }
     public DbSet<UserBadge> UserBadges { get; set; }
     public DbSet<UserStatistic> UserStatistics { get; set; }
@@ -59,7 +60,25 @@ public class TabuAIDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.UserPrompt).IsRequired();
             entity.Property(e => e.AiResponse).HasMaxLength(500);
-            entity.Property(e => e.AiFeedback);
+            
+            // Foreign Keys
+            entity.HasOne(e => e.User)
+                .WithMany(e => e.GameSessions)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Word)
+                .WithMany(e => e.GameSessions)
+                .HasForeignKey(e => e.WordId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // GameAttempt Configuration
+        modelBuilder.Entity<GameAttempt>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserPrompt).IsRequired();
+            entity.Property(e => e.AiGuess).IsRequired().HasMaxLength(100);
             
             // JSON column for Suggestions
             entity.Property(e => e.Suggestions)
@@ -72,16 +91,10 @@ public class TabuAIDbContext : DbContext
                     c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
                     c => c.ToList()));
 
-            // Foreign Keys
-            entity.HasOne(e => e.User)
-                .WithMany(e => e.GameSessions)
-                .HasForeignKey(e => e.UserId)
+            entity.HasOne(e => e.GameSession)
+                .WithMany(e => e.Attempts)
+                .HasForeignKey(e => e.GameSessionId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne(e => e.Word)
-                .WithMany(e => e.GameSessions)
-                .HasForeignKey(e => e.WordId)
-                .OnDelete(DeleteBehavior.Restrict);
         });
 
         // Badge Configuration

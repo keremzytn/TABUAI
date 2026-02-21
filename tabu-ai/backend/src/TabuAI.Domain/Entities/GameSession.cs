@@ -16,11 +16,8 @@ public class GameSession
     public DateTime? CompletedAt { get; set; }
     public GameStatus Status { get; set; } = GameStatus.InProgress;
     
-    // AI Feedback
-    public string? AiFeedback { get; set; }
-    public PromptQuality? PromptQuality { get; set; }
-    public List<string> Suggestions { get; set; } = new();
-    
+    public List<GameAttempt> Attempts { get; set; } = new();
+
     // Navigation properties
     public User User { get; set; } = null!;
     public Word Word { get; set; } = null!;

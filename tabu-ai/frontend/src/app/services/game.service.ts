@@ -31,8 +31,9 @@ export class GameService {
   }
 
   setCurrentGame(game: GameSession | null): void {
-    this.currentGameSubject.next(game);
+    // Swap order to ensure gameState is 'playing' BEFORE currentGame$ notifies
     this.gameStateSubject.next(game ? 'playing' : 'idle');
+    this.currentGameSubject.next(game);
   }
 
   completeGame(): void {
@@ -62,7 +63,8 @@ export class GameService {
       attemptNumber: 1,
       startedAt: new Date().toISOString(),
       status: 'InProgress',
-      suggestions: []
+      suggestions: [],
+      attempts: []
     };
 
     return new Observable(observer => {
@@ -94,7 +96,8 @@ export class GameService {
       suggestions: isCorrect
         ? ['Tebrikler! Başarılı bir prompt yazdınız.', 'Farklı açılardan yaklaşmayı deneyin.']
         : ['Daha spesifik detaylar ekleyin.', 'Nesnenin kullanım alanlarını belirtin.'],
-      gameCompleted: isCorrect
+      gameCompleted: isCorrect,
+      history: [] // Simplified for demo
     };
 
     return new Observable(observer => {

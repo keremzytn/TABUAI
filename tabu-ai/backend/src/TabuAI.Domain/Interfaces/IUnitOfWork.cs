@@ -7,6 +7,7 @@ public interface IUnitOfWork : IDisposable
     IRepository<User> Users { get; }
     IRepository<Word> Words { get; }
     IRepository<GameSession> GameSessions { get; }
+    IRepository<GameAttempt> GameAttempts { get; }
     IRepository<Badge> Badges { get; }
     IRepository<UserBadge> UserBadges { get; }
     IRepository<UserStatistic> UserStatistics { get; }

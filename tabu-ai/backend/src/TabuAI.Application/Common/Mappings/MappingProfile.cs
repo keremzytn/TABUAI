@@ -18,6 +18,9 @@ public class MappingProfile : Profile
 
         CreateMap<GameSession, GameSessionDto>()
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+            .ForMember(dest => dest.PromptQuality, opt => opt.MapFrom(src => (int?)null)); // Legacy field, will use Attempts
+
+        CreateMap<GameAttempt, GameAttemptDto>()
             .ForMember(dest => dest.PromptQuality, opt => opt.MapFrom(src => src.PromptQuality.HasValue ? (int)src.PromptQuality.Value : (int?)null));
 
         CreateMap<StartGameRequest, StartGameCommand>();

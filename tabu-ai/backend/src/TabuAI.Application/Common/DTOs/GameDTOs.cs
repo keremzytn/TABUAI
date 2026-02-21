@@ -9,6 +9,18 @@ public class WordDto
     public int Difficulty { get; set; }
 }
 
+public class GameAttemptDto
+{
+    public int AttemptNumber { get; set; }
+    public string UserPrompt { get; set; } = string.Empty;
+    public string AiGuess { get; set; } = string.Empty;
+    public bool IsCorrect { get; set; }
+    public int Score { get; set; }
+    public string? AiFeedback { get; set; }
+    public int? PromptQuality { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
+
 public class GameSessionDto
 {
     public Guid Id { get; set; }
@@ -26,6 +38,7 @@ public class GameSessionDto
     public string? AiFeedback { get; set; }
     public int? PromptQuality { get; set; }
     public List<string> Suggestions { get; set; } = new();
+    public List<GameAttemptDto> Attempts { get; set; } = new();
 }
 
 public class UserDto
@@ -64,4 +77,5 @@ public class GameResultDto
     public int PromptQuality { get; set; }
     public List<string> Suggestions { get; set; } = new();
     public bool GameCompleted { get; set; }
+    public List<GameAttemptDto> History { get; set; } = new();
 }

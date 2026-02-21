@@ -30,6 +30,9 @@ public class GetGameSessionQueryHandler : IRequestHandler<GetGameSessionQuery, G
             gameSession.Word = word;
         }
 
+        var attempts = await _unitOfWork.GameAttempts.FindAsync(a => a.GameSessionId == gameSession.Id);
+        gameSession.Attempts = attempts.OrderBy(a => a.AttemptNumber).ToList();
+
         return _mapper.Map<GameSessionDto>(gameSession);
     }
 }

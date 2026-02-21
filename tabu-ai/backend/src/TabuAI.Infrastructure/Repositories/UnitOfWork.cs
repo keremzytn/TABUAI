@@ -13,6 +13,7 @@ public class UnitOfWork : IUnitOfWork
     private IRepository<User>? _users;
     private IRepository<Word>? _words;
     private IRepository<GameSession>? _gameSessions;
+    private IRepository<GameAttempt>? _gameAttempts;
     private IRepository<Badge>? _badges;
     private IRepository<UserBadge>? _userBadges;
     private IRepository<UserStatistic>? _userStatistics;
@@ -25,6 +26,7 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<User> Users => _users ??= new Repository<User>(_context);
     public IRepository<Word> Words => _words ??= new Repository<Word>(_context);
     public IRepository<GameSession> GameSessions => _gameSessions ??= new Repository<GameSession>(_context);
+    public IRepository<GameAttempt> GameAttempts => _gameAttempts ??= new Repository<GameAttempt>(_context);
     public IRepository<Badge> Badges => _badges ??= new Repository<Badge>(_context);
     public IRepository<UserBadge> UserBadges => _userBadges ??= new Repository<UserBadge>(_context);
     public IRepository<UserStatistic> UserStatistics => _userStatistics ??= new Repository<UserStatistic>(_context);

@@ -6,6 +6,17 @@ export interface Word {
   difficulty: number;
 }
 
+export interface GameAttempt {
+  attemptNumber: number;
+  userPrompt: string;
+  aiGuess: string;
+  isCorrect: boolean;
+  score: number;
+  aiFeedback?: string;
+  promptQuality?: number;
+  createdAt: string;
+}
+
 export interface GameSession {
   id: string;
   userId: string;
@@ -22,17 +33,18 @@ export interface GameSession {
   aiFeedback?: string;
   promptQuality?: number;
   suggestions: string[];
+  attempts: GameAttempt[];
 }
 
 export interface StartGameRequest {
-  userId: string;  // Will be converted to Guid on backend
+  userId: string;
   gameMode: string;
   category?: string;
   difficulty?: number;
 }
 
 export interface SubmitPromptRequest {
-  gameSessionId: string;  // Will be converted to Guid on backend
+  gameSessionId: string;
   prompt: string;
 }
 
@@ -44,6 +56,7 @@ export interface GameResult {
   promptQuality: number;
   suggestions: string[];
   gameCompleted: boolean;
+  history: GameAttempt[];
 }
 
 export interface User {
