@@ -32,12 +32,17 @@ public class GetFriendsQueryHandler : IRequestHandler<GetFriendsQuery, List<Frie
             {
                 friends.Add(new FriendDto
                 {
+                    FriendshipId = f.Id,
                     UserId = user.Id,
                     Username = user.Username,
                     DisplayName = user.DisplayName,
                     Level = user.Level.ToString(),
                     TotalScore = user.TotalScore,
-                    FriendSince = f.UpdatedAt ?? f.CreatedAt
+                    GamesPlayed = user.GamesPlayed,
+                    GamesWon = user.GamesWon,
+                    WinRate = user.WinRate,
+                    FriendSince = f.UpdatedAt ?? f.CreatedAt,
+                    CreatedAt = user.CreatedAt
                 });
             }
         }
@@ -49,12 +54,17 @@ public class GetFriendsQueryHandler : IRequestHandler<GetFriendsQuery, List<Frie
             {
                 friends.Add(new FriendDto
                 {
+                    FriendshipId = f.Id,
                     UserId = user.Id,
                     Username = user.Username,
                     DisplayName = user.DisplayName,
                     Level = user.Level.ToString(),
                     TotalScore = user.TotalScore,
-                    FriendSince = f.UpdatedAt ?? f.CreatedAt
+                    GamesPlayed = user.GamesPlayed,
+                    GamesWon = user.GamesWon,
+                    WinRate = user.WinRate,
+                    FriendSince = f.UpdatedAt ?? f.CreatedAt,
+                    CreatedAt = user.CreatedAt
                 });
             }
         }

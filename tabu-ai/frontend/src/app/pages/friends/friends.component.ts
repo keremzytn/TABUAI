@@ -25,6 +25,7 @@ export class FriendsComponent implements OnInit {
     searchTerm = '';
     isLoading = true;
     isSearching = false;
+    selectedFriend: Friend | null = null;
 
     private searchTimeout: any;
 
@@ -134,12 +135,8 @@ export class FriendsComponent implements OnInit {
     }
 
     removeFriend(friend: Friend) {
-        if (!this.userId) return;
-        // We need the friendship ID. We'll search for it via the friends endpoint
-        // For now, we need to match by userId - but the backend needs the friendship ID
-        // Let's get it from the friend list using a separate approach
-        // Actually, we can use the friend's userId to find the friendship
-        this.friendService.getFriends(this.userId).subscribe({
+        if (!this.userId || !friend.friendshipId) return;
+        this.friendService.removeFriend(friend.friendshipId, this.userId).subscribe({
             next: () => {
                 this.toastService.info('Arkadaş kaldırıldı.');
                 this.friends = this.friends.filter(f => f.userId !== friend.userId);
@@ -162,5 +159,27 @@ export class FriendsComponent implements OnInit {
 
     getInitial(name: string): string {
         return name ? name.charAt(0).toUpperCase() : '?';
+    }
+
+    openFriendPopup(friend: Friend) {
+        this.selectedFriend = friend;
+    }
+
+    closeFriendPopup() {
+        this.selectedFriend = null;
+    }
+
+    getFriendshipDuration(date: Date): string {
+        const now = new Date();
+        const then = new Date(date);
+        const diffMs = now.getTime() - then.getTime();
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        if (diffDays < 1) return 'Bugün';
+        if (diffDays === 1) return '1 gün';
+        if (diffDays < 30) return `${diffDays} gün`;
+        const months = Math.floor(diffDays / 30);
+        if (months < 12) return `${months} ay`;
+        const years = Math.floor(months / 12);
+        return `${years} yıl`;
     }
 }

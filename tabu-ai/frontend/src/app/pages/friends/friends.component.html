@@ -43,7 +43,7 @@
             </div>
 
             <div class="friend-list" *ngIf="!isLoading && friends.length > 0">
-                <div class="friend-card glass-card" *ngFor="let friend of friends">
+                <div class="friend-card glass-card" *ngFor="let friend of friends" (click)="openFriendPopup(friend)">
                     <div class="friend-avatar">{{ getInitial(friend.username) }}</div>
                     <div class="friend-info">
                         <span class="friend-name">{{ friend.displayName || friend.username }}</span>
@@ -51,6 +51,12 @@
                             <span class="friend-level">{{ getLevelText(friend.level) }}</span>
                             <span class="friend-score">{{ friend.totalScore }} XP</span>
                         </span>
+                    </div>
+                    <div class="card-arrow">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
                     </div>
                 </div>
             </div>
@@ -129,5 +135,79 @@
             </div>
         </div>
 
+    </div>
+</div>
+
+<!-- Friend Detail Popup Modal -->
+<div class="popup-overlay" *ngIf="selectedFriend" (click)="closeFriendPopup()">
+    <div class="popup-card pop-in" (click)="$event.stopPropagation()">
+        <!-- Close Button -->
+        <button class="popup-close" (click)="closeFriendPopup()">✕</button>
+
+        <!-- Popup Header -->
+        <div class="popup-header">
+            <div class="popup-avatar">
+                {{ getInitial(selectedFriend.username) }}
+            </div>
+            <h2 class="popup-name">{{ selectedFriend.displayName || selectedFriend.username }}</h2>
+            <span class="popup-username">{{ '@' + selectedFriend.username }}</span>
+            <div class="popup-level-pill">
+                {{ getLevelText(selectedFriend.level) }}
+            </div>
+        </div>
+
+        <!-- XP Score Ring -->
+        <div class="popup-score-ring">
+            <span class="popup-score-value">{{ selectedFriend.totalScore }}</span>
+            <span class="popup-score-label">XP</span>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="popup-stats">
+            <div class="popup-stat-item">
+                <span class="ps-icon">🎮</span>
+                <span class="ps-value">{{ selectedFriend.gamesPlayed }}</span>
+                <span class="ps-label">Oyun</span>
+            </div>
+            <div class="popup-stat-item">
+                <span class="ps-icon">🏆</span>
+                <span class="ps-value">{{ selectedFriend.gamesWon }}</span>
+                <span class="ps-label">Galibiyet</span>
+            </div>
+            <div class="popup-stat-item">
+                <span class="ps-icon">📊</span>
+                <span class="ps-value">{{ selectedFriend.winRate | number:'1.0-0' }}%</span>
+                <span class="ps-label">Başarı</span>
+            </div>
+        </div>
+
+        <!-- Detail Info -->
+        <div class="popup-details">
+            <div class="popup-detail-row">
+                <span class="pd-icon">🤝</span>
+                <span class="pd-label">Arkadaşlık Süresi</span>
+                <span class="pd-value">{{ getFriendshipDuration(selectedFriend.friendSince) }}</span>
+            </div>
+            <div class="popup-detail-row">
+                <span class="pd-icon">📅</span>
+                <span class="pd-label">Arkadaş Olma</span>
+                <span class="pd-value">{{ selectedFriend.friendSince | date:'dd MMM yyyy' }}</span>
+            </div>
+            <div class="popup-detail-row">
+                <span class="pd-icon">🗓️</span>
+                <span class="pd-label">Katılım</span>
+                <span class="pd-value">{{ selectedFriend.createdAt | date:'dd MMM yyyy' }}</span>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="popup-actions">
+            <button class="popup-btn remove" (click)="removeFriend(selectedFriend); closeFriendPopup()">
+                Arkadaşlıktan Çıkar
+            </button>
+            <button class="popup-btn close" (click)="closeFriendPopup()">
+                Kapat
+            </button>
+        </div>
     </div>
 </div>
