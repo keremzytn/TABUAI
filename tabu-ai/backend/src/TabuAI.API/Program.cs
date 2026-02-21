@@ -83,8 +83,11 @@ builder.Services.AddCors(options =>
                   var uri = new Uri(origin);
                   return uri.Host == "localhost" || 
                          uri.Host == "127.0.0.1" || 
-                         uri.Host == "192.168.1.38" ||
-                         origin.StartsWith("capacitor://");
+                         uri.Host == "172.16.0.159" ||
+                         origin.StartsWith("capacitor://") ||
+                         origin.StartsWith("ionic://") ||
+                         uri.Host.StartsWith("192.168.") ||
+                         uri.Host.StartsWith("172.16.");
               })
               .AllowAnyHeader()
               .AllowAnyMethod()
