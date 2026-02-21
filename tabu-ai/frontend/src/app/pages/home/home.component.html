@@ -1,0 +1,121 @@
+<div class="container home-container">
+    <!-- Hero Section -->
+    <section class="hero-section fade-in">
+        <div class="hero-content">
+            <div class="badge-new pop-in">🤖 AI Destekli Kelime Oyunu</div>
+            <h1 class="hero-title">
+                Prompt <br>
+                <span class="text-gradient">Engineering</span>
+            </h1>
+            <p class="hero-description">
+                Yapay zeka ile iletişim kurma sanatını bir oyuna dönüştürdük.
+                Yasaklı kelimeleri kullanmadan AI'ya hedefi anlatabilir misin?
+            </p>
+            <div class="hero-actions">
+                <a routerLink="/game" class="btn btn-primary btn-lg pulse-hover">
+                    🎮 Oyuna Başla
+                </a>
+
+                <a routerLink="/leaderboard" class="btn btn-secondary btn-lg">
+                    🏆 Liderler
+                </a>
+
+                <!-- Logged In -->
+                <ng-container *ngIf="(isLoggedIn$ | async); else guestTemplate">
+                    <a routerLink="/profile" class="btn btn-secondary btn-lg profile-btn">
+                        👤 Profil
+                    </a>
+                    <button (click)="logout()" class="btn btn-secondary btn-lg logout-btn">
+                        🚪 Çıkış
+                    </button>
+                </ng-container>
+
+                <!-- Guest -->
+                <ng-template #guestTemplate>
+                    <a routerLink="/login" class="btn btn-secondary btn-lg">
+                        🔑 Giriş Yap
+                    </a>
+                    <a routerLink="/register" class="btn btn-secondary btn-lg register-btn">
+                        ✨ Kayıt Ol
+                    </a>
+                </ng-template>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Grid -->
+    <section class="features-section">
+        <div class="features-grid">
+            <div class="feature-card glass-card">
+                <div class="card-icon gradient-1">🤖</div>
+                <h3>AI Hakem</h3>
+                <p>Promptlarınız saniyeler içinde analiz edilir ve puanlanır.</p>
+            </div>
+
+            <div class="feature-card glass-card">
+                <div class="card-icon gradient-2">🎯</div>
+                <h3>Zorlu Görevler</h3>
+                <p>Her seviyede daha zorlu yasaklı kelimeler ve karmaşık hedefler.</p>
+            </div>
+
+            <div class="feature-card glass-card">
+                <div class="card-icon gradient-3">📈</div>
+                <h3>Gelişim</h3>
+                <p>Prompt yazma becerinizi geliştirin ve seviye atlayın.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section fade-in">
+        <div class="stats-grid">
+            <div class="stat-card glass-card">
+                <div class="stat-value text-gradient">20+</div>
+                <div class="stat-label">Kelime</div>
+            </div>
+            <div class="stat-card glass-card">
+                <div class="stat-value text-gradient">10</div>
+                <div class="stat-label">Kategori</div>
+            </div>
+            <div class="stat-card glass-card">
+                <div class="stat-value text-gradient">4</div>
+                <div class="stat-label">Zorluk Seviyesi</div>
+            </div>
+            <div class="stat-card glass-card">
+                <div class="stat-value text-gradient">∞</div>
+                <div class="stat-label">Eğlence</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How to Play -->
+    <section class="how-section glass-card">
+        <h2 class="section-title">Nasıl Oynanır?</h2>
+        <div class="steps-container">
+            <div class="step-item">
+                <div class="step-number">1</div>
+                <div class="step-text">
+                    <h4>Hedef Kartı Al</h4>
+                    <p>Yasaklı kelimelere dikkat et.</p>
+                </div>
+            </div>
+            <div class="step-line"></div>
+            <div class="step-item">
+                <div class="step-number">2</div>
+                <div class="step-text">
+                    <h4>Prompt Yaz</h4>
+                    <p>AI'yı doğru kelimeye yönlendir.</p>
+                </div>
+            </div>
+            <div class="step-line"></div>
+            <div class="step-item">
+                <div class="step-number">3</div>
+                <div class="step-text">
+                    <h4>Puan Topla</h4>
+                    <p>Liderlik tablosuna tırman.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>

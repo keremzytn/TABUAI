@@ -1,0 +1,214 @@
+<div class="container game-container">
+
+    <!-- LOADING OVERLAY -->
+    <div *ngIf="loading" class="loading-overlay fade-in">
+        <div class="spinner-container">
+            <div class="loading-ring">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+            <p class="loading-text">{{ loadingText }}</p>
+        </div>
+    </div>
+
+    <!-- GAME START SCREEN -->
+    <div *ngIf="gameState === 'idle' && !loading" class="game-start fade-in">
+        <div class="glass-card start-panel">
+            <div class="start-header">
+                <div class="start-icon pop-in">🎯</div>
+                <h1 class="text-center">Mod Seç</h1>
+                <p class="text-center text-muted">Nasıl oynamak istersin?</p>
+            </div>
+
+            <div class="mode-grid">
+                <button class="mode-card glass-card" [class.active]="selectedMode === 'demo'"
+                    (click)="selectedMode = 'demo'">
+                    <div class="mode-icon-wrapper">
+                        <div class="mode-icon">🎮</div>
+                    </div>
+                    <h3>Demo Modu</h3>
+                    <p>Hızlı başlangıç, kayıt gerektirmez.</p>
+                    <div class="mode-badge free">Ücretsiz</div>
+                </button>
+
+                <button class="mode-card glass-card" [class.active]="selectedMode === 'real'"
+                    (click)="selectedMode = 'real'">
+                    <div class="mode-icon-wrapper">
+                        <div class="mode-icon">🤖</div>
+                    </div>
+                    <h3>AI Modu</h3>
+                    <p>Gerçek AI değerlendirmesi.</p>
+                    <div class="mode-badge ai">Groq AI</div>
+                </button>
+            </div>
+
+            <!-- Category Selection -->
+            <div class="category-section" *ngIf="selectedMode">
+                <h4 class="section-label">Kategori (Opsiyonel)</h4>
+                <div class="category-chips">
+                    <button *ngFor="let cat of categories" class="chip" [class.active]="selectedCategory === cat"
+                        (click)="selectedCategory = selectedCategory === cat ? null : cat">
+                        {{ cat }}
+                    </button>
+                </div>
+            </div>
+
+            <div class="actions mt-4 text-center">
+                <button class="btn btn-primary btn-lg start-btn" (click)="startGame()">
+                    <span class="btn-text">OYUNA BAŞLA</span>
+                    <span class="btn-arrow">→</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- GAME PLAYING SCREEN -->
+    <div *ngIf="gameState === 'playing' && currentGame" class="game-board fade-in">
+
+        <!-- Header / Stats -->
+        <div class="game-header glass-card">
+            <div class="stat-item">
+                <span class="label">SKOR</span>
+                <span class="value score-glow" [class.score-bump]="scoreBump">{{ currentGame.score }}</span>
+            </div>
+            <div class="stat-item timer-item">
+                <div class="timer-ring" [class.timer-warning]="isTimerWarning">{{ gameTime }}</div>
+            </div>
+            <div class="stat-item">
+                <span class="label">DENEME</span>
+                <span class="value">
+                    <span *ngFor="let a of [1,2,3]; let i = index" class="attempt-dot"
+                        [class.used]="i < currentGame.attemptNumber"></span>
+                </span>
+            </div>
+        </div>
+
+        <!-- Main Card Area -->
+        <div class="card-area">
+            <div class="target-card glass-card" [class.card-shake]="cardShake">
+                <div class="card-header">
+                    <span class="difficulty-badge" [attr.data-level]="currentGame.word.difficulty">
+                        {{ getDifficultyText(currentGame.word.difficulty) }}
+                    </span>
+                    <span class="category-badge">{{ currentGame.word.category }}</span>
+                </div>
+
+                <div class="word-display">
+                    <h2 class="target-word slide-up">{{ currentGame.word.targetWord }}</h2>
+                </div>
+
+                <div class="tabu-section">
+                    <div class="tabu-label">
+                        <span class="tabu-icon">🚫</span> YASAKLI KELİMELER
+                    </div>
+                    <div class="tabu-list">
+                        <div *ngFor="let tabu of currentGame.word.tabuWords; let i = index" class="tabu-item"
+                            [style.animation-delay]="(i * 0.08) + 's'">
+                            {{ tabu }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History/Chat Section -->
+        <div *ngIf="currentGame.attempts && currentGame.attempts.length > 0" class="history-area fade-in"
+            #historyScroll>
+            <div *ngFor="let attempt of currentGame.attempts" class="history-item glass-card"
+                [class.correct]="attempt.isCorrect">
+                <div class="history-prompt">
+                    <span class="badge">#{{ attempt.attemptNumber }}</span>
+                    <p>{{ attempt.userPrompt }}</p>
+                </div>
+                <div class="history-ai">
+                    <span class="ai-label">AI Tahmini:</span>
+                    <span class="ai-guess">"{{ attempt.aiGuess }}"</span>
+                    <span *ngIf="attempt.isCorrect" class="success-icon">✅</span>
+                    <span *ngIf="!attempt.isCorrect" class="fail-icon">❌</span>
+                </div>
+                <p class="ai-feedback">{{ attempt.aiFeedback }}</p>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="input-area glass-card" [class.input-error]="inputError" *ngIf="!submitting && !lastResult">
+            <textarea #promptInput [(ngModel)]="currentPrompt" class="game-input"
+                placeholder="Yasaklı kelimeler kullanmadan hedefini anlat..." [disabled]="submitting"
+                (keydown.enter)="onEnter($event)" (input)="checkTabuWords()" rows="1"></textarea>
+
+            <button class="btn btn-send" (click)="submitPrompt()"
+                [disabled]="!currentPrompt.trim() || submitting || currentGame.attemptNumber >= 3">
+                <span *ngIf="!submitting" class="send-icon">➤</span>
+                <div *ngIf="submitting" class="loading-spinner small"></div>
+            </button>
+        </div>
+
+        <!-- Tabu Warning -->
+        <div *ngIf="detectedTabuWord" class="tabu-warning slide-up">
+            ⚠️ "<strong>{{ detectedTabuWord }}</strong>" yasaklı kelime!
+        </div>
+    </div>
+
+    <!-- GAME RESULT MODAL -->
+    <div *ngIf="lastResult" class="result-modal-backdrop fade-in" (click)="onBackdropClick($event)">
+        <div *ngIf="lastResult.isCorrect" class="confetti-wrapper">
+            <div *ngFor="let c of confettiPieces" class="confetti" [style]="c"></div>
+        </div>
+
+        <div class="result-modal minimal glass-card pop-in" [class.success]="lastResult.isCorrect"
+            [class.fail]="!lastResult.isCorrect">
+
+            <div class="modal-mini-header">
+                <div class="header-main">
+                    <span class="mini-icon">{{ lastResult.isCorrect ? '🎉' : (currentGame?.attemptNumber === 3 ? '💀' :
+                        '😔') }}</span>
+                    <div class="title-group">
+                        <h2 class="mini-title">{{ lastResult.isCorrect ? 'BAŞARILI!' : (currentGame?.attemptNumber === 3
+                            ? 'OYUN BİTTİ' : 'TEKRAR DENE') }}</h2>
+                        <p class="mini-msg">{{ lastResult.isCorrect ? 'AI bildi!' : 'AI bilemedi.' }}</p>
+                    </div>
+                </div>
+
+                <div class="mini-stats">
+                    <div class="mini-stat-item">
+                        <span class="ms-label">TAHMİN</span>
+                        <span class="ms-value" [class.correct]="lastResult.isCorrect">"{{ lastResult.aiGuess }}"</span>
+                    </div>
+                    <div *ngIf="lastResult.score > 0" class="mini-stat-item">
+                        <span class="ms-label">PUAN</span>
+                        <span class="ms-value score">+{{ lastResult.score }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mini-content">
+                <!-- Quality & Feedback combined -->
+                <div class="feedback-compact">
+                    <div class="quality-mini">
+                        <span *ngFor="let s of [1,2,3,4,5]" class="mini-star"
+                            [class.active]="s <= lastResult.promptQuality">★</span>
+                    </div>
+                    <p class="mini-feedback-text">"{{ lastResult.aiFeedback }}"</p>
+                </div>
+
+                <!-- Compact Suggestions (only if failed) -->
+                <div *ngIf="!lastResult.isCorrect && lastResult.suggestions.length > 0" class="mini-suggestions">
+                    <span class="sugg-tag">İPUCU:</span>
+                    <span class="sugg-text">{{ lastResult.suggestions[0] }}</span>
+                </div>
+            </div>
+
+            <div class="mini-actions">
+                <button *ngIf="!lastResult.gameCompleted && (currentGame?.attemptNumber ?? 0) < 3"
+                    class="btn-mini btn-primary" (click)="continueGame()">
+                    🔄 Tekrar Dene
+                </button>
+                <button class="btn-mini btn-secondary" (click)="startNewGame()">
+                    {{ lastResult.gameCompleted ? '🎮 Yeni Oyun' : '🚪 Çık' }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -78,7 +78,14 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularDev", policy =>
     {
-        policy.WithOrigins("http://localhost:4200", "http://192.168.0.100:4200")
+        policy.SetIsOriginAllowed(origin => 
+              {
+                  var uri = new Uri(origin);
+                  return uri.Host == "localhost" || 
+                         uri.Host == "127.0.0.1" || 
+                         uri.Host == "192.168.1.38" ||
+                         origin.StartsWith("capacitor://");
+              })
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();

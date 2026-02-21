@@ -1,0 +1,343 @@
+.leaderboard-container {
+    padding-top: 20px;
+    padding-bottom: 100px;
+}
+
+.header-section {
+    margin-bottom: 30px;
+}
+
+.page-title {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+
+/* Period Tabs */
+.period-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 36px;
+}
+
+.tab-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tab-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: white;
+}
+
+.tab-btn.active {
+    background: rgba(139, 92, 246, 0.2);
+    border-color: var(--primary);
+    color: #c4b5fd;
+}
+
+/* Loading */
+.loading-section {
+    padding: 60px 0;
+}
+
+.large {
+    width: 50px;
+    height: 50px;
+    border-width: 4px;
+}
+
+/* Podium */
+.podium-grid {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 16px;
+    margin-bottom: 30px;
+    padding: 0 10px;
+}
+
+.podium-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px;
+    width: 100%;
+    max-width: 160px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    transition: transform 0.3s;
+}
+
+.podium-card:hover {
+    transform: translateY(-4px);
+}
+
+.crown {
+    position: absolute;
+    top: -20px;
+    font-size: 2rem;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-6px);
+    }
+}
+
+.rank-badge {
+    font-size: 2rem;
+    margin-bottom: 12px;
+}
+
+/* 1st Place */
+.podium-card.first {
+    height: 240px;
+    background: linear-gradient(to bottom, rgba(234, 179, 8, 0.08), rgba(30, 41, 59, 0.6));
+    border-color: rgba(234, 179, 8, 0.4);
+    z-index: 2;
+    transform: scale(1.08);
+}
+
+.first .score {
+    color: #eab308;
+    font-size: 1.4rem;
+}
+
+/* 2nd Place */
+.podium-card.second {
+    height: 210px;
+    background: linear-gradient(to bottom, rgba(148, 163, 184, 0.08), rgba(30, 41, 59, 0.6));
+    border-color: rgba(148, 163, 184, 0.4);
+}
+
+.second .score {
+    color: #94a3b8;
+}
+
+/* 3rd Place */
+.podium-card.third {
+    height: 190px;
+    background: linear-gradient(to bottom, rgba(180, 83, 9, 0.08), rgba(30, 41, 59, 0.6));
+    border-color: rgba(180, 83, 9, 0.4);
+}
+
+.third .score {
+    color: #d97706;
+}
+
+.player-info h3 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.level-badge {
+    font-size: 0.7rem;
+    padding: 3px 10px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    display: inline-block;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.level-badge.highlight {
+    background: rgba(234, 179, 8, 0.15);
+    color: #fde047;
+}
+
+.score {
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.1rem;
+    margin-top: auto;
+}
+
+.win-rate {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+/* Current User Card */
+.current-user-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 24px;
+    margin-bottom: 20px;
+    border-color: rgba(139, 92, 246, 0.3);
+    background: rgba(139, 92, 246, 0.05);
+}
+
+.your-rank {
+    display: flex;
+    flex-direction: column;
+}
+
+.rank-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.rank-number {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--primary);
+}
+
+.your-score {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.score-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--accent);
+}
+
+.score-label-small {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* List */
+.ranking-list {
+    padding: 0;
+    overflow: hidden;
+}
+
+.list-header {
+    display: grid;
+    grid-template-columns: 50px 2fr 1fr 1fr;
+    padding: 14px 20px;
+    background: rgba(0, 0, 0, 0.2);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.list-row {
+    display: grid;
+    grid-template-columns: 50px 2fr 1fr 1fr;
+    padding: 14px 20px;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    transition: background 0.2s;
+}
+
+.list-row:last-child {
+    border-bottom: none;
+}
+
+.list-row:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.list-row.is-you {
+    background: rgba(139, 92, 246, 0.08);
+    border-left: 3px solid var(--primary);
+}
+
+.rank-num {
+    font-weight: 700;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.col-player .name {
+    display: block;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.col-player .level {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+.col-score {
+    font-weight: 700;
+    color: var(--primary);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.col-stats {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+/* Empty State */
+.empty-state {
+    padding: 60px 30px;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 16px;
+}
+
+/* Stats Footer */
+.stats-footer {
+    margin-top: 16px;
+    font-size: 0.85rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .mobile-hide {
+        display: none;
+    }
+
+    .mobile-show {
+        display: block;
+    }
+
+    .list-header,
+    .list-row {
+        grid-template-columns: 40px 1fr 80px;
+    }
+
+    .podium-grid {
+        gap: 8px;
+    }
+
+    .podium-card {
+        padding: 16px 8px;
+        max-width: 120px;
+    }
+
+    .period-tabs {
+        gap: 4px;
+    }
+
+    .tab-btn {
+        padding: 6px 14px;
+        font-size: 0.8rem;
+    }
+}

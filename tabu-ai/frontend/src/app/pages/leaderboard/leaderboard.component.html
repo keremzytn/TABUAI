@@ -1,0 +1,118 @@
+<div class="container leaderboard-container">
+    <div class="header-section text-center fade-in">
+        <h1 class="page-title">
+            🏆 <span class="text-gradient">Liderlik Tablosu</span>
+        </h1>
+        <p class="text-muted">En başarılı prompt yazarları</p>
+    </div>
+
+    <!-- Period Tabs -->
+    <div class="period-tabs fade-in">
+        <button *ngFor="let p of periods" class="tab-btn" [class.active]="selectedPeriod === p.key"
+            (click)="changePeriod(p.key)">
+            {{ p.label }}
+        </button>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="loading-section text-center">
+        <div class="loading-spinner large"></div>
+        <p class="text-muted mt-4">Yükleniyor...</p>
+    </div>
+
+    <ng-container *ngIf="!loading">
+        <!-- Top 3 Podium -->
+        <div class="podium-grid fade-in" *ngIf="topThree.length > 0">
+            <!-- 2nd Place -->
+            <div *ngIf="topThree.length >= 2" class="podium-card glass-card second pop-in"
+                style="animation-delay: 0.1s">
+                <div class="rank-badge">🥈</div>
+                <div class="player-info">
+                    <h3>{{ topThree[1].displayName || topThree[1].username }}</h3>
+                    <span class="level-badge">{{ getLevelText(topThree[1].level) }}</span>
+                </div>
+                <div class="score">{{ topThree[1].totalScore | number }}</div>
+                <div class="win-rate">{{ topThree[1].winRate | number:'1.0-0' }}% Başarı</div>
+            </div>
+
+            <!-- 1st Place -->
+            <div *ngIf="topThree.length >= 1" class="podium-card glass-card first pop-in">
+                <div class="crown">👑</div>
+                <div class="rank-badge gold">🥇</div>
+                <div class="player-info">
+                    <h3>{{ topThree[0].displayName || topThree[0].username }}</h3>
+                    <span class="level-badge highlight">{{ getLevelText(topThree[0].level) }}</span>
+                </div>
+                <div class="score">{{ topThree[0].totalScore | number }}</div>
+                <div class="win-rate">{{ topThree[0].winRate | number:'1.0-0' }}% Başarı</div>
+            </div>
+
+            <!-- 3rd Place -->
+            <div *ngIf="topThree.length >= 3" class="podium-card glass-card third pop-in" style="animation-delay: 0.2s">
+                <div class="rank-badge">🥉</div>
+                <div class="player-info">
+                    <h3>{{ topThree[2].displayName || topThree[2].username }}</h3>
+                    <span class="level-badge">{{ getLevelText(topThree[2].level) }}</span>
+                </div>
+                <div class="score">{{ topThree[2].totalScore | number }}</div>
+                <div class="win-rate">{{ topThree[2].winRate | number:'1.0-0' }}% Başarı</div>
+            </div>
+        </div>
+
+        <!-- Current User Position -->
+        <div *ngIf="currentUserEntry" class="current-user-card glass-card fade-in">
+            <div class="your-rank">
+                <span class="rank-label">Senin Sıran</span>
+                <span class="rank-number">#{{ currentUserEntry.rank }}</span>
+            </div>
+            <div class="your-score">
+                <span class="score-value">{{ currentUserEntry.totalScore | number }}</span>
+                <span class="score-label">puan</span>
+            </div>
+        </div>
+
+        <!-- Leaderboard List -->
+        <div class="ranking-list glass-card fade-in" *ngIf="remainingPlayers.length > 0">
+            <div class="list-header">
+                <div class="col-rank">#</div>
+                <div class="col-player">Oyuncu</div>
+                <div class="col-score">Puan</div>
+                <div class="col-stats mobile-hide">Oyun / Başarı</div>
+            </div>
+
+            <div *ngFor="let player of remainingPlayers" class="list-row"
+                [class.is-you]="currentUserEntry && player.userId === currentUserEntry.userId">
+                <div class="col-rank">
+                    <span class="rank-num">{{ player.rank }}</span>
+                </div>
+                <div class="col-player">
+                    <span class="name">{{ player.displayName || player.username }}</span>
+                    <span class="level mobile-show">{{ getLevelText(player.level) }}</span>
+                </div>
+                <div class="col-score">{{ player.totalScore | number }}</div>
+                <div class="col-stats mobile-hide">
+                    {{ player.gamesPlayed }} / {{ player.winRate | number:'1.0-0' }}%
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="allEntries.length === 0" class="empty-state glass-card fade-in text-center">
+            <div class="empty-icon">🏆</div>
+            <h3>Henüz oyuncu yok!</h3>
+            <p class="text-muted">İlk sırayı almak için hemen oyna.</p>
+            <a routerLink="/game" class="btn btn-primary mt-4">Oyna</a>
+        </div>
+
+        <!-- Stats Footer -->
+        <div *ngIf="totalPlayers > 0" class="stats-footer text-center fade-in">
+            <span class="text-muted">Toplam {{ totalPlayers }} oyuncu</span>
+        </div>
+    </ng-container>
+
+    <div class="action-area text-center mt-4 fade-in">
+        <a routerLink="/game" class="btn btn-primary pulse">
+            🎮 Sıralamaya Gir
+        </a>
+    </div>
+</div>
