@@ -36,9 +36,9 @@ import { ToastService } from '../../services/toast.service';
 
       <ng-container *ngIf="!loading">
         <!-- Top 3 Podium -->
-        <div class="podium-grid fade-in" *ngIf="topThree.length >= 3">
+        <div class="podium-grid fade-in" *ngIf="topThree.length > 0">
           <!-- 2nd Place -->
-          <div class="podium-card glass-card second pop-in" style="animation-delay: 0.1s">
+          <div *ngIf="topThree.length >= 2" class="podium-card glass-card second pop-in" style="animation-delay: 0.1s">
             <div class="rank-badge">🥈</div>
             <div class="player-info">
               <h3>{{ topThree[1].displayName || topThree[1].username }}</h3>
@@ -49,7 +49,7 @@ import { ToastService } from '../../services/toast.service';
           </div>
           
           <!-- 1st Place -->
-          <div class="podium-card glass-card first pop-in">
+          <div *ngIf="topThree.length >= 1" class="podium-card glass-card first pop-in">
             <div class="crown">👑</div>
             <div class="rank-badge gold">🥇</div>
             <div class="player-info">
@@ -61,7 +61,7 @@ import { ToastService } from '../../services/toast.service';
           </div>
           
           <!-- 3rd Place -->
-          <div class="podium-card glass-card third pop-in" style="animation-delay: 0.2s">
+          <div *ngIf="topThree.length >= 3" class="podium-card glass-card third pop-in" style="animation-delay: 0.2s">
             <div class="rank-badge">🥉</div>
             <div class="player-info">
               <h3>{{ topThree[2].displayName || topThree[2].username }}</h3>

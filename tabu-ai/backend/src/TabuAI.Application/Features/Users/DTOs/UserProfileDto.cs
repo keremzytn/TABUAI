@@ -14,6 +14,7 @@ public class UserProfileDto
     public int GamesPlayed { get; set; }
     public int GamesWon { get; set; }
     public decimal WinRate { get; set; }
+    public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
     public List<UserBadgeDto> Badges { get; set; } = new();
 }

@@ -9,6 +9,7 @@ export interface UserProfile {
     gamesPlayed: number;
     gamesWon: number;
     winRate: number;
+    isActive: boolean;
     createdAt: Date;
     badges: UserBadge[];
 }

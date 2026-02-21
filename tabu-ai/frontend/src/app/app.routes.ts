@@ -1,34 +1,48 @@
 import { Routes } from '@angular/router';
 import { AuthGuard } from './guards/auth.guard';
+import { MainLayoutComponent } from './layouts/main-layout/main-layout.component';
+import { AdminLayoutComponent } from './layouts/admin-layout/admin-layout.component';
+import { AdminLoginComponent } from './admin/pages/admin-login/admin-login.component';
 
 export const routes: Routes = [
   {
     path: '',
-    loadComponent: () => import('./pages/home/home.component').then(m => m.HomeComponent)
+    component: MainLayoutComponent,
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./pages/home/home.component').then(m => m.HomeComponent)
+      },
+      {
+        path: 'game',
+        loadComponent: () => import('./pages/game/game.component').then(m => m.GameComponent)
+      },
+      {
+        path: 'leaderboard',
+        loadComponent: () => import('./pages/leaderboard/leaderboard.component').then(m => m.LeaderboardComponent)
+      },
+      {
+        path: 'profile',
+        loadComponent: () => import('./pages/profile/profile.component').then(m => m.ProfileComponent),
+        canActivate: [AuthGuard]
+      },
+      {
+        path: 'login',
+        loadComponent: () => import('./pages/auth/login/login.component').then(m => m.LoginComponent)
+      },
+      {
+        path: 'register',
+        loadComponent: () => import('./pages/auth/register/register.component').then(m => m.RegisterComponent)
+      }
+    ]
   },
   {
-    path: 'game',
-    loadComponent: () => import('./pages/game/game.component').then(m => m.GameComponent)
-  },
-  {
-    path: 'leaderboard',
-    loadComponent: () => import('./pages/leaderboard/leaderboard.component').then(m => m.LeaderboardComponent)
-  },
-  {
-    path: 'profile',
-    loadComponent: () => import('./pages/profile/profile.component').then(m => m.ProfileComponent),
-    canActivate: [AuthGuard]
-  },
-  {
-    path: 'login',
-    loadComponent: () => import('./pages/auth/login/login.component').then(m => m.LoginComponent)
-  },
-  {
-    path: 'register',
-    loadComponent: () => import('./pages/auth/register/register.component').then(m => m.RegisterComponent)
+    path: 'admin/login',
+    component: AdminLoginComponent
   },
   {
     path: 'admin',
+    component: AdminLayoutComponent,
     canActivate: [AuthGuard],
     data: { role: 'Admin' },
     children: [

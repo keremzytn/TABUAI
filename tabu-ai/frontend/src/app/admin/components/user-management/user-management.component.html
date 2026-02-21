@@ -16,6 +16,7 @@
                     <th>Seviye</th>
                     <th>Toplam Puan</th>
                     <th>Rol</th>
+                    <th>Durum</th>
                     <th>Kayıt Tarihi</th>
                     <th>İşlemler</th>
                 </tr>
@@ -27,11 +28,16 @@
                     <td><span class="badge-level">{{ user.level }}</span></td>
                     <td>{{ user.totalScore }}</td>
                     <td><span class="badge-role" [class.admin]="user.role === 'Admin'">{{ user.role }}</span></td>
+                    <td>
+                        <span class="badge-status" [class.active]="user.isActive" [class.inactive]="!user.isActive">
+                            {{ user.isActive ? 'Aktif' : 'Pasif' }}
+                        </span>
+                    </td>
                     <td>{{ user.createdAt | date:'shortDate' }}</td>
                     <td>
-                        <button class="btn-action" [class.btn-danger]="user.role !== 'Admin'"
+                        <button class="btn-action" [class.btn-danger]="user.isActive && user.role !== 'Admin'"
                             (click)="toggleStatus(user.id)" [disabled]="user.role === 'Admin'">
-                            {{ user.role === 'Admin' ? 'Erişilemez' : 'Durumu Değiştir' }}
+                            {{ user.role === 'Admin' ? 'Erişilemez' : (user.isActive ? 'Pasife Al' : 'Aktif Et') }}
                         </button>
                     </td>
                 </tr>
