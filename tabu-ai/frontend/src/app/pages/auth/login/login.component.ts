@@ -5,12 +5,12 @@ import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { ToastService } from '../../../services/toast.service';
 import { LoginRequest } from '../../../models/auth.models';
-import { SocialAuthService, GoogleLoginProvider, FacebookLoginProvider } from '@abacritt/angularx-social-login';
+import { SocialAuthService, GoogleLoginProvider, FacebookLoginProvider, GoogleSigninButtonModule } from '@abacritt/angularx-social-login';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, GoogleSigninButtonModule],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
@@ -25,24 +25,24 @@ export class LoginComponent {
     private socialAuthService: SocialAuthService,
     private router: Router,
     private toastService: ToastService
-  ) { }
-
-  signInWithGoogle(): void {
-    this.socialLoading = true;
-    this.socialAuthService.signIn(GoogleLoginProvider.PROVIDER_ID).then(user => {
-      this.handleSocialLogin('GOOGLE', user.idToken);
-    }).catch(err => {
-      this.socialLoading = false;
-      console.error(err);
-      this.toastService.error('Google ile giriş yapılamadı.');
+  ) {
+    // Google veya Facebook girişi başarılı olduğunda bu state tetiklenir
+    this.socialAuthService.authState.subscribe((user) => {
+      if (user) {
+        this.socialLoading = true;
+        // Google idToken kullanırken, Facebook authToken kullanır.
+        const token = user.provider === 'GOOGLE' ? user.idToken : user.authToken;
+        this.handleSocialLogin(user.provider, token);
+      }
     });
   }
 
+  // Google butonu artık otomatik tetikleniyor, manual metod devre dışı bırakıldı.
+  // Facebook hala manual metod ile çalışabilir.
+
   signInWithFB(): void {
     this.socialLoading = true;
-    this.socialAuthService.signIn(FacebookLoginProvider.PROVIDER_ID).then(user => {
-      this.handleSocialLogin('FACEBOOK', user.authToken);
-    }).catch(err => {
+    this.socialAuthService.signIn(FacebookLoginProvider.PROVIDER_ID).catch(err => {
       this.socialLoading = false;
       console.error(err);
       this.toastService.error('Facebook ile giriş yapılamadı.');

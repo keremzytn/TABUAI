@@ -33,10 +33,7 @@
         </div>
 
         <div class="social-login">
-            <button class="btn btn-social google" (click)="signInWithGoogle()" [disabled]="isLoading || socialLoading">
-                <img src="assets/icons/google.svg" alt="Google" width="20" height="20">
-                Google ile Giriş
-            </button>
+            <asl-google-signin-button type="standard" size="large"></asl-google-signin-button>
             <button class="btn btn-social facebook" (click)="signInWithFB()" [disabled]="isLoading || socialLoading">
                 <img src="assets/icons/facebook.svg" alt="Facebook" width="20" height="20">
                 Facebook ile Giriş
