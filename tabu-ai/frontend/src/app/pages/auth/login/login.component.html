@@ -22,11 +22,26 @@
                 {{ error }}
             </div>
 
-            <button type="submit" class="btn btn-primary btn-block" [disabled]="isLoading">
+            <button type="submit" class="btn btn-primary btn-block" [disabled]="isLoading || socialLoading">
                 <span *ngIf="!isLoading">Giriş Yap</span>
                 <span *ngIf="isLoading" class="spinner"></span>
             </button>
         </form>
+
+        <div class="divider">
+            <span>veya</span>
+        </div>
+
+        <div class="social-login">
+            <button class="btn btn-social google" (click)="signInWithGoogle()" [disabled]="isLoading || socialLoading">
+                <img src="assets/icons/google.svg" alt="Google" width="20" height="20">
+                Google ile Giriş
+            </button>
+            <button class="btn btn-social facebook" (click)="signInWithFB()" [disabled]="isLoading || socialLoading">
+                <img src="assets/icons/facebook.svg" alt="Facebook" width="20" height="20">
+                Facebook ile Giriş
+            </button>
+        </div>
 
         <div class="card-footer">
             <p>Hesabın yok mu? <a routerLink="/register">Kayıt Ol</a></p>

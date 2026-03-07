@@ -48,6 +48,16 @@ export class AuthService {
       }));
   }
 
+  externalLogin(provider: string, idToken: string): Observable<UserProfile> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/external-login`, { provider, idToken })
+      .pipe(map(response => {
+        localStorage.setItem('token', response.token);
+        localStorage.setItem('user', JSON.stringify(response.user));
+        this.currentUserSubject.next(response.user);
+        return response.user;
+      }));
+  }
+
   logout() {
     // remove user from local storage to log user out
     localStorage.removeItem('token');

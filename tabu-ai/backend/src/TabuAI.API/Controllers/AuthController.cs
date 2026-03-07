@@ -55,4 +55,23 @@ public class AuthController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+
+    [HttpPost("external-login")]
+    public async Task<ActionResult<AuthResponse>> ExternalLogin(SocialLoginRequest request)
+    {
+        var command = new ExternalLoginCommand
+        {
+            Provider = request.Provider,
+            IdToken = request.IdToken
+        };
+        try
+        {
+            var response = await _mediator.Send(command);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }

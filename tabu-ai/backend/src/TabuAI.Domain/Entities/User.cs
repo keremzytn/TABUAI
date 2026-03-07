@@ -18,6 +18,8 @@ public class User
     public DateTime? LastLoginAt { get; set; }
     public bool IsActive { get; set; } = true;
     public string PasswordHash { get; set; } = string.Empty;
+    public string? GoogleId { get; set; }
+    public string? FacebookId { get; set; }
     
     // Navigation properties
     public ICollection<GameSession> GameSessions { get; set; } = new List<GameSession>();

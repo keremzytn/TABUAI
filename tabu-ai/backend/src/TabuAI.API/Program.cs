@@ -51,6 +51,10 @@ builder.Services.AddScoped<TabuAI.Application.Common.Services.IBadgeService, Tab
 // Token Service
 builder.Services.AddScoped<TabuAI.Application.Common.Interfaces.ITokenService, TabuAI.Infrastructure.Services.TokenService>();
 
+// External Auth Service
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<TabuAI.Application.Common.Interfaces.IExternalAuthService, TabuAI.Infrastructure.Services.ExternalAuthService>();
+
 // Authentication
 builder.Services.AddAuthentication(options =>
 {

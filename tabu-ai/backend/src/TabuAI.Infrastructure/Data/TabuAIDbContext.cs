@@ -32,9 +32,12 @@ public class TabuAIDbContext : DbContext
             entity.Property(e => e.Username).IsRequired().HasMaxLength(50);
             entity.Property(e => e.Email).IsRequired().HasMaxLength(254);
             entity.Property(e => e.DisplayName).HasMaxLength(100);
-            entity.Property(e => e.Role).IsRequired().HasDefaultValue(UserRole.User);
+            entity.Property(e => e.Level).IsRequired().HasDefaultValue(PlayerLevel.Rookie).HasSentinel((PlayerLevel)0);
+            entity.Property(e => e.Role).IsRequired().HasDefaultValue(UserRole.User).HasSentinel((UserRole)0);
             entity.HasIndex(e => e.Username).IsUnique();
             entity.HasIndex(e => e.Email).IsUnique();
+            entity.HasIndex(e => e.GoogleId).IsUnique();
+            entity.HasIndex(e => e.FacebookId).IsUnique();
         });
 
         // Word Configuration
