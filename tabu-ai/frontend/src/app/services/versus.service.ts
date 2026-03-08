@@ -29,6 +29,7 @@ export class VersusService implements OnDestroy {
   private matchmakingError$ = new Subject<string>();
   private roomNotFound$ = new Subject<string>();
   private opponentDisconnected$ = new Subject<{ disconnectedPlayerId: string; winnerId: string | null }>();
+  private authError$ = new Subject<string>();
 
   private connectionState$ = new BehaviorSubject<string>('disconnected');
 
@@ -41,6 +42,7 @@ export class VersusService implements OnDestroy {
   onMatchmakingError = this.matchmakingError$.asObservable();
   onRoomNotFound = this.roomNotFound$.asObservable();
   onOpponentDisconnected = this.opponentDisconnected$.asObservable();
+  onAuthError = this.authError$.asObservable();
   onConnectionStateChange = this.connectionState$.asObservable();
 
   constructor(
@@ -70,6 +72,7 @@ export class VersusService implements OnDestroy {
     } catch (err) {
       console.error('SignalR connection error:', err);
       this.connectionState$.next('error');
+      this.authError$.next('Sunucuya bağlanılamadı. Lütfen tekrar giriş yapın.');
     }
   }
 
@@ -117,6 +120,10 @@ export class VersusService implements OnDestroy {
 
     this.hubConnection.on('OpponentDisconnected', (data: { disconnectedPlayerId: string; winnerId: string | null }) => {
       this.opponentDisconnected$.next(data);
+    });
+
+    this.hubConnection.on('AuthError', (msg: string) => {
+      this.authError$.next(msg);
     });
 
     this.hubConnection.onreconnecting(() => {

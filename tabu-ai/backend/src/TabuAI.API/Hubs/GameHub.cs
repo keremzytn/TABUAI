@@ -96,10 +96,10 @@ public class GameHub : Hub
     public async Task JoinMatchmaking(string? category, int? difficulty)
     {
         var userId = Context.User?.FindFirst("UserId")?.Value;
-        if (userId == null) return;
+        if (userId == null) { await Clients.Caller.SendAsync("AuthError", "Oturum süresi dolmuş. Lütfen tekrar giriş yapın."); return; }
 
         var user = await _unitOfWork.Users.GetByIdAsync(Guid.Parse(userId));
-        if (user == null) return;
+        if (user == null) { await Clients.Caller.SendAsync("AuthError", "Kullanıcı bulunamadı."); return; }
 
         _cancelledMatchmaking.TryRemove(userId, out _);
 
@@ -156,27 +156,37 @@ public class GameHub : Hub
     public async Task WaitInRoom(string roomCode)
     {
         var userId = Context.User?.FindFirst("UserId")?.Value;
-        if (userId == null) return;
+        if (userId == null) { await Clients.Caller.SendAsync("AuthError", "Oturum süresi dolmuş. Lütfen tekrar giriş yapın."); return; }
 
-        var versusGames = await _unitOfWork.VersusGames.FindAsync(
-            v => v.RoomCode == roomCode && v.Status == VersusGameStatus.WaitingForOpponent);
-        var versusGame = versusGames.FirstOrDefault();
-
-        if (versusGame == null)
+        try
         {
-            await Clients.Caller.SendAsync("RoomNotFound", "Oda bulunamadı.");
-            return;
-        }
+            var versusGames = await _unitOfWork.VersusGames.FindAsync(
+                v => v.RoomCode == roomCode && v.Status == VersusGameStatus.WaitingForOpponent);
+            var versusGame = versusGames.FirstOrDefault();
 
-        if (versusGame.Player1Id.ToString() != userId)
+            if (versusGame == null)
+            {
+                await Clients.Caller.SendAsync("RoomNotFound", "Oda bulunamadı.");
+                return;
+            }
+
+            if (versusGame.Player1Id.ToString() != userId)
+            {
+                await Clients.Caller.SendAsync("RoomNotFound", "Bu odanın sahibi değilsiniz.");
+                return;
+            }
+
+            var groupName = $"versus_{versusGame.Id}";
+            await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
+            _userConnections[userId] = Context.ConnectionId;
+
+            _logger.LogInformation("Player {UserId} waiting in room {RoomCode} (group: {GroupName})", userId, roomCode, groupName);
+        }
+        catch (Exception ex)
         {
-            await Clients.Caller.SendAsync("RoomNotFound", "Bu odanın sahibi değilsiniz.");
-            return;
+            _logger.LogError(ex, "Error in WaitInRoom for room {RoomCode}", roomCode);
+            await Clients.Caller.SendAsync("RoomNotFound", $"Odada beklenirken hata: {ex.Message}");
         }
-
-        var groupName = $"versus_{versusGame.Id}";
-        await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
-        _userConnections[userId] = Context.ConnectionId;
     }
 
     /// <summary>
@@ -185,8 +195,10 @@ public class GameHub : Hub
     public async Task JoinRoom(string roomCode)
     {
         var userId = Context.User?.FindFirst("UserId")?.Value;
-        if (userId == null) return;
+        if (userId == null) { await Clients.Caller.SendAsync("AuthError", "Oturum süresi dolmuş. Lütfen tekrar giriş yapın."); return; }
 
+        try
+        {
         var versusGames = await _unitOfWork.VersusGames.FindAsync(
             v => v.RoomCode == roomCode && v.Status == VersusGameStatus.WaitingForOpponent);
         var versusGame = versusGames.FirstOrDefault();
@@ -205,7 +217,7 @@ public class GameHub : Hub
 
         var parsedUserId = Guid.Parse(userId);
         var player2 = await _unitOfWork.Users.GetByIdAsync(parsedUserId);
-        if (player2 == null) return;
+        if (player2 == null) { await Clients.Caller.SendAsync("RoomNotFound", "Kullanıcı bulunamadı."); return; }
 
         // Join the game
         versusGame.Player2Id = parsedUserId;
@@ -214,7 +226,7 @@ public class GameHub : Hub
 
         // Create game sessions for both players
         var word = await _unitOfWork.Words.GetByIdAsync(versusGame.WordId);
-        if (word == null) return;
+        if (word == null) { await Clients.Caller.SendAsync("RoomNotFound", "Kelime bulunamadı."); return; }
 
         var p1Session = new GameSession
         {
@@ -249,15 +261,16 @@ public class GameHub : Hub
         var groupName = $"versus_{versusGame.Id}";
         await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
 
-        if (_userConnections.TryGetValue(versusGame.Player1Id.ToString(), out var p1Connection))
+        string? p1Connection = null;
+        _userConnections.TryGetValue(versusGame.Player1Id.ToString(), out p1Connection);
+        if (p1Connection != null)
         {
             await Groups.AddToGroupAsync(p1Connection, groupName);
         }
 
         var player1 = await _unitOfWork.Users.GetByIdAsync(versusGame.Player1Id);
 
-        // Notify both players
-        await Clients.Group(groupName).SendAsync("GameStarted", new
+        var gameStartedPayload = new
         {
             versusGameId = versusGame.Id,
             roomCode = versusGame.RoomCode,
@@ -281,7 +294,22 @@ public class GameHub : Hub
                 displayName = player2.DisplayName ?? player2.Username,
                 gameSessionId = p2Session.Id
             }
-        });
+        };
+
+        // Notify via group
+        await Clients.Group(groupName).SendAsync("GameStarted", gameStartedPayload);
+
+        // Also notify Player1 directly in case group membership failed
+        if (p1Connection != null)
+        {
+            await Clients.Client(p1Connection).SendAsync("GameStarted", gameStartedPayload);
+        }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in JoinRoom for room {RoomCode}", roomCode);
+            await Clients.Caller.SendAsync("RoomNotFound", $"Odaya katılırken hata oluştu: {ex.Message}");
+        }
     }
 
     /// <summary>
@@ -290,7 +318,7 @@ public class GameHub : Hub
     public async Task SubmitVersusPrompt(string versusGameId, string gameSessionId, string prompt)
     {
         var userId = Context.User?.FindFirst("UserId")?.Value;
-        if (userId == null) return;
+        if (userId == null) { await Clients.Caller.SendAsync("AuthError", "Oturum süresi dolmuş. Lütfen tekrar giriş yapın."); return; }
 
         var parsedVersusId = Guid.Parse(versusGameId);
         var parsedSessionId = Guid.Parse(gameSessionId);

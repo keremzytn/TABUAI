@@ -126,10 +126,19 @@ export class VersusComponent implements OnInit, OnDestroy {
 
       this.versusService.onRoomNotFound.subscribe((msg: string) => {
         this.toastService.error(msg);
+        this.phase = 'lobby';
+        this.lobbyMode = 'menu';
       }),
 
       this.versusService.onOpponentDisconnected.subscribe((data) => {
         this.handleOpponentDisconnected(data);
+      }),
+
+      this.versusService.onAuthError.subscribe((msg: string) => {
+        this.toastService.error(msg);
+        this.phase = 'lobby';
+        this.lobbyMode = 'menu';
+        this.router.navigate(['/login']);
       })
     );
   }
@@ -175,6 +184,7 @@ export class VersusComponent implements OnInit, OnDestroy {
   // ---- Game Logic ----
 
   private handleGameStarted(data: VersusGameStartedEvent): void {
+    if (this.phase === 'playing') return; // duplicate event guard
     this.versusGameId = data.versusGameId;
     this.roomCode = data.roomCode;
     this.word = data.word;
