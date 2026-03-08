@@ -12,7 +12,10 @@ public interface IUnitOfWork : IDisposable
     IRepository<UserBadge> UserBadges { get; }
     IRepository<UserStatistic> UserStatistics { get; }
     IRepository<Friendship> Friendships { get; }
-    
+    IRepository<VersusGame> VersusGames { get; }
+    IRepository<Challenge> Challenges { get; }
+    IRepository<ActivityLog> ActivityLogs { get; }
+
     Task<int> SaveChangesAsync();
     Task BeginTransactionAsync();
     Task CommitTransactionAsync();

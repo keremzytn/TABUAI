@@ -32,6 +32,21 @@ export const routes: Routes = [
         canActivate: [AuthGuard]
       },
       {
+        path: 'versus',
+        loadComponent: () => import('./pages/versus/versus.component').then(m => m.VersusComponent),
+        canActivate: [AuthGuard]
+      },
+      {
+        path: 'challenges',
+        loadComponent: () => import('./pages/challenges/challenges.component').then(m => m.ChallengesComponent),
+        canActivate: [AuthGuard]
+      },
+      {
+        path: 'activity',
+        loadComponent: () => import('./pages/activity/activity.component').then(m => m.ActivityComponent),
+        canActivate: [AuthGuard]
+      },
+      {
         path: 'login',
         loadComponent: () => import('./pages/auth/login/login.component').then(m => m.LoginComponent)
       },

@@ -178,6 +178,20 @@
     color: #c4b5fd;
 }
 
+.mode-badge.versus {
+    background: rgba(236, 72, 153, 0.2);
+    color: #f9a8d4;
+}
+
+.versus-card {
+    border-color: rgba(236, 72, 153, 0.3) !important;
+
+    &:hover, &.active {
+        border-color: #ec4899 !important;
+        box-shadow: 0 0 20px rgba(236, 72, 153, 0.2);
+    }
+}
+
 .category-chips {
     display: flex;
     flex-wrap: wrap;

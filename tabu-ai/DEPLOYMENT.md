@@ -18,8 +18,7 @@
 ### 1. Repository'yi Klonlayın
 ```bash
 git clone https://github.com/keremzytn/TABUAI.git
-cd TABUAI
-cd tabu-ai
+cd TABUAI && cd tabu-ai
 docker-compose -f docker-compose.prod.yml up -d --build
 
 ```

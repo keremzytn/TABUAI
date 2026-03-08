@@ -1,0 +1,97 @@
+<div class="container challenges-container">
+  <div class="glass-card challenges-panel">
+    <div class="page-header">
+      <h1>Meydan Okumalar</h1>
+      <p class="text-muted">Arkadaşlarına meydan oku veya gelen okumalara yanıt ver.</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab" [class.active]="activeTab === 'received'" (click)="activeTab = 'received'">
+        Gelen
+        <span *ngIf="pendingChallenges.length > 0" class="tab-badge">{{ pendingChallenges.length }}</span>
+      </button>
+      <button class="tab" [class.active]="activeTab === 'sent'" (click)="activeTab = 'sent'">Gönderilen</button>
+      <button class="tab" [class.active]="activeTab === 'new'" (click)="activeTab = 'new'">Yeni Meydan Okuma</button>
+    </div>
+
+    <!-- Received Challenges -->
+    <div *ngIf="activeTab === 'received'" class="tab-content fade-in">
+      <div *ngIf="loading" class="loading-state">
+        <div class="loading-dots"><span></span><span></span><span></span></div>
+      </div>
+
+      <div *ngIf="!loading && pendingChallenges.length === 0" class="empty-state">
+        <p>Henuz gelen meydan okuma yok.</p>
+      </div>
+
+      <div *ngFor="let c of pendingChallenges" class="challenge-card glass-card">
+        <div class="challenge-info">
+          <div class="challenger-avatar">&#9876;</div>
+          <div class="challenge-details">
+            <span class="challenger-name">{{ c.challenger.displayName || c.challenger.username }}</span>
+            <span class="challenge-meta">{{ c.word.category }} | {{ getTimeAgo(c.createdAt) }}</span>
+            <span *ngIf="c.message" class="challenge-message">"{{ c.message }}"</span>
+          </div>
+        </div>
+        <div class="challenge-actions">
+          <button class="btn btn-primary btn-sm" (click)="acceptChallenge(c)">Kabul Et</button>
+          <button class="btn btn-outline btn-sm" (click)="rejectChallenge(c)">Reddet</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sent Challenges -->
+    <div *ngIf="activeTab === 'sent'" class="tab-content fade-in">
+      <div *ngIf="sentChallenges.length === 0" class="empty-state">
+        <p>Henuz gonderilen meydan okuma yok.</p>
+      </div>
+
+      <div *ngFor="let c of sentChallenges" class="challenge-card glass-card">
+        <div class="challenge-info">
+          <div class="challenger-avatar">&#127919;</div>
+          <div class="challenge-details">
+            <span class="challenger-name">{{ c.challenged.displayName || c.challenged.username }}</span>
+            <span class="challenge-meta">{{ c.word.category }} | {{ getTimeAgo(c.createdAt) }}</span>
+          </div>
+        </div>
+        <span class="status-badge" [ngClass]="getStatusClass(c.status)">{{ getStatusText(c.status) }}</span>
+      </div>
+    </div>
+
+    <!-- New Challenge -->
+    <div *ngIf="activeTab === 'new'" class="tab-content fade-in">
+      <div class="new-challenge-form">
+
+        <div class="form-group">
+          <label class="form-label">Arkadaş Sec</label>
+          <select [(ngModel)]="selectedFriendId" class="form-select">
+            <option value="">Bir arkadaş seç...</option>
+            <option *ngFor="let f of friends" [value]="f.userId">{{ f.displayName || f.username }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Kategori (Opsiyonel)</label>
+          <div class="category-chips">
+            <button *ngFor="let cat of categories" class="chip"
+              [class.active]="selectedCategory === cat"
+              (click)="selectedCategory = selectedCategory === cat ? null : cat">
+              {{ cat }}
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Mesaj (Opsiyonel)</label>
+          <input type="text" class="form-input" [(ngModel)]="challengeMessage"
+            placeholder="Bakalım yenebilecek misin?" maxlength="200">
+        </div>
+
+        <button class="btn btn-primary btn-lg" (click)="sendChallenge()" [disabled]="!selectedFriendId">
+          Meydan Oku!
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

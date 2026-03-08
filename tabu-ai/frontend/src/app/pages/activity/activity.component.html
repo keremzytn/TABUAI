@@ -1,0 +1,42 @@
+<div class="container activity-container">
+  <div class="glass-card activity-panel">
+    <div class="page-header">
+      <h1>Topluluk Akisi</h1>
+      <p class="text-muted">Arkadaşlarının son aktiviteleri</p>
+    </div>
+
+    <!-- Activity List -->
+    <div class="activity-list">
+      <div *ngFor="let activity of activities" class="activity-item fade-in">
+        <div class="activity-icon">{{ getActivityIcon(activity.type) }}</div>
+        <div class="activity-content">
+          <div class="activity-header">
+            <span class="activity-user">{{ activity.userDisplayName }}</span>
+            <span class="activity-time">{{ getTimeAgo(activity.createdAt) }}</span>
+          </div>
+          <p class="activity-desc">{{ activity.description }}</p>
+          <span *ngIf="activity.scoreEarned" class="activity-score">+{{ activity.scoreEarned }} puan</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!loading && activities.length === 0" class="empty-state">
+      <div class="empty-icon">&#128240;</div>
+      <p>Henuz aktivite yok.</p>
+      <p class="text-muted">Arkadaş ekle ve oyun oyna!</p>
+    </div>
+
+    <!-- Load More -->
+    <div *ngIf="hasMore && activities.length > 0" class="load-more">
+      <button class="btn btn-outline" (click)="loadMore()" [disabled]="loading">
+        {{ loading ? 'Yukleniyor...' : 'Daha Fazla' }}
+      </button>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading && activities.length === 0" class="loading-state">
+      <div class="loading-dots"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+</div>

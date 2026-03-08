@@ -20,6 +20,9 @@ public class TabuAIDbContext : DbContext
     public DbSet<UserStatistic> UserStatistics { get; set; }
 
     public DbSet<Friendship> Friendships { get; set; }
+    public DbSet<VersusGame> VersusGames { get; set; }
+    public DbSet<Challenge> Challenges { get; set; }
+    public DbSet<ActivityLog> ActivityLogs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -159,6 +162,80 @@ public class TabuAIDbContext : DbContext
 
             // A user can only send one request to another user
             entity.HasIndex(e => new { e.RequesterId, e.AddresseeId }).IsUnique();
+        });
+
+        // VersusGame Configuration
+        modelBuilder.Entity<VersusGame>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.RoomCode).IsRequired().HasMaxLength(10);
+            entity.HasIndex(e => e.RoomCode).IsUnique();
+
+            entity.HasOne(e => e.Word)
+                .WithMany()
+                .HasForeignKey(e => e.WordId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Player1)
+                .WithMany()
+                .HasForeignKey(e => e.Player1Id)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Player2)
+                .WithMany()
+                .HasForeignKey(e => e.Player2Id)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Player1GameSession)
+                .WithMany()
+                .HasForeignKey(e => e.Player1GameSessionId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(e => e.Player2GameSession)
+                .WithMany()
+                .HasForeignKey(e => e.Player2GameSessionId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // Challenge Configuration
+        modelBuilder.Entity<Challenge>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Message).HasMaxLength(200);
+
+            entity.HasOne(e => e.Challenger)
+                .WithMany()
+                .HasForeignKey(e => e.ChallengerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Challenged)
+                .WithMany()
+                .HasForeignKey(e => e.ChallengedId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Word)
+                .WithMany()
+                .HasForeignKey(e => e.WordId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.VersusGame)
+                .WithMany()
+                .HasForeignKey(e => e.VersusGameId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // ActivityLog Configuration
+        modelBuilder.Entity<ActivityLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Description).IsRequired().HasMaxLength(500);
+
+            entity.HasOne(e => e.User)
+                .WithMany(e => e.ActivityLogs)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => new { e.UserId, e.CreatedAt });
         });
 
         // Seed Data

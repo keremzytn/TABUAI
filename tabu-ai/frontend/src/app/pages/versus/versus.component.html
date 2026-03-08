@@ -1,0 +1,230 @@
+<div class="container versus-container">
+
+  <!-- LOBBY -->
+  <div *ngIf="phase === 'lobby'" class="fade-in">
+    <div class="glass-card lobby-panel">
+
+      <!-- Menu -->
+      <div *ngIf="lobbyMode === 'menu'">
+        <div class="lobby-header">
+          <div class="lobby-icon">&#9876;</div>
+          <h1>Duello Modu</h1>
+          <p class="text-muted">Arkadaşlarınla veya rastgele rakiplerle yarış!</p>
+        </div>
+
+        <!-- Category Selection -->
+        <div class="category-section">
+          <h4 class="section-label">Kategori (Opsiyonel)</h4>
+          <div class="category-chips">
+            <button *ngFor="let cat of categories" class="chip"
+              [class.active]="selectedCategory === cat"
+              (click)="selectedCategory = selectedCategory === cat ? null : cat">
+              {{ cat }}
+            </button>
+          </div>
+        </div>
+
+        <div class="lobby-actions">
+          <button class="btn btn-primary btn-lg lobby-btn" (click)="startMatchmaking()">
+            <span class="btn-icon">&#128270;</span>
+            <div class="btn-content">
+              <span class="btn-title">Rastgele Rakip Bul</span>
+              <span class="btn-desc">Otomatik eslesme</span>
+            </div>
+          </button>
+
+          <button class="btn btn-secondary btn-lg lobby-btn" (click)="createRoom()">
+            <span class="btn-icon">&#127968;</span>
+            <div class="btn-content">
+              <span class="btn-title">Oda Olustur</span>
+              <span class="btn-desc">Arkadaşını davet et</span>
+            </div>
+          </button>
+
+          <button class="btn btn-outline btn-lg lobby-btn" (click)="lobbyMode = 'join-room'">
+            <span class="btn-icon">&#128279;</span>
+            <div class="btn-content">
+              <span class="btn-title">Odaya Katıl</span>
+              <span class="btn-desc">Oda kodu ile katıl</span>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Create Room -->
+      <div *ngIf="lobbyMode === 'create-room'" class="room-created">
+        <div class="lobby-icon">&#127968;</div>
+        <h2>Oda Olusturuldu!</h2>
+        <p class="text-muted">Bu kodu arkadaşınla paylaş:</p>
+        <div class="room-code-display" (click)="copyRoomCode()">
+          <span class="room-code">{{ createdRoomCode }}</span>
+          <span class="copy-hint">Kopyala</span>
+        </div>
+        <p class="waiting-text">Rakibin bekleniyor...</p>
+        <div class="loading-dots">
+          <span></span><span></span><span></span>
+        </div>
+        <button class="btn btn-outline mt-3" (click)="backToLobby()">Iptal</button>
+      </div>
+
+      <!-- Join Room -->
+      <div *ngIf="lobbyMode === 'join-room'" class="join-room">
+        <div class="lobby-icon">&#128279;</div>
+        <h2>Odaya Katıl</h2>
+        <p class="text-muted">Arkadaşından aldığın kodu gir:</p>
+        <input type="text" class="room-code-input" [(ngModel)]="joinRoomCode"
+          placeholder="ABCDEF" maxlength="6" (keydown.enter)="joinRoom()">
+        <div class="join-actions">
+          <button class="btn btn-primary" (click)="joinRoom()" [disabled]="joinRoomCode.length < 6">
+            Katıl
+          </button>
+          <button class="btn btn-outline" (click)="lobbyMode = 'menu'">Geri</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WAITING -->
+  <div *ngIf="phase === 'waiting'" class="fade-in waiting-screen">
+    <div class="glass-card waiting-panel">
+      <div class="loading-ring"><div></div><div></div><div></div><div></div></div>
+      <h2>Rakip Aranıyor...</h2>
+      <p class="text-muted">Uygun bir rakip bulunduğunda otomatik başlayacak.</p>
+      <button class="btn btn-outline mt-3" (click)="cancelMatchmaking()">Iptal</button>
+    </div>
+  </div>
+
+  <!-- PLAYING -->
+  <div *ngIf="phase === 'playing' && word" class="fade-in game-board">
+
+    <!-- Players Header -->
+    <div class="versus-header glass-card">
+      <div class="player-info me">
+        <span class="player-name">{{ myPlayer?.displayName }}</span>
+        <span class="player-score">{{ myPlayer?.score ?? 0 }}</span>
+        <span class="player-attempts">
+          <span *ngFor="let a of [1,2,3]; let i = index" class="attempt-dot"
+            [class.used]="i < (myPlayer?.attempts ?? 0)"></span>
+        </span>
+      </div>
+
+      <div class="vs-badge">
+        <span class="vs-text">VS</span>
+        <span class="timer">{{ gameTime }}</span>
+      </div>
+
+      <div class="player-info opponent">
+        <span class="player-name">{{ opponentPlayer?.displayName }}</span>
+        <span class="player-score">{{ opponentPlayer?.score ?? 0 }}</span>
+        <span class="player-attempts">
+          <span *ngFor="let a of [1,2,3]; let i = index" class="attempt-dot"
+            [class.used]="i < (opponentPlayer?.attempts ?? 0)"></span>
+        </span>
+      </div>
+    </div>
+
+    <!-- Word Card -->
+    <div class="card-area">
+      <div class="target-card glass-card">
+        <div class="card-header">
+          <span class="difficulty-badge" [attr.data-level]="word.difficulty">
+            {{ getDifficultyText(word.difficulty) }}
+          </span>
+          <span class="category-badge">{{ word.category }}</span>
+        </div>
+        <div class="word-display">
+          <h2 class="target-word">{{ word.targetWord }}</h2>
+        </div>
+        <div class="tabu-section">
+          <div class="tabu-label">&#128683; YASAKLI KELIMELER</div>
+          <div class="tabu-list">
+            <div *ngFor="let tabu of word.tabuWords" class="tabu-item">{{ tabu }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- My Attempts History -->
+    <div *ngIf="myAttempts.length > 0" class="history-area">
+      <div *ngFor="let attempt of myAttempts" class="history-item glass-card"
+        [class.correct]="attempt.isCorrect">
+        <div class="history-prompt">
+          <span class="badge">#{{ attempt.attemptNumber }}</span>
+          <p>{{ attempt.prompt }}</p>
+        </div>
+        <div class="history-ai">
+          <span class="ai-label">AI Tahmini:</span>
+          <span class="ai-guess">"{{ attempt.aiGuess }}"</span>
+          <span *ngIf="attempt.isCorrect" class="success-icon">&#9989;</span>
+          <span *ngIf="!attempt.isCorrect" class="fail-icon">&#10060;</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Opponent Status -->
+    <div *ngIf="opponentFinished && !myFinished" class="opponent-status glass-card">
+      <p>Rakibiniz tamamladı! ({{ opponentPlayer?.attempts }} deneme, {{ opponentPlayer?.score }} puan)</p>
+    </div>
+
+    <!-- My Input Area -->
+    <div class="input-area glass-card" *ngIf="!myFinished && !submitting">
+      <textarea [(ngModel)]="currentPrompt" class="game-input"
+        placeholder="Yasaklı kelimeler kullanmadan hedefini anlat..."
+        [disabled]="submitting"
+        (keydown.enter)="onEnter($event)"
+        (input)="checkTabuWords()" rows="1"></textarea>
+      <button class="btn btn-send" (click)="submitPrompt()"
+        [disabled]="!currentPrompt.trim() || submitting">
+        <span class="send-icon">&#10148;</span>
+      </button>
+    </div>
+
+    <!-- Submitting indicator -->
+    <div *ngIf="submitting" class="submitting-indicator glass-card">
+      <div class="loading-dots"><span></span><span></span><span></span></div>
+      <p>AI dusunuyor...</p>
+    </div>
+
+    <!-- Tabu Warning -->
+    <div *ngIf="detectedTabuWord" class="tabu-warning slide-up">
+      &#9888; "<strong>{{ detectedTabuWord }}</strong>" yasaklı kelime!
+    </div>
+
+    <!-- Waiting for opponent after I'm done -->
+    <div *ngIf="myFinished && !opponentFinished" class="waiting-opponent glass-card">
+      <div class="loading-dots"><span></span><span></span><span></span></div>
+      <p>Rakibinizin bitirmesi bekleniyor...</p>
+    </div>
+  </div>
+
+  <!-- FINISHED -->
+  <div *ngIf="phase === 'finished'" class="fade-in result-screen">
+    <div class="glass-card result-panel" [class.win]="winnerId === userId" [class.lose]="winnerId && winnerId !== userId" [class.draw]="isDraw">
+      <div class="result-icon">
+        {{ isDraw ? '&#129309;' : (winnerId === userId ? '&#127942;' : '&#128546;') }}
+      </div>
+      <h1 class="result-title">
+        {{ isDraw ? 'BERABERE!' : (winnerId === userId ? 'KAZANDIN!' : 'KAYBETTIN') }}
+      </h1>
+
+      <div class="result-scores">
+        <div class="result-player me" [class.winner]="winnerId === myPlayer?.id">
+          <span class="rp-name">{{ myPlayer?.displayName }}</span>
+          <span class="rp-score">{{ myPlayer?.score }}</span>
+          <span class="rp-attempts">{{ myPlayer?.attempts }} deneme</span>
+        </div>
+        <div class="result-vs">VS</div>
+        <div class="result-player opponent" [class.winner]="winnerId === opponentPlayer?.id">
+          <span class="rp-name">{{ opponentPlayer?.displayName }}</span>
+          <span class="rp-score">{{ opponentPlayer?.score }}</span>
+          <span class="rp-attempts">{{ opponentPlayer?.attempts }} deneme</span>
+        </div>
+      </div>
+
+      <div class="result-actions">
+        <button class="btn btn-primary btn-lg" (click)="backToLobby()">Tekrar Oyna</button>
+        <button class="btn btn-outline" routerLink="/">Ana Sayfa</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -27,6 +27,7 @@ public class User
     public ICollection<UserStatistic> UserStatistics { get; set; } = new List<UserStatistic>();
     public ICollection<Friendship> SentFriendRequests { get; set; } = new List<Friendship>();
     public ICollection<Friendship> ReceivedFriendRequests { get; set; } = new List<Friendship>();
+    public ICollection<ActivityLog> ActivityLogs { get; set; } = new List<ActivityLog>();
 }
 
 public enum PlayerLevel

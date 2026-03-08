@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { Subscription, interval } from 'rxjs';
 import { GameService } from '../../services/game.service';
 import { AuthService } from '../../services/auth.service';
@@ -44,7 +45,8 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewChecked {
   constructor(
     private gameService: GameService,
     private authService: AuthService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private router: Router
   ) { }
 
   ngOnInit() {
@@ -281,6 +283,10 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewChecked {
         this.startNewGame();
       }
     }
+  }
+
+  goToVersus(): void {
+    this.router.navigate(['/versus']);
   }
 
   getDifficultyText(level: number): string {

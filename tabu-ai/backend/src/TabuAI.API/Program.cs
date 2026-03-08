@@ -10,11 +10,13 @@ using TabuAI.Infrastructure.Data;
 using TabuAI.Infrastructure.Repositories;
 using TabuAI.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using TabuAI.API.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -74,6 +76,21 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(
             System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "super_secret_key_tabuia_secure_2024!")),
         RoleClaimType = System.Security.Claims.ClaimTypes.Role
+    };
+
+    // SignalR sends JWT via query string
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/game"))
+            {
+                context.Token = accessToken;
+            }
+            return Task.CompletedTask;
+        }
     };
 });
 
@@ -140,6 +157,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<GameHub>("/hubs/game");
 
 // Database Migration (Development only)
 if (app.Environment.IsDevelopment())

@@ -26,8 +26,17 @@ import { AuthService } from '../../services/auth.service';
             <a routerLink="/leaderboard" routerLinkActive="active" class="nav-link">
               Liderlik
             </a>
+            <a routerLink="/versus" routerLinkActive="active" class="nav-link">
+              Duello
+            </a>
+            <a routerLink="/challenges" routerLinkActive="active" class="nav-link">
+              Meydan Okuma
+            </a>
+            <a routerLink="/activity" routerLinkActive="active" class="nav-link">
+              Akis
+            </a>
             <a routerLink="/friends" routerLinkActive="active" class="nav-link">
-              Arkadaşlar
+              Arkadas
             </a>
             <a *ngIf="!(authService.currentUser | async)" routerLink="/login" routerLinkActive="active" class="nav-link">
               Giriş
@@ -86,17 +95,18 @@ import { AuthService } from '../../services/auth.service';
             <span class="label play-label">Oyna</span>
           </a>
 
-          <!-- Arkadaşlar -->
-          <a routerLink="/friends" routerLinkActive="active" class="mobile-link">
+          <!-- Duello -->
+          <a routerLink="/versus" routerLinkActive="active" class="mobile-link">
             <div class="icon-wrap">
               <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-                <circle cx="9" cy="7" r="4"></circle>
-                <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                <path d="M14.5 17.5L3 6V3h3l11.5 11.5"></path>
+                <path d="M13 19l6-6"></path>
+                <path d="M16 16l4 4"></path>
+                <path d="M19 21l2-2"></path>
+                <path d="M14.5 6.5L18 3h3v3l-3.5 3.5"></path>
               </svg>
             </div>
-            <span class="label">Arkadaş</span>
+            <span class="label">Duello</span>
             <span class="active-dot"></span>
           </a>
 
