@@ -88,9 +88,9 @@
   <div *ngIf="phase === 'waiting'" class="fade-in waiting-screen">
     <div class="glass-card waiting-panel">
       <div class="loading-ring"><div></div><div></div><div></div><div></div></div>
-      <h2>Rakip Aranıyor...</h2>
-      <p class="text-muted">Uygun bir rakip bulunduğunda otomatik başlayacak.</p>
-      <button class="btn btn-outline mt-3" (click)="cancelMatchmaking()">Iptal</button>
+      <h2>{{ lobbyMode === 'join-room' ? 'Odaya Katılınıyor...' : 'Rakip Aranıyor...' }}</h2>
+      <p class="text-muted">{{ lobbyMode === 'join-room' ? 'Oyun başlamak üzere.' : 'Uygun bir rakip bulunduğunda otomatik başlayacak.' }}</p>
+      <button *ngIf="lobbyMode !== 'join-room'" class="btn btn-outline mt-3" (click)="cancelMatchmaking()">Iptal</button>
     </div>
   </div>
 

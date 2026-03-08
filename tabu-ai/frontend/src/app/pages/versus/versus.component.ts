@@ -157,7 +157,6 @@ export class VersusComponent implements OnInit, OnDestroy {
         this.createdRoomCode = response.roomCode;
         this.versusGameId = response.versusGameId;
         this.lobbyMode = 'create-room';
-        this.phase = 'waiting';
         this.toastService.success(`Oda olu\u015Fturuldu: ${response.roomCode}`);
         await this.versusService.waitInRoom(response.roomCode);
       },
