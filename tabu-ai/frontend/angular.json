@@ -69,7 +69,8 @@
               "buildTarget": "tabu-ai-web:build:production"
             },
             "development": {
-              "buildTarget": "tabu-ai-web:build:development"
+              "buildTarget": "tabu-ai-web:build:development",
+              "proxyConfig": "proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"

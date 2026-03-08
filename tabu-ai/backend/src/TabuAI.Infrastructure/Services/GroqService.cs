@@ -2,7 +2,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OpenAI;
 using OpenAI.Chat;
+using Polly;
+using Polly.Retry;
 using System.ClientModel;
+using System.Globalization;
 using System.Text.Json;
 using TabuAI.Domain.Interfaces;
 
@@ -16,6 +19,51 @@ public class GroqService : IAiService
     private readonly OpenAIClient _groqClient;
     private readonly ILogger<GroqService> _logger;
     private readonly string _model;
+    private readonly AsyncRetryPolicy _retryPolicy;
+
+    // Türkçe karakter normalizasyon tablosu
+    private static readonly Dictionary<char, char> TurkishCharMap = new()
+    {
+        { 'ç', 'c' }, { 'Ç', 'C' },
+        { 'ğ', 'g' }, { 'Ğ', 'G' },
+        { 'ı', 'i' }, { 'I', 'I' },
+        { 'İ', 'i' }, { 'i', 'i' },
+        { 'ö', 'o' }, { 'Ö', 'O' },
+        { 'ş', 's' }, { 'Ş', 'S' },
+        { 'ü', 'u' }, { 'Ü', 'U' }
+    };
+
+    // Yaygın Türkçe ekler (çekim/hal/iyelik/çoğul)
+    private static readonly string[] TurkishSuffixes = new[]
+    {
+        // Çoğul
+        "ler", "lar",
+        // Hal ekleri
+        "ı", "i", "u", "ü",           // Belirtme
+        "ın", "in", "un", "ün",       // Tamlayan
+        "a", "e",                       // Yönelme
+        "da", "de", "ta", "te",       // Bulunma
+        "dan", "den", "tan", "ten",   // Ayrılma
+        // İyelik
+        "ım", "im", "um", "üm",
+        "ın", "in", "un", "ün",
+        "ımız", "imiz", "umuz", "ümüz",
+        "ınız", "iniz", "unuz", "ünüz",
+        "ları", "leri",
+        // Sıfat fiil / fiilden isim
+        "lık", "lik", "luk", "lük",
+        "cı", "ci", "cu", "cü",
+        "sız", "siz", "suz", "süz",
+        // Birleşik ekler
+        "ları", "leri",
+        "lardan", "lerden",
+        "lara", "lere",
+        "ında", "inde", "unda", "ünde",
+        "ından", "inden", "undan", "ünden",
+        "ına", "ine", "una", "üne",
+        "ıyla", "iyle", "uyla", "üyle",
+        "yla", "yle",
+    };
 
     public GroqService(IConfiguration configuration, ILogger<GroqService> logger)
     {
@@ -30,53 +78,81 @@ public class GroqService : IAiService
 
         _groqClient = new OpenAIClient(new ApiKeyCredential(apiKey), options);
         _logger = logger;
+
+        // Retry policy: 3 deneme, exponential backoff (1s, 2s, 4s)
+        _retryPolicy = Policy
+            .Handle<Exception>(ex => ex is not ArgumentException and not InvalidOperationException)
+            .WaitAndRetryAsync(
+                retryCount: 2,
+                sleepDurationProvider: attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt - 1)),
+                onRetry: (exception, timeSpan, retryCount, _) =>
+                {
+                    _logger.LogWarning(exception,
+                        "Groq API çağrısı başarısız oldu. Deneme {RetryCount}, {Delay}s sonra tekrar denenecek.",
+                        retryCount, timeSpan.TotalSeconds);
+                });
     }
 
     public async Task<AiGuessResult> GuessWordAsync(string prompt, string targetWord, List<string> tabuWords)
     {
         try
         {
-            var systemMessage = $@"Sen bir TABU oyunu asistanısın. Kullanıcı sana bir tanımlama gönderecek ve sen bu tanımlamaya göre kelimeyi tahmin etmelisin.
-                
-Kurallar:
-1. Sadece TEK KELİME ile cevap ver
-2. Cevabını JSON formatında ver: {{""word"": ""tahmin_ettiğin_kelime"", ""confidence"": 0.95}}
-3. Confidence 0.0 ile 1.0 arasında olmalı
-4. Türkçe kelimelerle cevap ver
-5. En muhtemel kelimeyi tahmin et
+            var systemMessage = @"Sen bir TABU oyunu oyuncususun. Karşındaki kişi bir kelimeyi anlatmaya çalışıyor ve sen bu tanımlamadan kelimeyi tahmin etmelisin.
 
-Tabu kelimeler (bunlar ipucu değil, sadece bilgi amaçlı): {string.Join(", ", tabuWords)}";
+ÖNEMLİ KURALLAR:
+1. SADECE kullanıcının verdiği tanımlamayı kullanarak tahmin yap. Başka hiçbir bilgin yok.
+2. Tanımlama belirsiz veya yetersizse, yine de en mantıklı tahmini yap ama düşük confidence ver.
+3. Tanımlama çok genel veya birden fazla kelimeye uyuyorsa, en yaygın olanı seç ve orta seviye confidence ver.
+4. Sadece tanımlamada açıkça belirtilen özelliklere dayanarak tahmin yap. Varsayımda bulunma.
+5. Eğer tanımlama çok kısa veya anlamsızsa, genel bir tahmin yap ve çok düşük confidence ver.
+6. Sadece TEK KELİME ile cevap ver (birleşik kelimeler kabul edilir, örn: 'buzdolabı').
+7. Türkçe kelimelerle cevap ver.
 
-            var chatClient = _groqClient.GetChatClient(_model);
-            var response = await chatClient.CompleteChatAsync(
-                new ChatMessage[]
-                {
-                    new SystemChatMessage(systemMessage),
-                    new UserChatMessage(prompt)
-                });
+Cevabını SADECE şu JSON formatında ver, başka hiçbir şey yazma:
+{""word"": ""tahmin_ettiğin_kelime"", ""confidence"": 0.85}
 
-            var content = response.Value.Content[0].Text;
+Confidence seviyeleri:
+- 0.9-1.0: Tanımlama çok net, kesinlikle bu kelime
+- 0.7-0.9: Büyük ihtimalle bu kelime
+- 0.5-0.7: Olabilir ama başka seçenekler de var
+- 0.3-0.5: Tahmin, belirsiz
+- 0.0-0.3: Çok belirsiz, rastgele tahmin";
+
+            string content = null!;
+            await _retryPolicy.ExecuteAsync(async () =>
+            {
+                var chatClient = _groqClient.GetChatClient(_model);
+                var response = await chatClient.CompleteChatAsync(
+                    new ChatMessage[]
+                    {
+                        new SystemChatMessage(systemMessage),
+                        new UserChatMessage(prompt)
+                    });
+                content = response.Value.Content[0].Text;
+            });
+
             _logger.LogInformation("AI Response: {Response}", content);
 
             // Extract and parse JSON
             var jsonContent = ExtractJson(content);
             try
             {
-                var jsonResponse = JsonSerializer.Deserialize<AiResponse>(jsonContent, new JsonSerializerOptions 
-                { 
-                    PropertyNameCaseInsensitive = true 
+                var jsonResponse = JsonSerializer.Deserialize<AiResponse>(jsonContent, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
                 });
 
                 if (jsonResponse?.Word != null)
                 {
-                    var isCorrect = string.Equals(jsonResponse.Word.Trim(), targetWord.Trim(), StringComparison.OrdinalIgnoreCase);
-                    
+                    var guessedWord = jsonResponse.Word.Trim();
+                    var isCorrect = IsWordMatch(guessedWord, targetWord);
+
                     return new AiGuessResult
                     {
-                        GuessedWord = jsonResponse.Word,
+                        GuessedWord = guessedWord,
                         IsCorrect = isCorrect,
                         Confidence = jsonResponse.Confidence,
-                        Reasoning = $"AI tahmini: {jsonResponse.Word} (Güven: {jsonResponse.Confidence:P0})"
+                        Reasoning = $"AI tahmini: {guessedWord} (Güven: {jsonResponse.Confidence:P0})"
                     };
                 }
             }
@@ -85,14 +161,15 @@ Tabu kelimeler (bunlar ipucu değil, sadece bilgi amaçlı): {string.Join(", ", 
                 _logger.LogWarning(ex, "Failed to parse AI guess JSON response. Using fallback.");
                 // Fallback logic
                 var cleanedResponse = content.Trim().Trim('"');
-                if (cleanedResponse.Length > 50) cleanedResponse = cleanedResponse[..50]; // Prevention for DB limits
-                
+                if (cleanedResponse.Length > 50) cleanedResponse = cleanedResponse[..50];
+
+                var isCorrectFallback = IsWordMatch(cleanedResponse, targetWord);
                 return new AiGuessResult
                 {
                     GuessedWord = cleanedResponse,
-                    IsCorrect = false,
+                    IsCorrect = isCorrectFallback,
                     Confidence = 0.1,
-                    Reasoning = "AI anlamsız giriş tespit etti veya format hatası oluştu"
+                    Reasoning = "AI format hatası oluştu ama tahmin değerlendirildi"
                 };
             }
 
@@ -106,7 +183,7 @@ Tabu kelimeler (bunlar ipucu değil, sadece bilgi amaçlı): {string.Join(", ", 
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error occurred while getting AI guess");
+            _logger.LogError(ex, "Error occurred while getting AI guess (tüm retry denemeleri başarısız)");
             return new AiGuessResult
             {
                 GuessedWord = "Hata",
@@ -121,17 +198,8 @@ Tabu kelimeler (bunlar ipucu değil, sadece bilgi amaçlı): {string.Join(", ", 
     {
         try
         {
-            // Check for tabu words first
-            var detectedTabuWords = new List<string>();
-            var promptLower = prompt.ToLowerInvariant();
-            
-            foreach (var tabuWord in tabuWords)
-            {
-                if (promptLower.Contains(tabuWord.ToLowerInvariant()))
-                {
-                    detectedTabuWords.Add(tabuWord);
-                }
-            }
+            // Türkçe ek/çekim farkındalıklı tabu kelime kontrolü
+            var detectedTabuWords = DetectTabuWords(prompt, tabuWords);
 
             if (detectedTabuWords.Any())
             {
@@ -146,42 +214,54 @@ Tabu kelimeler (bunlar ipucu değil, sadece bilgi amaçlı): {string.Join(", ", 
                 };
             }
 
-            var systemMessage = $@"Sen bir prompt kalitesi değerlendirme uzmanısın. Kullanıcının verdiği tanımlamayı analiz et.
+            var systemMessage = $@"Sen bir TABU oyunu prompt değerlendirme uzmanısın. Kullanıcının bir kelimeyi anlatmak için yazdığı tanımlamayı analiz et.
 
 Hedef kelime: {targetWord}
-Tabu kelimeler: {string.Join(", ", tabuWords)}
+Yasaklı (tabu) kelimeler: {string.Join(", ", tabuWords)}
 
 Değerlendirme kriterleri:
-1. Açıklık ve netlik
-2. Yaratıcılık
-3. Tabu kelimelerden kaçınma
-4. Hedef kelimeye yönlendirme
+1. **Açıklık ve netlik**: Tanımlama hedef kelimeyi ne kadar iyi tarif ediyor? Sadece bu kelimeyi mi işaret ediyor yoksa birçok kelimeye mi uyuyor?
+2. **Yaratıcılık**: Tanımlama sıradan mı yoksa akıllıca bir yaklaşım mı kullanıyor? Benzetme, metafor veya farklı bakış açısı kullanılmış mı?
+3. **Tabu kelimelerden kaçınma**: Yasaklı kelimelerin kendisi veya türevleri (ekleri, çekimleri) kullanılmış mı?
+4. **Hedef kelimeye yönlendirme gücü**: Tanımlama doğrudan hedef kelimeye mi götürüyor yoksa çok genel mi kalıyor?
+5. **Kısalık ve öz**: Gereksiz uzun mu yoksa yeterli bilgiyi kısa ve öz mü veriyor?
 
-Cevabını JSON formatında ver:
+Puanlama:
+- 1: Çok kötü - Tanımlama anlamsız, alakasız veya tabu kelime içeriyor
+- 2: Zayıf - Tanımlama çok genel, birçok kelimeye uyabilir
+- 3: Orta - Tanımlama makul ama daha iyi olabilir, hedef kelime tahmin edilebilir
+- 4: İyi - Tanımlama net ve yaratıcı, hedef kelimeye güçlü şekilde yönlendiriyor
+- 5: Mükemmel - Tanımlama kısa, yaratıcı ve hedef kelimeyi neredeyse kesin olarak işaret ediyor
+
+Cevabını SADECE şu JSON formatında ver, başka hiçbir şey yazma:
 {{
-    ""quality"": 1-5, // 1: Çok kötü, 5: Mükemmel
-    ""feedback"": ""Genel değerlendirme"",
+    ""quality"": 3,
+    ""feedback"": ""Genel değerlendirme cümlesi"",
     ""strengths"": [""Güçlü yön 1"", ""Güçlü yön 2""],
     ""weaknesses"": [""Zayıf yön 1"", ""Zayıf yön 2""]
 }}";
 
-            var chatClient = _groqClient.GetChatClient(_model);
-            var response = await chatClient.CompleteChatAsync(
-                new ChatMessage[]
-                {
-                    new SystemChatMessage(systemMessage),
-                    new UserChatMessage($"Analiz edilecek prompt: {prompt}")
-                });
+            string content = null!;
+            await _retryPolicy.ExecuteAsync(async () =>
+            {
+                var chatClient = _groqClient.GetChatClient(_model);
+                var response = await chatClient.CompleteChatAsync(
+                    new ChatMessage[]
+                    {
+                        new SystemChatMessage(systemMessage),
+                        new UserChatMessage($"Analiz edilecek prompt: {prompt}")
+                    });
+                content = response.Value.Content[0].Text;
+            });
 
-            var content = response.Value.Content[0].Text;
             _logger.LogInformation("Prompt Analysis Response: {Response}", content);
 
             try
             {
                 var jsonContent = ExtractJson(content);
-                var analysisResponse = JsonSerializer.Deserialize<PromptAnalysisResponse>(jsonContent, new JsonSerializerOptions 
-                { 
-                    PropertyNameCaseInsensitive = true 
+                var analysisResponse = JsonSerializer.Deserialize<PromptAnalysisResponse>(jsonContent, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
                 });
 
                 if (analysisResponse != null)
@@ -232,36 +312,50 @@ Cevabını JSON formatında ver:
     {
         try
         {
-            var systemMessage = $@"Sen bir prompt iyileştirme danışmanısın. Kullanıcının promptunu analiz et ve iyileştirme önerileri ver.
+            var systemMessage = $@"Sen bir TABU oyunu koçusun. Kullanıcının bir kelimeyi anlatmak için yazdığı tanımlamayı analiz et ve nasıl daha iyi yazabileceğini öner.
 
 Hedef kelime: {targetWord}
-Tabu kelimeler: {string.Join(", ", tabuWords)}
-Tahmin doğru muydu: {(wasCorrect ? "Evet" : "Hayır")}
+Yasaklı (tabu) kelimeler: {string.Join(", ", tabuWords)}
+AI tahmin edebildi mi: {(wasCorrect ? "Evet, doğru tahmin etti" : "Hayır, yanlış tahmin etti")}
 
-3-5 adet pratik iyileştirme önerisi ver. Öneriler kısa ve uygulanabilir olmalı.
+{(wasCorrect ? @"Tahmin doğruydu ama yine de daha iyi prompt yazma teknikleri öner:
+- Daha kısa ve öz anlatım
+- Daha yaratıcı yaklaşımlar
+- İlk denemede doğru tahmin ettirecek stratejiler" : @"Tahmin yanlıştı. Şu konularda öneriler ver:
+- Tanımlamanın neden yetersiz kaldığını açıkla
+- Hedef kelimeye daha iyi nasıl yönlendirileceğini anlat
+- Somut alternatif tanımlama örnekleri ver (tabu kelimeler kullanmadan)
+- Farklı bakış açıları ve stratejiler öner")}
 
-Cevabını JSON formatında ver:
+3-5 adet SOMUT ve UYGULANABILIR öneri ver. Her öneri spesifik olsun, genel tavsiyeler verme.
+Mümkünse örnek tanımlama cümleleri de ekle.
+
+Cevabını SADECE şu JSON formatında ver, başka hiçbir şey yazma:
 {{
     ""suggestions"": [""Öneri 1"", ""Öneri 2"", ""Öneri 3""]
 }}";
 
-            var chatClient = _groqClient.GetChatClient(_model);
-            var response = await chatClient.CompleteChatAsync(
-                new ChatMessage[]
-                {
-                    new SystemChatMessage(systemMessage),
-                    new UserChatMessage($"İyileştirilecek prompt: {prompt}")
-                });
+            string content = null!;
+            await _retryPolicy.ExecuteAsync(async () =>
+            {
+                var chatClient = _groqClient.GetChatClient(_model);
+                var response = await chatClient.CompleteChatAsync(
+                    new ChatMessage[]
+                    {
+                        new SystemChatMessage(systemMessage),
+                        new UserChatMessage($"İyileştirilecek prompt: {prompt}")
+                    });
+                content = response.Value.Content[0].Text;
+            });
 
-            var content = response.Value.Content[0].Text;
             _logger.LogInformation("Suggestions Response: {Response}", content);
 
             try
             {
                 var jsonContent = ExtractJson(content);
-                var suggestionsResponse = JsonSerializer.Deserialize<SuggestionsResponse>(jsonContent, new JsonSerializerOptions 
-                { 
-                    PropertyNameCaseInsensitive = true 
+                var suggestionsResponse = JsonSerializer.Deserialize<SuggestionsResponse>(jsonContent, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
                 });
 
                 if (suggestionsResponse?.Suggestions != null && suggestionsResponse.Suggestions.Any())
@@ -301,20 +395,149 @@ Cevabını JSON formatında ver:
         }
     }
 
-    private string ExtractJson(string content)
+    #region Helper Methods
+
+    /// <summary>
+    /// Türkçe karakter ve çekim ekleri farkındalıklı kelime eşleştirme.
+    /// "Kahve", "kahve", "KAHVE", "kahveler" gibi varyasyonları doğru olarak eşleştirir.
+    /// </summary>
+    private static bool IsWordMatch(string guessedWord, string targetWord)
+    {
+        if (string.IsNullOrWhiteSpace(guessedWord) || string.IsNullOrWhiteSpace(targetWord))
+            return false;
+
+        var normalizedGuess = NormalizeTurkish(guessedWord.Trim());
+        var normalizedTarget = NormalizeTurkish(targetWord.Trim());
+
+        // Tam eşleşme (Türkçe normalize edilmiş)
+        if (normalizedGuess == normalizedTarget)
+            return true;
+
+        // Tahmin, hedef kelimenin ekli hali mi? (örn: tahmin="kahveler", hedef="kahve")
+        if (normalizedGuess.StartsWith(normalizedTarget) && normalizedGuess.Length <= normalizedTarget.Length + 6)
+        {
+            var suffix = normalizedGuess[normalizedTarget.Length..];
+            if (IsTurkishSuffix(suffix))
+                return true;
+        }
+
+        // Hedef kelime, tahminin ekli hali mi? (örn: tahmin="kahve", hedef="kahveler" - olası değil ama güvenlik)
+        if (normalizedTarget.StartsWith(normalizedGuess) && normalizedTarget.Length <= normalizedGuess.Length + 6)
+        {
+            var suffix = normalizedTarget[normalizedGuess.Length..];
+            if (IsTurkishSuffix(suffix))
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Türkçe ek/çekim farkındalıklı tabu kelime tespiti.
+    /// "çay" tabu kelimesi varken "çayı", "çaydan", "çaylar" gibi kullanımları da yakalar.
+    /// </summary>
+    private static List<string> DetectTabuWords(string prompt, List<string> tabuWords)
+    {
+        var detected = new List<string>();
+        var promptNormalized = NormalizeTurkish(prompt);
+        var promptWords = promptNormalized.Split(new[] { ' ', ',', '.', '!', '?', ';', ':', '\'', '"', '(', ')', '-', '\n', '\r', '\t' },
+            StringSplitOptions.RemoveEmptyEntries);
+
+        foreach (var tabuWord in tabuWords)
+        {
+            var normalizedTabu = NormalizeTurkish(tabuWord);
+
+            foreach (var promptWord in promptWords)
+            {
+                // Tam eşleşme
+                if (promptWord == normalizedTabu)
+                {
+                    detected.Add(tabuWord);
+                    break;
+                }
+
+                // Prompt kelimesi tabu kelimeyle başlıyor mu? (ekli kullanım)
+                if (promptWord.StartsWith(normalizedTabu) && promptWord.Length <= normalizedTabu.Length + 6)
+                {
+                    var suffix = promptWord[normalizedTabu.Length..];
+                    if (suffix.Length == 0 || IsTurkishSuffix(suffix))
+                    {
+                        detected.Add(tabuWord);
+                        break;
+                    }
+                }
+
+                // Kısa tabu kelimeleri için (3 harf veya daha az) sadece tam eşleşme veya bilinen ekler
+                // Uzun tabu kelimeleri için daha esnek kontrol
+                if (normalizedTabu.Length > 3 && promptWord.Contains(normalizedTabu))
+                {
+                    detected.Add(tabuWord);
+                    break;
+                }
+            }
+        }
+
+        return detected;
+    }
+
+    /// <summary>
+    /// Türkçe karakterleri ASCII karşılıklarına dönüştürür ve küçük harfe çevirir.
+    /// "Çay" -> "cay", "Güneş" -> "gunes", "KAHVE" -> "kahve"
+    /// </summary>
+    private static string NormalizeTurkish(string input)
+    {
+        if (string.IsNullOrEmpty(input)) return string.Empty;
+
+        // Önce Türkçe kültürüne göre küçük harfe çevir (İ->i, I->ı doğru çalışsın)
+        var lower = input.ToLower(new CultureInfo("tr-TR"));
+
+        var chars = new char[lower.Length];
+        for (int i = 0; i < lower.Length; i++)
+        {
+            chars[i] = lower[i] switch
+            {
+                'ç' => 'c',
+                'ğ' => 'g',
+                'ı' => 'i',
+                'ö' => 'o',
+                'ş' => 's',
+                'ü' => 'u',
+                _ => lower[i]
+            };
+        }
+
+        return new string(chars);
+    }
+
+    /// <summary>
+    /// Verilen suffix'in bilinen bir Türkçe ek olup olmadığını kontrol eder.
+    /// </summary>
+    private static bool IsTurkishSuffix(string suffix)
+    {
+        if (string.IsNullOrEmpty(suffix)) return true; // Boş suffix = tam eşleşme
+
+        var normalizedSuffix = NormalizeTurkish(suffix);
+        return TurkishSuffixes.Any(s => NormalizeTurkish(s) == normalizedSuffix);
+    }
+
+    private static string ExtractJson(string content)
     {
         if (string.IsNullOrWhiteSpace(content)) return "{}";
-        
+
         var firstBrace = content.IndexOf('{');
         var lastBrace = content.LastIndexOf('}');
-        
+
         if (firstBrace != -1 && lastBrace != -1 && lastBrace > firstBrace)
         {
             return content.Substring(firstBrace, lastBrace - firstBrace + 1);
         }
-        
+
         return content;
     }
+
+    #endregion
+
+    #region Response Models
 
     private class AiResponse
     {
@@ -334,4 +557,6 @@ Cevabını JSON formatında ver:
     {
         public List<string>? Suggestions { get; set; }
     }
+
+    #endregion
 }
