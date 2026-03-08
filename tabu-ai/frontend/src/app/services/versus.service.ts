@@ -28,6 +28,7 @@ export class VersusService implements OnDestroy {
   private tabuWordDetected$ = new Subject<{ detectedWords: string[] }>();
   private matchmakingError$ = new Subject<string>();
   private roomNotFound$ = new Subject<string>();
+  private opponentDisconnected$ = new Subject<{ disconnectedPlayerId: string; winnerId: string | null }>();
 
   private connectionState$ = new BehaviorSubject<string>('disconnected');
 
@@ -39,6 +40,7 @@ export class VersusService implements OnDestroy {
   onTabuWordDetected = this.tabuWordDetected$.asObservable();
   onMatchmakingError = this.matchmakingError$.asObservable();
   onRoomNotFound = this.roomNotFound$.asObservable();
+  onOpponentDisconnected = this.opponentDisconnected$.asObservable();
   onConnectionStateChange = this.connectionState$.asObservable();
 
   constructor(
@@ -114,6 +116,10 @@ export class VersusService implements OnDestroy {
       // handled locally
     });
 
+    this.hubConnection.on('OpponentDisconnected', (data: { disconnectedPlayerId: string; winnerId: string | null }) => {
+      this.opponentDisconnected$.next(data);
+    });
+
     this.hubConnection.onreconnecting(() => {
       this.connectionState$.next('reconnecting');
     });
@@ -143,6 +149,11 @@ export class VersusService implements OnDestroy {
   async joinRoom(roomCode: string): Promise<void> {
     await this.ensureConnected();
     await this.hubConnection!.invoke('JoinRoom', roomCode);
+  }
+
+  async waitInRoom(roomCode: string): Promise<void> {
+    await this.ensureConnected();
+    await this.hubConnection!.invoke('WaitInRoom', roomCode);
   }
 
   async submitVersusPrompt(versusGameId: string, gameSessionId: string, prompt: string): Promise<void> {

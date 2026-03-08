@@ -16,6 +16,7 @@ public class GameHub : Hub
     // In-memory matchmaking queue
     private static readonly ConcurrentQueue<WaitingPlayer> _matchmakingQueue = new();
     private static readonly ConcurrentDictionary<string, string> _userConnections = new();
+    private static readonly ConcurrentDictionary<string, bool> _cancelledMatchmaking = new();
 
     public GameHub(IUnitOfWork unitOfWork, IAiService aiService, ILogger<GameHub> logger)
     {
@@ -40,12 +41,53 @@ public class GameHub : Hub
         if (userId != null)
         {
             _userConnections.TryRemove(userId, out _);
+            _cancelledMatchmaking.TryRemove(userId, out _);
+
+            // If the disconnected user is in an active versus game, award win to opponent
+            await HandlePlayerDisconnect(userId);
         }
 
-        // Remove from matchmaking queue if they were waiting
-        // (ConcurrentQueue doesn't support removal, but the matchmaking logic handles stale entries)
-
         await base.OnDisconnectedAsync(exception);
+    }
+
+    private async Task HandlePlayerDisconnect(string userId)
+    {
+        try
+        {
+            var parsedUserId = Guid.Parse(userId);
+            var activeGames = await _unitOfWork.VersusGames.FindAsync(
+                v => v.Status == VersusGameStatus.InProgress &&
+                     (v.Player1Id == parsedUserId || v.Player2Id == parsedUserId));
+
+            var activeGame = activeGames.FirstOrDefault();
+            if (activeGame == null) return;
+
+            var groupName = $"versus_{activeGame.Id}";
+
+            // Award win to the opponent
+            var winnerId = activeGame.Player1Id == parsedUserId
+                ? activeGame.Player2Id
+                : (Guid?)activeGame.Player1Id;
+
+            activeGame.Status = VersusGameStatus.Completed;
+            activeGame.CompletedAt = DateTime.UtcNow;
+            activeGame.WinnerId = winnerId;
+
+            await _unitOfWork.VersusGames.UpdateAsync(activeGame);
+            await UpdateVersusStats(activeGame);
+            await LogVersusActivity(activeGame);
+            await _unitOfWork.SaveChangesAsync();
+
+            await Clients.Group(groupName).SendAsync("OpponentDisconnected", new
+            {
+                disconnectedPlayerId = userId,
+                winnerId
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error handling player disconnect for user {UserId}", userId);
+        }
     }
 
     /// <summary>
@@ -59,13 +101,18 @@ public class GameHub : Hub
         var user = await _unitOfWork.Users.GetByIdAsync(Guid.Parse(userId));
         if (user == null) return;
 
+        _cancelledMatchmaking.TryRemove(userId, out _);
+
         // Check if there's someone already waiting
+        var matchmakingTtl = TimeSpan.FromMinutes(5);
         WaitingPlayer? opponent = null;
         while (_matchmakingQueue.TryDequeue(out var candidate))
         {
-            // Skip if the candidate disconnected or is the same user
+            // Skip stale, cancelled, disconnected or same user
             if (candidate.UserId == userId) continue;
             if (!_userConnections.ContainsKey(candidate.UserId)) continue;
+            if (_cancelledMatchmaking.ContainsKey(candidate.UserId)) continue;
+            if (DateTime.UtcNow - candidate.JoinedAt > matchmakingTtl) continue;
             opponent = candidate;
             break;
         }
@@ -97,8 +144,39 @@ public class GameHub : Hub
     /// </summary>
     public async Task LeaveMatchmaking()
     {
-        // We can't remove from ConcurrentQueue, but the matching logic skips disconnected users
+        var userId = Context.User?.FindFirst("UserId")?.Value;
+        if (userId != null)
+            _cancelledMatchmaking[userId] = true;
         await Clients.Caller.SendAsync("MatchmakingCancelled");
+    }
+
+    /// <summary>
+    /// Player1 joins the SignalR group for their own room (without starting the game)
+    /// </summary>
+    public async Task WaitInRoom(string roomCode)
+    {
+        var userId = Context.User?.FindFirst("UserId")?.Value;
+        if (userId == null) return;
+
+        var versusGames = await _unitOfWork.VersusGames.FindAsync(
+            v => v.RoomCode == roomCode && v.Status == VersusGameStatus.WaitingForOpponent);
+        var versusGame = versusGames.FirstOrDefault();
+
+        if (versusGame == null)
+        {
+            await Clients.Caller.SendAsync("RoomNotFound", "Oda bulunamadı.");
+            return;
+        }
+
+        if (versusGame.Player1Id.ToString() != userId)
+        {
+            await Clients.Caller.SendAsync("RoomNotFound", "Bu odanın sahibi değilsiniz.");
+            return;
+        }
+
+        var groupName = $"versus_{versusGame.Id}";
+        await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
+        _userConnections[userId] = Context.ConnectionId;
     }
 
     /// <summary>
@@ -506,11 +584,9 @@ public class GameHub : Hub
         if (player1 != null)
         {
             player1.GamesPlayed++;
+            player1.TotalScore += versusGame.Player1Score;
             if (versusGame.WinnerId == player1.Id)
-            {
                 player1.GamesWon++;
-                player1.TotalScore += versusGame.Player1Score;
-            }
             await _unitOfWork.Users.UpdateAsync(player1);
         }
 
@@ -520,11 +596,9 @@ public class GameHub : Hub
             if (player2 != null)
             {
                 player2.GamesPlayed++;
+                player2.TotalScore += versusGame.Player2Score;
                 if (versusGame.WinnerId == player2.Id)
-                {
                     player2.GamesWon++;
-                    player2.TotalScore += versusGame.Player2Score;
-                }
                 await _unitOfWork.Users.UpdateAsync(player2);
             }
         }

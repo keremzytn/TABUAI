@@ -126,6 +126,10 @@ export class VersusComponent implements OnInit, OnDestroy {
 
       this.versusService.onRoomNotFound.subscribe((msg: string) => {
         this.toastService.error(msg);
+      }),
+
+      this.versusService.onOpponentDisconnected.subscribe((data) => {
+        this.handleOpponentDisconnected(data);
       })
     );
   }
@@ -144,18 +148,18 @@ export class VersusComponent implements OnInit, OnDestroy {
     this.lobbyMode = 'menu';
   }
 
-  createRoom(): void {
+  async createRoom(): Promise<void> {
     this.versusService.createRoom({
       userId: this.userId,
       category: this.selectedCategory ?? undefined
     }).subscribe({
-      next: (response) => {
+      next: async (response) => {
         this.createdRoomCode = response.roomCode;
         this.versusGameId = response.versusGameId;
         this.lobbyMode = 'create-room';
+        this.phase = 'waiting';
         this.toastService.success(`Oda olu\u015Fturuldu: ${response.roomCode}`);
-        // Connect to SignalR and wait
-        this.versusService.joinRoom(response.roomCode);
+        await this.versusService.waitInRoom(response.roomCode);
       },
       error: () => {
         this.toastService.error('Oda olu\u015Fturulamad\u0131.');
@@ -253,6 +257,19 @@ export class VersusComponent implements OnInit, OnDestroy {
       this.toastService.success('Tebrikler, d\u00FCelloyu kazand\u0131n\u0131z!');
     } else {
       this.toastService.warning('D\u00FCelloyu kaybettiniz.');
+    }
+  }
+
+  private handleOpponentDisconnected(data: { disconnectedPlayerId: string; winnerId: string | null }): void {
+    this.phase = 'finished';
+    this.winnerId = data.winnerId;
+    this.isDraw = false;
+    this.stopTimer();
+
+    if (data.winnerId === this.userId) {
+      this.toastService.success('Rakibiniz bağlantısını kesti. Düelloyu kazandınız!');
+    } else {
+      this.toastService.warning('Rakibiniz bağlantısını kesti.');
     }
   }
 
