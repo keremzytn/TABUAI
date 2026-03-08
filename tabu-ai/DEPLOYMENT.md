@@ -73,79 +73,37 @@ docker-compose logs -f
 
 ## 🌐 Üretim Deployment'ı
 
-### 1. Docker Compose Üretim Konfigürasyonu
+## 🌍 carmedlaw.com Test Ortamı Deployment'ı
 
-```yaml
-# docker-compose.prod.yml
-version: '3.8'
+Bu proje, `carmedlaw.com` üzerindeki test ortamı için özel olarak hazırlanmış bir Docker yapılandırmasına sahiptir.
 
-services:
-  postgres:
-    image: postgres:15
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    restart: always
-    networks:
-      - tabuai-network
+### 1. Dosya Hazırlığı
+Aşağıdaki dosyaların kök dizinde (`/`) olduğundan emin olun:
+- `docker-compose.prod.yml`
+- `nginx/nginx.conf`
+- `.env.prod.example`
 
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Host=postgres;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
-      - OpenAI__ApiKey=${OPENAI_API_KEY}
-    depends_on:
-      - postgres
-    restart: always
-    networks:
-      - tabuai-network
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - "80:80"
-      - "443:443"
-    depends_on:
-      - backend
-    restart: always
-    networks:
-      - tabuai-network
-
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./nginx/ssl:/etc/nginx/ssl
-    depends_on:
-      - frontend
-      - backend
-    restart: always
-    networks:
-      - tabuai-network
-
-volumes:
-  postgres_data:
-
-networks:
-  tabuai-network:
-    driver: bridge
+### 2. Environment Ayarları
+`.env.prod.example` dosyasını kopyalayarak gerçek değerleri girin:
+```bash
+cp .env.prod.example .env
+nano .env # Gerçek API key ve DB şifrelerini buraya yazın
 ```
 
-### 2. Üretim Deployment'ı
+### 3. Uygulamayı Başlatın
 ```bash
-# Üretim ortamında çalıştırın
-docker-compose -f docker-compose.prod.yml up -d
+docker-compose -f docker-compose.prod.yml up -d --build
+```
+
+### 4. Database Migration
+Eğer veritabanı boşsa migrationları çalıştırın:
+```bash
+docker exec tabuai-backend dotnet ef database update
+```
+
+### 5. Logları İzleyin
+```bash
+docker-compose -f docker-compose.prod.yml logs -f
 ```
 
 ## 🔒 Güvenlik Konfigürasyonu
