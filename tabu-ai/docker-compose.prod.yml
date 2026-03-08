@@ -1,73 +1,25 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:15-alpine
-    container_name: tabuai-postgres
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-tabuai_db}
-      POSTGRES_USER: ${POSTGRES_USER:-tabuai_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tabuai_password}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    restart: always
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-tabuai_user} -d $${POSTGRES_DB:-tabuai_db}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - tabuai-network
-
   backend:
-    build:
+    build: 
       context: ./backend
       dockerfile: Dockerfile
     container_name: tabuai-backend
+    network_mode: host
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Host=postgres;Database=${POSTGRES_DB:-tabuai_db};Username=${POSTGRES_USER:-tabuai_user};Password=${POSTGRES_PASSWORD:-tabuai_password}
+      - ASPNETCORE_URLS=http://0.0.0.0:5000
+      - ConnectionStrings__DefaultConnection=Host=localhost;Database=tabuai_db;Username=tabuai_user;Password=tabuai_password
       - OpenAI__ApiKey=${OPENAI_API_KEY}
-      - Groq__ApiKey=${GROQ_API_KEY}
-      - Authentication__Google__ClientId=${GOOGLE_CLIENT_ID}
-      - Authentication__Google__ClientSecret=${GOOGLE_CLIENT_SECRET}
-    depends_on:
-      postgres:
-        condition: service_healthy
     restart: always
-    networks:
-      - tabuai-network
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: tabuai-frontend
+    network_mode: host
     environment:
-      - API_URL=/api
-    depends_on:
-      - backend
+      - API_URL=http://localhost:5000/api
     restart: always
-    networks:
-      - tabuai-network
-
-  nginx:
-    image: nginx:alpine
-    container_name: tabuai-nginx
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - frontend
-      - backend
-    restart: always
-    networks:
-      - tabuai-network
-
-volumes:
-  postgres_data:
-
-networks:
-  tabuai-network:
-    driver: bridge

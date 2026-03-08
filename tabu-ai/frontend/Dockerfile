@@ -25,7 +25,7 @@ COPY --from=build /app/dist/tabu-ai-web /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/nginx.conf
 
 # Expose port
-EXPOSE 80
+EXPOSE 8081
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]
