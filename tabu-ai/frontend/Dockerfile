@@ -19,7 +19,8 @@ RUN npm run build
 FROM nginx:alpine AS production
 
 # Copy built app from build stage
-COPY --from=build /app/dist/tabu-ai-web /usr/share/nginx/html
+# Angular 17+ outputs to dist/project-name/browser
+COPY --from=build /app/dist/tabu-ai-web/browser /usr/share/nginx/html
 
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
