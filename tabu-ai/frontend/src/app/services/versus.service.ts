@@ -53,12 +53,11 @@ export class VersusService implements OnDestroy {
   async startConnection(): Promise<void> {
     if (this.hubConnection?.state === signalR.HubConnectionState.Connected) return;
 
-    const token = this.authService.token;
     const baseUrl = environment.production ? '' : 'http://localhost:5000';
 
     this.hubConnection = new signalR.HubConnectionBuilder()
       .withUrl(`${baseUrl}/hubs/game`, {
-        accessTokenFactory: () => token || ''
+        accessTokenFactory: () => this.authService.token || ''
       })
       .withAutomaticReconnect()
       .build();

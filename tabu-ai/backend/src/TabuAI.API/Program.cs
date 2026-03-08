@@ -105,6 +105,8 @@ builder.Services.AddCors(options =>
                   return uri.Host == "localhost" || 
                          uri.Host == "127.0.0.1" || 
                          uri.Host == "172.16.0.159" ||
+                         uri.Host == "carmedlaw.com" ||
+                         uri.Host == "www.carmedlaw.com" ||
                          origin.StartsWith("capacitor://") ||
                          origin.StartsWith("ionic://") ||
                          uri.Host.StartsWith("192.168.") ||
