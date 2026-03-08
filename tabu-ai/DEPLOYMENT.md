@@ -18,7 +18,10 @@
 ### 1. Repository'yi Klonlayın
 ```bash
 git clone https://github.com/keremzytn/TABUAI.git
+cd TABUAI
 cd tabu-ai
+docker-compose -f docker-compose.prod.yml up -d --build
+
 ```
 
 ### 2. Environment Dosyasını Ayarlayın
