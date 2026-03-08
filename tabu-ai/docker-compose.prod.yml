@@ -5,21 +5,47 @@ services:
     build: 
       context: ./backend
       dockerfile: Dockerfile
-    container_name: tabuai-backend
-    network_mode: host
+    container_name: tabuai-backend-prod
+    restart: unless-stopped
+    env_file: .env
     environment:
-      - ASPNETCORE_ENVIRONMENT=Production
-      - ASPNETCORE_URLS=http://0.0.0.0:5000
-      - ConnectionStrings__DefaultConnection=Host=localhost;Database=tabuai_db;Username=tabuai_user;Password=tabuai_password
-      - OpenAI__ApiKey=${OPENAI_API_KEY}
-    restart: always
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:5000
+      ConnectionStrings__DefaultConnection: "Host=127.0.0.1;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+      Jwt__Key: "super_secret_key_tabuia_secure_2024!"
+      Jwt__Issuer: TabuAI
+      Jwt__Audience: TabuAIUsers
+      Groq__ApiKey: ${GROQ_API_KEY}
+    network_mode: "host"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/game/health"] # Sağlık kontrolü için bir endpoint
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: tabuai-frontend
-    network_mode: host
-    environment:
-      - API_URL=http://localhost:5000/api
-    restart: always
+    container_name: tabuai-frontend-prod
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "8081:80" # Ana Nginx'in yönlendirdiği port
+    depends_on:
+      - backend
+    networks:
+      - tabuai-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/"]
+      interval: 30s
+      timeout: 5s
+      start_period: 5s
+      retries: 3
+
+networks:
+  tabuai-network:
+    driver: bridge
