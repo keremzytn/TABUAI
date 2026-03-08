@@ -98,10 +98,7 @@ docker-compose -f docker-compose.prod.yml up -d --build
 ```
 
 ### 4. Database Migration
-Eğer veritabanı boşsa migrationları çalıştırın:
-```bash
-docker exec tabuai-backend dotnet ef database update
-```
+Veritabanı tabloları uygulama ilk ayağa kalktığında **otomatik olarak** oluşturulacaktır. Herhangi bir manuel işlem yapmanıza gerek yoktur.
 
 ### 5. Logları İzleyin
 ```bash

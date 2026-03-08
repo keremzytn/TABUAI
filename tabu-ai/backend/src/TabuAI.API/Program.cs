@@ -159,19 +159,19 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHub<GameHub>("/hubs/game");
 
-// Database Migration (Development only)
-if (app.Environment.IsDevelopment())
+// Database Migration (Automatic for all environments)
+using (var scope = app.Services.CreateScope())
 {
-    using var scope = app.Services.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<TabuAIDbContext>();
     try
     {
         await context.Database.MigrateAsync();
-        app.Logger.LogInformation("Database migrations applied");
+        app.Logger.LogInformation("Database migrations applied successfully");
     }
     catch (Exception ex)
     {
         app.Logger.LogError(ex, "An error occurred while ensuring the database was created");
+        // In production, we might want to continue or stop
     }
 }
 
