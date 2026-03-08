@@ -17,7 +17,7 @@
 
 ### 1. Repository'yi Klonlayın
 ```bash
-git clone https://github.com/username/tabu-ai.git
+git clone https://github.com/keremzytn/TABUAI.git
 cd tabu-ai
 ```
 

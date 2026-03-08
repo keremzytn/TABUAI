@@ -28,7 +28,7 @@ export class LoginComponent {
   ) {
     // Google veya Facebook girişi başarılı olduğunda bu state tetiklenir
     this.socialAuthService.authState.subscribe((user) => {
-      if (user) {
+      if (user && user.provider) {
         this.socialLoading = true;
         // Google idToken kullanırken, Facebook authToken kullanır.
         const token = user.provider === 'GOOGLE' ? user.idToken : user.authToken;

@@ -47,7 +47,7 @@ import { AuthService } from '../../services/auth.service';
           </div>
           <div class="admin-user-info" *ngIf="authService.currentUser | async as user">
             <span class="user-name">{{user.displayName || user.username}}</span>
-            <div class="user-avatar">{{(user.displayName || user.username)?.[0] || 'A'}}</div>
+            <div class="user-avatar">{{(user.displayName || user.username)[0] || 'A'}}</div>
           </div>
         </header>
         
