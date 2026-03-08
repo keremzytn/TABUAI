@@ -1,11 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, Optional } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { ToastService } from '../../../services/toast.service';
 import { LoginRequest } from '../../../models/auth.models';
-import { SocialAuthService, GoogleLoginProvider, FacebookLoginProvider, GoogleSigninButtonModule } from '@abacritt/angularx-social-login';
+import { SocialAuthService, GoogleSigninButtonModule } from '@abacritt/angularx-social-login';
 
 @Component({
   selector: 'app-login',
@@ -22,42 +22,34 @@ export class LoginComponent {
 
   constructor(
     private authService: AuthService,
-    private socialAuthService: SocialAuthService,
+    @Optional() private socialAuthService: SocialAuthService,
     private router: Router,
     private toastService: ToastService
   ) {
-    // Google veya Facebook girişi başarılı olduğunda bu state tetiklenir
-    this.socialAuthService.authState.subscribe((user) => {
-      const token = user?.provider === 'GOOGLE' ? user?.idToken : user?.authToken;
-      if (user?.provider && token) {
-        this.socialLoading = true;
-        this.handleSocialLogin(user.provider, token);
-      }
-    });
-  }
-
-  // Google butonu artık otomatik tetikleniyor, manual metod devre dışı bırakıldı.
-  // Facebook hala manual metod ile çalışabilir.
-
-  signInWithFB(): void {
-    this.socialLoading = true;
-    this.socialAuthService.signIn(FacebookLoginProvider.PROVIDER_ID).catch(err => {
-      this.socialLoading = false;
-      console.error(err);
-      this.toastService.error('Facebook ile giriş yapılamadı.');
-    });
+    if (this.socialAuthService) {
+      this.socialAuthService.authState.subscribe({
+        next: (user) => {
+          const token = user?.provider === 'GOOGLE' ? user?.idToken : user?.authToken;
+          if (user?.provider && token) {
+            this.socialLoading = true;
+            this.handleSocialLogin(user.provider, token);
+          }
+        },
+        error: (err) => console.error('Social auth error:', err)
+      });
+    }
   }
 
   private handleSocialLogin(provider: string, token: string) {
     this.authService.externalLogin(provider, token).subscribe({
       next: (user) => {
         this.socialLoading = false;
-        this.toastService.success(`Hoş geldin, ${user.displayName || user.username}! 🎉`);
+        this.toastService.success(`Hoş geldin, ${user.displayName || user.username}!`);
         this.router.navigate(['/']);
       },
       error: (err) => {
         this.socialLoading = false;
-        this.toastService.error('Sistem girişi başarısız oldu.');
+        this.toastService.error('Sosyal giriş başarısız oldu.');
         console.error(err);
       }
     });
@@ -75,7 +67,7 @@ export class LoginComponent {
 
     this.authService.login(this.loginData).subscribe({
       next: (user) => {
-        this.toastService.success(`Hoş geldin, ${user.displayName || user.username}! 🎉`);
+        this.toastService.success(`Hoş geldin, ${user.displayName || user.username}!`);
         this.router.navigate(['/']);
       },
       error: (err) => {

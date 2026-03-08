@@ -16,13 +16,6 @@
 secrets.json
 
 
-# .NET App Settings (contain connection strings & API keys)
-**/appsettings.json
-**/appsettings.Development.json
-**/appsettings.Production.json
-**/appsettings.Staging.json
-!**/appsettings.example.json
-
 # Local configuration
 local.settings.json
 local.config.json
