@@ -12,8 +12,8 @@ using TabuAI.Infrastructure.Data;
 namespace TabuAI.Infrastructure.Migrations
 {
     [DbContext(typeof(TabuAIDbContext))]
-    [Migration("20260308181740_UpdateSeedDataWithNewCategories")]
-    partial class UpdateSeedDataWithNewCategories
+    [Migration("20260308200605_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
