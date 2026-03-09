@@ -17,13 +17,29 @@ import { AuthService } from '../../services/auth.service';
         </div>
         
         <nav class="sidebar-nav">
-          <a routerLink="/admin/users" routerLinkActive="active" class="sidebar-link">
+          <a routerLink="/admin/dashboard" routerLinkActive="active" class="sidebar-link">
+            <span class="link-icon">📊</span>
+            Dashboard
+          </a>
+          <a routerLink="/admin/users" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="sidebar-link">
             <span class="link-icon">👥</span>
             Kullanıcı Yönetimi
           </a>
           <a routerLink="/admin/words" routerLinkActive="active" class="sidebar-link">
             <span class="link-icon">📝</span>
             Kelime Yönetimi
+          </a>
+          <a routerLink="/admin/badges" routerLinkActive="active" class="sidebar-link">
+            <span class="link-icon">🏅</span>
+            Rozet Yönetimi
+          </a>
+          <a routerLink="/admin/word-packs" routerLinkActive="active" class="sidebar-link">
+            <span class="link-icon">📦</span>
+            Kelime Paketleri
+          </a>
+          <a routerLink="/admin/activity" routerLinkActive="active" class="sidebar-link">
+            <span class="link-icon">📋</span>
+            Aktivite
           </a>
           <div class="nav-divider"></div>
           <a routerLink="/" class="sidebar-link return-link">
@@ -251,8 +267,13 @@ export class AdminLayoutComponent {
 
   get currentPage(): string {
     const url = this.router.url;
+    if (url.includes('/admin/users/') && url.split('/').length > 3) return 'Kullanıcı Detay';
     if (url.includes('users')) return 'Kullanıcı Yönetimi';
-    if (url.includes('words')) return 'Kelime Yönetimi';
+    if (url.includes('words') && !url.includes('word-packs')) return 'Kelime Yönetimi';
+    if (url.includes('word-packs')) return 'Kelime Paketleri';
+    if (url.includes('badges')) return 'Rozet Yönetimi';
+    if (url.includes('activity')) return 'Aktivite';
+    if (url.includes('dashboard')) return 'Dashboard';
     return 'Dashboard';
   }
 

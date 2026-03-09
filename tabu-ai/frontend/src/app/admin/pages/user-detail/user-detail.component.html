@@ -1,0 +1,143 @@
+<div class="detail-container">
+    <div class="admin-header">
+        <h1>Kullanıcı Detay</h1>
+        <button class="btn-back" (click)="goBack()">
+            <i class="fa-solid fa-arrow-left"></i> Geri Dön
+        </button>
+    </div>
+
+    <div *ngIf="isLoading" class="loading-state">
+        <i class="fa-solid fa-spinner fa-spin"></i> Yükleniyor...
+    </div>
+
+    <div *ngIf="user && !isLoading">
+        <!-- User Info Card -->
+        <div class="user-card">
+            <div class="user-avatar-large">
+                {{ (user.displayName || user.username)[0].toUpperCase() }}
+            </div>
+            <div class="user-main-info">
+                <h2>{{ user.displayName || user.username }}</h2>
+                <p class="user-email">{{ user.email }}</p>
+                <div class="user-tags">
+                    <span class="tag-level">{{ user.level }}</span>
+                    <span class="tag-role" [class.admin]="user.role === 'Admin'">{{ user.role }}</span>
+                    <span class="tag-status" [class.active]="user.isActive" [class.inactive]="!user.isActive">
+                        {{ user.isActive ? 'Aktif' : 'Pasif' }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="detail-stats">
+            <div class="detail-stat-card">
+                <span class="detail-stat-value">{{ user.totalScore }}</span>
+                <span class="detail-stat-label">Toplam Puan</span>
+            </div>
+            <div class="detail-stat-card">
+                <span class="detail-stat-value">{{ user.gamesPlayed }}</span>
+                <span class="detail-stat-label">Oyun Sayısı</span>
+            </div>
+            <div class="detail-stat-card">
+                <span class="detail-stat-value">{{ user.gamesWon }}</span>
+                <span class="detail-stat-label">Galibiyet</span>
+            </div>
+            <div class="detail-stat-card">
+                <span class="detail-stat-value">%{{ (user.winRate * 100).toFixed(0) }}</span>
+                <span class="detail-stat-label">Kazanma Oranı</span>
+            </div>
+            <div class="detail-stat-card">
+                <span class="detail-stat-value">{{ user.promptCoins }}</span>
+                <span class="detail-stat-label">Coin</span>
+            </div>
+            <div class="detail-stat-card">
+                <span class="detail-stat-value">{{ user.currentStreak }} / {{ user.bestStreak }}</span>
+                <span class="detail-stat-label">Seri (Mevcut / En İyi)</span>
+            </div>
+        </div>
+
+        <!-- Tabs Content -->
+        <div class="detail-sections">
+            <!-- Badges -->
+            <div class="section-card" *ngIf="user.badges.length > 0">
+                <h3><i class="fa-solid fa-award"></i> Rozetler ({{ user.badges.length }})</h3>
+                <div class="badges-grid">
+                    <div class="badge-item" *ngFor="let badge of user.badges">
+                        <div class="badge-icon-display">
+                            <i class="fa-solid fa-medal"></i>
+                        </div>
+                        <span class="badge-name">{{ badge.name }}</span>
+                        <span class="badge-date">{{ formatDate(badge.earnedAt) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Games -->
+            <div class="section-card">
+                <h3><i class="fa-solid fa-gamepad"></i> Son Oyunlar ({{ user.recentGames.length }})</h3>
+                <div class="table-container" *ngIf="user.recentGames.length > 0">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Kelime</th>
+                                <th>Mod</th>
+                                <th>Durum</th>
+                                <th>Sonuç</th>
+                                <th>Skor</th>
+                                <th>Deneme</th>
+                                <th>Tarih</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let game of user.recentGames">
+                                <td><strong>{{ game.targetWord }}</strong></td>
+                                <td>{{ game.mode }}</td>
+                                <td>{{ game.status }}</td>
+                                <td>
+                                    <span class="result-badge" [class.success]="game.isCorrectGuess" [class.fail]="!game.isCorrectGuess">
+                                        {{ game.isCorrectGuess ? 'Başarılı' : 'Başarısız' }}
+                                    </span>
+                                </td>
+                                <td>{{ game.score }}</td>
+                                <td>{{ game.attemptNumber }}</td>
+                                <td>{{ formatDate(game.startedAt) }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="empty-state" *ngIf="user.recentGames.length === 0">Henüz oyun yok.</div>
+            </div>
+
+            <!-- Coin Transactions -->
+            <div class="section-card">
+                <h3><i class="fa-solid fa-coins"></i> Coin İşlemleri ({{ user.coinTransactions.length }})</h3>
+                <div class="table-container" *ngIf="user.coinTransactions.length > 0">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Miktar</th>
+                                <th>Tür</th>
+                                <th>Açıklama</th>
+                                <th>Tarih</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let tx of user.coinTransactions">
+                                <td>
+                                    <span [class.coin-positive]="tx.amount > 0" [class.coin-negative]="tx.amount < 0">
+                                        {{ tx.amount > 0 ? '+' : '' }}{{ tx.amount }}
+                                    </span>
+                                </td>
+                                <td>{{ tx.type }}</td>
+                                <td>{{ tx.description }}</td>
+                                <td>{{ formatDate(tx.createdAt) }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="empty-state" *ngIf="user.coinTransactions.length === 0">Henüz coin işlemi yok.</div>
+            </div>
+        </div>
+    </div>
+</div>

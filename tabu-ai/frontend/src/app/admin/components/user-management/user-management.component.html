@@ -34,7 +34,10 @@
                         </span>
                     </td>
                     <td>{{ user.createdAt | date:'shortDate' }}</td>
-                    <td>
+                    <td class="actions-cell">
+                        <button class="btn-detail" (click)="viewDetail(user.id)" title="Detay">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
                         <button class="btn-action" [class.btn-danger]="user.isActive && user.role !== 'Admin'"
                             (click)="toggleStatus(user.id)" [disabled]="user.role === 'Admin'">
                             {{ user.role === 'Admin' ? 'Erişilemez' : (user.isActive ? 'Pasife Al' : 'Aktif Et') }}

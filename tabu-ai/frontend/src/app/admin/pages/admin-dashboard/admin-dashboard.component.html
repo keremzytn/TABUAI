@@ -1,0 +1,104 @@
+<div class="dashboard-container">
+    <div class="admin-header">
+        <h1>Dashboard</h1>
+        <button class="btn-refresh" (click)="loadStats()">
+            <i class="fa-solid fa-arrows-rotate"></i> Yenile
+        </button>
+    </div>
+
+    <div *ngIf="isLoading" class="loading-state">
+        <i class="fa-solid fa-spinner fa-spin"></i> Yükleniyor...
+    </div>
+
+    <div *ngIf="stats && !isLoading">
+        <!-- Stat Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon users"><i class="fa-solid fa-users"></i></div>
+                <div class="stat-info">
+                    <span class="stat-value">{{ stats.totalUsers }}</span>
+                    <span class="stat-label">Toplam Kullanıcı</span>
+                    <div class="stat-detail">
+                        <span class="detail-active">{{ stats.activeUsers }} aktif</span>
+                        <span class="detail-inactive">{{ stats.inactiveUsers }} pasif</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon games"><i class="fa-solid fa-gamepad"></i></div>
+                <div class="stat-info">
+                    <span class="stat-value">{{ stats.totalGames }}</span>
+                    <span class="stat-label">Toplam Oyun</span>
+                    <div class="stat-detail">
+                        <span class="detail-today">Bugün: {{ stats.todayGames }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon words"><i class="fa-solid fa-book"></i></div>
+                <div class="stat-info">
+                    <span class="stat-value">{{ stats.totalWords }}</span>
+                    <span class="stat-label">Toplam Kelime</span>
+                    <div class="stat-detail">
+                        <span class="detail-active">{{ stats.activeWords }} aktif</span>
+                        <span class="detail-inactive">{{ stats.inactiveWords }} pasif</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon badges"><i class="fa-solid fa-award"></i></div>
+                <div class="stat-info">
+                    <span class="stat-value">{{ stats.totalBadges }}</span>
+                    <span class="stat-label">Rozet</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon packs"><i class="fa-solid fa-box-open"></i></div>
+                <div class="stat-info">
+                    <span class="stat-value">{{ stats.totalWordPacks }}</span>
+                    <span class="stat-label">Kelime Paketi</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="charts-row">
+            <!-- Registration Chart -->
+            <div class="chart-card">
+                <h3>Son 7 Gün Kayıt</h3>
+                <div class="bar-chart">
+                    <div class="bar-item" *ngFor="let reg of stats.last7DaysRegistrations">
+                        <div class="bar-wrapper">
+                            <div class="bar" [style.height.%]="getBarHeight(reg.count)">
+                                <span class="bar-value" *ngIf="reg.count > 0">{{ reg.count }}</span>
+                            </div>
+                        </div>
+                        <span class="bar-label">{{ formatDate(reg.date) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Users -->
+            <div class="chart-card">
+                <h3>En Aktif Kullanıcılar</h3>
+                <div class="top-users-list">
+                    <div class="top-user-item" *ngFor="let user of stats.topUsers; let i = index">
+                        <span class="rank">#{{ i + 1 }}</span>
+                        <div class="user-info">
+                            <span class="user-name">{{ user.displayName || user.username }}</span>
+                            <span class="user-stats">{{ user.gamesPlayed }} oyun · {{ user.gamesWon }} galibiyet</span>
+                        </div>
+                        <span class="user-score">{{ user.totalScore }} puan</span>
+                    </div>
+                    <div class="empty-state" *ngIf="stats.topUsers.length === 0">
+                        Henüz kullanıcı yok.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

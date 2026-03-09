@@ -127,6 +127,32 @@
     gap: 0.5rem;
 }
 
+.actions-cell {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.btn-detail {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    background: rgba(56, 189, 248, 0.1);
+    color: #38bdf8;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    font-size: 0.85rem;
+}
+
+.btn-detail:hover {
+    background: #38bdf8;
+    color: #0f172a;
+}
+
 .empty-state {
     padding: 3rem;
     text-align: center;

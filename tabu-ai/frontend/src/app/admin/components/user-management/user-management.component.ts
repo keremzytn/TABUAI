@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { AdminService } from '../../services/admin.service';
 import { UserProfile } from '../../../models/user.models';
 import { ToastService } from '../../../services/toast.service';
@@ -17,7 +18,8 @@ export class UserManagementComponent implements OnInit {
 
     constructor(
         private adminService: AdminService,
-        private toastService: ToastService
+        private toastService: ToastService,
+        private router: Router
     ) { }
 
     ngOnInit(): void {
@@ -36,6 +38,10 @@ export class UserManagementComponent implements OnInit {
                 this.isLoading = false;
             }
         });
+    }
+
+    viewDetail(userId: string): void {
+        this.router.navigate(['/admin/users', userId]);
     }
 
     toggleStatus(userId: string): void {

@@ -1,0 +1,115 @@
+<div class="admin-container">
+    <div class="admin-header">
+        <h1>Kelime Paketleri</h1>
+        <div class="header-actions">
+            <button class="btn-primary" (click)="openModal()">
+                <i class="fa-solid fa-plus"></i> Yeni Paket
+            </button>
+            <button class="btn-refresh" (click)="loadWordPacks()">
+                <i class="fa-solid fa-arrows-rotate"></i>
+            </button>
+        </div>
+    </div>
+
+    <div *ngIf="isLoading" class="loading-state">
+        <i class="fa-solid fa-spinner fa-spin"></i> Yükleniyor...
+    </div>
+
+    <div class="table-container" *ngIf="!isLoading && wordPacks.length > 0">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Ad</th>
+                    <th>Açıklama</th>
+                    <th>Dil</th>
+                    <th>Oluşturan</th>
+                    <th>Kelime</th>
+                    <th>Oynanma</th>
+                    <th>Beğeni</th>
+                    <th>Durum</th>
+                    <th>İşlemler</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let pack of wordPacks">
+                    <td><strong>{{ pack.name }}</strong></td>
+                    <td class="description-cell">{{ pack.description }}</td>
+                    <td>{{ pack.language }}</td>
+                    <td>{{ pack.createdByUsername }}</td>
+                    <td><span class="count-badge">{{ pack.wordCount }}</span></td>
+                    <td>{{ pack.playCount }}</td>
+                    <td>{{ pack.likeCount }}</td>
+                    <td>
+                        <div class="status-tags">
+                            <span class="badge-status" [class.active]="pack.isPublic" [class.inactive]="!pack.isPublic">
+                                {{ pack.isPublic ? 'Herkese Açık' : 'Özel' }}
+                            </span>
+                            <span class="badge-status" [class.active]="pack.isApproved" [class.inactive]="!pack.isApproved">
+                                {{ pack.isApproved ? 'Onaylı' : 'Onay Bekliyor' }}
+                            </span>
+                        </div>
+                    </td>
+                    <td class="actions-cell">
+                        <button class="btn-icon" title="Düzenle" (click)="openModal(pack)">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                        <button class="btn-icon btn-icon-danger" title="Sil" (click)="deletePack(pack.id)">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="empty-state" *ngIf="!isLoading && wordPacks.length === 0">
+        Henüz kelime paketi bulunmuyor.
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" *ngIf="isModalOpen" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h2>{{ isEditing ? 'Paket Düzenle' : 'Yeni Kelime Paketi' }}</h2>
+            <button class="btn-close" (click)="closeModal()">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Paket Adı</label>
+                <input type="text" [(ngModel)]="currentPack.name" placeholder="Paket adı">
+            </div>
+            <div class="form-group">
+                <label>Açıklama</label>
+                <input type="text" [(ngModel)]="currentPack.description" placeholder="Paket açıklaması">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Dil</label>
+                    <select [(ngModel)]="currentPack.language">
+                        <option value="tr">Türkçe</option>
+                        <option value="en">İngilizce</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" [(ngModel)]="currentPack.isPublic">
+                        Herkese Açık
+                    </label>
+                    <label class="checkbox-label" *ngIf="isEditing">
+                        <input type="checkbox" [(ngModel)]="currentPack.isApproved">
+                        Onaylı
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" (click)="closeModal()">İptal</button>
+            <button class="btn-primary" (click)="savePack()">
+                {{ isEditing ? 'Güncelle' : 'Oluştur' }}
+            </button>
+        </div>
+    </div>
+</div>

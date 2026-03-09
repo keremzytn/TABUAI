@@ -1,0 +1,127 @@
+<div class="activity-container">
+    <div class="admin-header">
+        <h1>Aktivite</h1>
+        <div class="header-actions">
+            <button class="btn-refresh" (click)="activeTab === 'games' ? loadGameSessions() : loadActivityLogs()">
+                <i class="fa-solid fa-arrows-rotate"></i> Yenile
+            </button>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab-btn" [class.active]="activeTab === 'games'" (click)="setTab('games')">
+            <i class="fa-solid fa-gamepad"></i> Son Oyunlar
+            <span class="tab-count">{{ gamesTotal }}</span>
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'logs'" (click)="setTab('logs')">
+            <i class="fa-solid fa-list"></i> Aktivite Logları
+            <span class="tab-count">{{ logsTotal }}</span>
+        </button>
+    </div>
+
+    <!-- Game Sessions Tab -->
+    <div *ngIf="activeTab === 'games'">
+        <div *ngIf="gamesLoading" class="loading-state">
+            <i class="fa-solid fa-spinner fa-spin"></i> Yükleniyor...
+        </div>
+
+        <div class="table-container" *ngIf="!gamesLoading && gameSessions.length > 0">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Kullanıcı</th>
+                        <th>Kelime</th>
+                        <th>Mod</th>
+                        <th>Durum</th>
+                        <th>Sonuç</th>
+                        <th>Skor</th>
+                        <th>Deneme</th>
+                        <th>Başlangıç</th>
+                        <th>Bitiş</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let game of gameSessions">
+                        <td><strong>{{ game.username }}</strong></td>
+                        <td>{{ game.targetWord }}</td>
+                        <td><span class="mode-badge">{{ game.mode }}</span></td>
+                        <td>{{ game.status }}</td>
+                        <td>
+                            <span class="result-badge" [class.success]="game.isCorrectGuess" [class.fail]="!game.isCorrectGuess">
+                                {{ game.isCorrectGuess ? 'Başarılı' : 'Başarısız' }}
+                            </span>
+                        </td>
+                        <td><strong>{{ game.score }}</strong></td>
+                        <td>{{ game.attemptNumber }}</td>
+                        <td class="date-cell">{{ formatDate(game.startedAt) }}</td>
+                        <td class="date-cell">{{ game.completedAt ? formatDate(game.completedAt) : '-' }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="empty-state" *ngIf="!gamesLoading && gameSessions.length === 0">
+            Henüz oyun kaydı yok.
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" *ngIf="gamesTotalPages > 1">
+            <button class="page-btn" [disabled]="gamesPage === 1" (click)="loadGameSessions(gamesPage - 1)">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <span class="page-info">{{ gamesPage }} / {{ gamesTotalPages }}</span>
+            <button class="page-btn" [disabled]="gamesPage === gamesTotalPages" (click)="loadGameSessions(gamesPage + 1)">
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Activity Logs Tab -->
+    <div *ngIf="activeTab === 'logs'">
+        <div *ngIf="logsLoading" class="loading-state">
+            <i class="fa-solid fa-spinner fa-spin"></i> Yükleniyor...
+        </div>
+
+        <div class="table-container" *ngIf="!logsLoading && activityLogs.length > 0">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Kullanıcı</th>
+                        <th>Tür</th>
+                        <th>Açıklama</th>
+                        <th>Kazanılan Puan</th>
+                        <th>Tarih</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let log of activityLogs">
+                        <td><strong>{{ log.username }}</strong></td>
+                        <td><span class="log-type">{{ log.type }}</span></td>
+                        <td class="description-cell">{{ log.description }}</td>
+                        <td>
+                            <span *ngIf="log.scoreEarned" class="score-earned">+{{ log.scoreEarned }}</span>
+                            <span *ngIf="!log.scoreEarned" class="text-dim">-</span>
+                        </td>
+                        <td class="date-cell">{{ formatDate(log.createdAt) }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="empty-state" *ngIf="!logsLoading && activityLogs.length === 0">
+            Henüz aktivite logu yok.
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" *ngIf="logsTotalPages > 1">
+            <button class="page-btn" [disabled]="logsPage === 1" (click)="loadActivityLogs(logsPage - 1)">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <span class="page-info">{{ logsPage }} / {{ logsTotalPages }}</span>
+            <button class="page-btn" [disabled]="logsPage === logsTotalPages" (click)="loadActivityLogs(logsPage + 1)">
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+</div>

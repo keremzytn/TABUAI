@@ -81,16 +81,36 @@ export const routes: Routes = [
     data: { role: 'Admin' },
     children: [
       {
+        path: 'dashboard',
+        loadComponent: () => import('./admin/pages/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent)
+      },
+      {
         path: 'users',
         loadComponent: () => import('./admin/components/user-management/user-management.component').then(m => m.UserManagementComponent)
+      },
+      {
+        path: 'users/:id',
+        loadComponent: () => import('./admin/pages/user-detail/user-detail.component').then(m => m.UserDetailComponent)
       },
       {
         path: 'words',
         loadComponent: () => import('./admin/components/word-management/word-management.component').then(m => m.WordManagementComponent)
       },
       {
+        path: 'badges',
+        loadComponent: () => import('./admin/components/badge-management/badge-management.component').then(m => m.BadgeManagementComponent)
+      },
+      {
+        path: 'word-packs',
+        loadComponent: () => import('./admin/components/word-pack-management/word-pack-management.component').then(m => m.WordPackManagementComponent)
+      },
+      {
+        path: 'activity',
+        loadComponent: () => import('./admin/pages/admin-activity/admin-activity.component').then(m => m.AdminActivityComponent)
+      },
+      {
         path: '',
-        redirectTo: 'users',
+        redirectTo: 'dashboard',
         pathMatch: 'full'
       }
     ]
