@@ -23,9 +23,9 @@
           <h1>{{ profile.displayName || profile.username }}</h1>
           <span class="level-pill">{{ getLevelText(profile.level) }}</span>
           <div class="profile-badges-row">
-            <span class="profile-coin-badge" *ngIf="profile.promptCoins > 0">🪙 {{ profile.promptCoins }}</span>
+            <span class="profile-coin-badge" *ngIf="profile.promptCoins > 0">{{ profile.promptCoins }} coin</span>
             <span class="profile-streak-badge" *ngIf="profile.currentStreak > 0">{{ getStreakEmoji() }} {{ profile.currentStreak }} gün</span>
-            <span class="profile-card-badge" *ngIf="getCardDesignLabel()">✨ {{ getCardDesignLabel() }}</span>
+            <span class="profile-card-badge" *ngIf="getCardDesignLabel()">{{ getCardDesignLabel() }}</span>
           </div>
         </div>
         <div class="header-score">
@@ -64,21 +64,21 @@
 
       <!-- Friends Link -->
       <a routerLink="/friends" class="friends-link glass-card">
-        <span class="fl-icon">👥</span>
+        <span class="fl-icon"></span>
         <span class="fl-text">Arkadaşlar</span>
         <span class="fl-arrow">→</span>
       </a>
 
       <!-- Stats Link -->
       <a routerLink="/stats" class="friends-link glass-card">
-        <span class="fl-icon">📊</span>
+        <span class="fl-icon"></span>
         <span class="fl-text">Detaylı İstatistikler</span>
         <span class="fl-arrow">→</span>
       </a>
 
       <!-- Wallet Link -->
       <a routerLink="/wallet" class="friends-link glass-card wallet-link">
-        <span class="fl-icon">🪙</span>
+        <span class="fl-icon"></span>
         <span class="fl-text">Cüzdan & Mağaza</span>
         <span class="wallet-balance" *ngIf="profile.promptCoins > 0">{{ profile.promptCoins }} coin</span>
         <span class="fl-arrow">→</span>
@@ -86,7 +86,7 @@
 
       <!-- Badges -->
       <div class="section glass-card" *ngIf="profile.badges && profile.badges.length > 0">
-        <h3 class="section-title">🏅 Rozetler</h3>
+        <h3 class="section-title">Rozetler</h3>
         <div class="badge-list">
           <div class="badge-chip" *ngFor="let badge of profile.badges" [title]="badge.description">
             <span class="b-emoji">{{ getBadgeEmoji(badge.name) }}</span>
@@ -96,13 +96,13 @@
       </div>
 
       <div class="section glass-card" *ngIf="!profile.badges || profile.badges.length === 0">
-        <h3 class="section-title">🏅 Rozetler</h3>
-        <p class="empty-text">Henüz rozet yok — oyna ve kazan! 🎮</p>
+        <h3 class="section-title">Rozetler</h3>
+        <p class="empty-text">Henüz rozet yok — oyna ve kazan!</p>
       </div>
 
       <!-- Game History -->
       <div class="section glass-card">
-        <h3 class="section-title">📜 Son Oyunlar</h3>
+        <h3 class="section-title">Son Oyunlar</h3>
         <div class="history" *ngIf="gameHistory.length > 0">
           <div class="h-row" *ngFor="let g of gameHistory" [class.win]="g.isWin" [class.loss]="!g.isWin"
             (click)="openGamePopup(g)">
@@ -119,7 +119,7 @@
     </div>
 
     <div *ngIf="!isLoading && !profile" class="error-state">
-      <p>😕 Profil bulunamadı.</p>
+      <p>Profil bulunamadı.</p>
       <a routerLink="/" class="btn btn-secondary">Ana Sayfa</a>
     </div>
   </div>
@@ -134,7 +134,7 @@
     <!-- Popup Header -->
     <div class="popup-header" [class.win]="selectedGame.isWin" [class.loss]="!selectedGame.isWin">
       <div class="popup-result-icon" [class.w]="selectedGame.isWin" [class.l]="!selectedGame.isWin">
-        {{ selectedGame.isWin ? '🎉' : '😔' }}
+        {{ selectedGame.isWin ? '&#10003;' : '&#10007;' }}
       </div>
       <h2 class="popup-word">{{ selectedGame.targetWord }}</h2>
       <span class="popup-result-text" [class.w]="selectedGame.isWin" [class.l]="!selectedGame.isWin">
@@ -151,22 +151,18 @@
     <!-- Detail Grid -->
     <div class="popup-details">
       <div class="popup-detail-item">
-        <span class="pd-icon">📅</span>
         <span class="pd-label">Tarih</span>
         <span class="pd-value">{{ selectedGame.playedAt | date:'dd MMM yyyy, HH:mm' }}</span>
       </div>
       <div class="popup-detail-item">
-        <span class="pd-icon">⏱️</span>
         <span class="pd-label">Süre</span>
         <span class="pd-value">{{ formatTimeSpent(selectedGame.timeSpent) }}</span>
       </div>
       <div class="popup-detail-item">
-        <span class="pd-icon">🔄</span>
         <span class="pd-label">Deneme</span>
         <span class="pd-value">{{ selectedGame.attemptNumber }}</span>
       </div>
       <div class="popup-detail-item">
-        <span class="pd-icon">🎮</span>
         <span class="pd-label">Mod</span>
         <span class="pd-value">{{ getModeName(selectedGame.mode) }}</span>
       </div>

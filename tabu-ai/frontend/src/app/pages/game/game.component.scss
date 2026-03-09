@@ -159,6 +159,70 @@
     transition: transform 0.3s;
 }
 
+.mode-icon-text {
+    font-size: 1.4rem !important;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--primary);
+}
+
+.daily-icon-badge {
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: #f59e0b;
+    background: rgba(245, 158, 11, 0.15);
+    padding: 8px 12px;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.daily-icon-badge.done {
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.15);
+    font-size: 1.2rem;
+}
+
+.tabu-x {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #ef4444;
+}
+
+.result-status-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.result-status-icon.win {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+}
+
+.result-status-icon.lose {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+}
+
+.success-icon {
+    color: #10b981;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.fail-icon {
+    color: #ef4444;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
 .mode-card:hover .mode-icon {
     transform: scale(1.1) rotate(-5deg);
 }

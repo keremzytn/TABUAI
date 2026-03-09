@@ -9,9 +9,9 @@
 
     <!-- Tabs -->
     <div class="tabs glass-card">
-      <button class="tab" [class.active]="activeTab === 'chart'" (click)="switchTab('chart')">📊 Prompt Analizi</button>
-      <button class="tab" [class.active]="activeTab === 'style'" (click)="switchTab('style')">🎭 Stil Analizi</button>
-      <button class="tab" [class.active]="activeTab === 'gallery'" (click)="switchTab('gallery')">🏅 Başarı Galerisi</button>
+      <button class="tab" [class.active]="activeTab === 'chart'" (click)="switchTab('chart')">Prompt Analizi</button>
+      <button class="tab" [class.active]="activeTab === 'style'" (click)="switchTab('style')">Stil Analizi</button>
+      <button class="tab" [class.active]="activeTab === 'gallery'" (click)="switchTab('gallery')">Basari Galerisi</button>
     </div>
 
     <!-- Loading -->
@@ -33,10 +33,10 @@
 
       <!-- Metric Selector -->
       <div class="metric-row">
-        <button class="metric-btn" [class.active]="chartMetric === 'successRate'" (click)="changeMetric('successRate')">🎯 Başarı</button>
-        <button class="metric-btn" [class.active]="chartMetric === 'averagePromptLength'" (click)="changeMetric('averagePromptLength')">📝 Uzunluk</button>
-        <button class="metric-btn" [class.active]="chartMetric === 'uniqueWordsUsed'" (click)="changeMetric('uniqueWordsUsed')">📚 Kelime</button>
-        <button class="metric-btn" [class.active]="chartMetric === 'averageScore'" (click)="changeMetric('averageScore')">⭐ Skor</button>
+        <button class="metric-btn" [class.active]="chartMetric === 'successRate'" (click)="changeMetric('successRate')">Basari</button>
+        <button class="metric-btn" [class.active]="chartMetric === 'averagePromptLength'" (click)="changeMetric('averagePromptLength')">Uzunluk</button>
+        <button class="metric-btn" [class.active]="chartMetric === 'uniqueWordsUsed'" (click)="changeMetric('uniqueWordsUsed')">Kelime</button>
+        <button class="metric-btn" [class.active]="chartMetric === 'averageScore'" (click)="changeMetric('averageScore')">Skor</button>
       </div>
 
       <!-- Chart -->

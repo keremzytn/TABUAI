@@ -28,8 +28,8 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponse>
 
     public async Task<AuthResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
-        // Find user by username
-        var existingUser = await _unitOfWork.Users.FindFirstAsync(u => u.Username == request.Username);
+        // Find user by username or email
+        var existingUser = await _unitOfWork.Users.FindFirstAsync(u => u.Username == request.Username || u.Email == request.Username);
         
         // If password hash is empty (legacy users), deny or allow if password matches 'password' (fallback)? 
         // Better to fail and require password reset/register new.

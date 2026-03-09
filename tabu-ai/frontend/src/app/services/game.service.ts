@@ -139,7 +139,10 @@ export class GameService {
       gameCompleted: isCorrect,
       history: [],
       aiReaction: reaction,
-      promptCoach: mockCoach ?? undefined
+      promptCoach: mockCoach ?? undefined,
+      coinsEarned: isCorrect ? Math.floor(Math.random() * 10) + 5 : 0,
+      newStreak: isCorrect ? 1 : 0,
+      totalCoins: 0
     };
 
     return new Observable(observer => {

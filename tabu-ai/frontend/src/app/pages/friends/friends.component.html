@@ -3,23 +3,20 @@
 
         <!-- Page Title -->
         <div class="page-header glass-card">
-            <h1>👥 Arkadaşlar</h1>
+            <h1>Arkadaslar</h1>
         </div>
 
         <!-- Tab Bar -->
         <div class="tab-bar glass-card">
             <button class="tab-btn" [class.active]="activeTab === 'friends'" (click)="switchTab('friends')">
-                <span class="tab-icon">🤝</span>
                 <span class="tab-label">Arkadaşlarım</span>
                 <span class="tab-count" *ngIf="friends.length > 0">{{ friends.length }}</span>
             </button>
             <button class="tab-btn" [class.active]="activeTab === 'pending'" (click)="switchTab('pending')">
-                <span class="tab-icon">📨</span>
                 <span class="tab-label">İstekler</span>
                 <span class="tab-count pending" *ngIf="pendingRequests.length > 0">{{ pendingRequests.length }}</span>
             </button>
             <button class="tab-btn" [class.active]="activeTab === 'search'" (click)="switchTab('search')">
-                <span class="tab-icon">🔍</span>
                 <span class="tab-label">Ara</span>
             </button>
         </div>
@@ -37,7 +34,6 @@
             </div>
 
             <div *ngIf="!isLoading && friends.length === 0" class="empty-state glass-card">
-                <span class="empty-icon">😕</span>
                 <p>Henüz arkadaşın yok</p>
                 <span class="empty-hint">Kullanıcı Ara tabından arkadaş ekle!</span>
             </div>
@@ -65,7 +61,6 @@
         <!-- Pending Requests Tab -->
         <div class="tab-content" *ngIf="activeTab === 'pending'">
             <div *ngIf="pendingRequests.length === 0" class="empty-state glass-card">
-                <span class="empty-icon">📭</span>
                 <p>Bekleyen istek yok</p>
             </div>
 
@@ -89,7 +84,10 @@
         <!-- Search Tab -->
         <div class="tab-content" *ngIf="activeTab === 'search'">
             <div class="search-box glass-card">
-                <span class="search-icon">🔍</span>
+                <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
                 <input type="text" [(ngModel)]="searchTerm" (input)="onSearchInput()"
                     placeholder="Kullanıcı adı ile ara..." class="search-input" autocomplete="off" />
             </div>
@@ -105,7 +103,6 @@
 
             <div *ngIf="!isSearching && searchTerm.length >= 2 && searchResults.length === 0"
                 class="empty-state glass-card">
-                <span class="empty-icon">🔎</span>
                 <p>Kullanıcı bulunamadı</p>
             </div>
 
@@ -165,17 +162,14 @@
         <!-- Stats Grid -->
         <div class="popup-stats">
             <div class="popup-stat-item">
-                <span class="ps-icon">🎮</span>
                 <span class="ps-value">{{ selectedFriend.gamesPlayed }}</span>
                 <span class="ps-label">Oyun</span>
             </div>
             <div class="popup-stat-item">
-                <span class="ps-icon">🏆</span>
                 <span class="ps-value">{{ selectedFriend.gamesWon }}</span>
                 <span class="ps-label">Galibiyet</span>
             </div>
             <div class="popup-stat-item">
-                <span class="ps-icon">📊</span>
                 <span class="ps-value">{{ selectedFriend.winRate | number:'1.0-0' }}%</span>
                 <span class="ps-label">Başarı</span>
             </div>
@@ -184,17 +178,14 @@
         <!-- Detail Info -->
         <div class="popup-details">
             <div class="popup-detail-row">
-                <span class="pd-icon">🤝</span>
                 <span class="pd-label">Arkadaşlık Süresi</span>
                 <span class="pd-value">{{ getFriendshipDuration(selectedFriend.friendSince) }}</span>
             </div>
             <div class="popup-detail-row">
-                <span class="pd-icon">📅</span>
                 <span class="pd-label">Arkadaş Olma</span>
                 <span class="pd-value">{{ selectedFriend.friendSince | date:'dd MMM yyyy' }}</span>
             </div>
             <div class="popup-detail-row">
-                <span class="pd-icon">🗓️</span>
                 <span class="pd-label">Katılım</span>
                 <span class="pd-value">{{ selectedFriend.createdAt | date:'dd MMM yyyy' }}</span>
             </div>

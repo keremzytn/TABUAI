@@ -13,7 +13,6 @@ import { AuthService } from '../../services/auth.service';
       <header class="desktop-header glass-card">
         <div class="container nav-container">
           <div class="brand">
-            <span class="logo-icon">🎯</span>
             <h1>TABU<span class="text-gradient">.AI</span></h1>
           </div>
           <nav class="desktop-nav">
@@ -164,16 +163,11 @@ import { AuthService } from '../../services/auth.service';
     }
 
     .brand h1 {
-      font-size: 24px;
+      font-size: 22px;
       font-weight: 800;
       letter-spacing: -0.5px;
       margin: 0;
       color: white;
-    }
-
-    .logo-icon {
-      font-size: 28px;
-      animation: float 3s ease-in-out infinite;
     }
 
     .desktop-nav {
@@ -185,9 +179,10 @@ import { AuthService } from '../../services/auth.service';
     .nav-link {
       color: var(--text-muted);
       text-decoration: none;
-      padding: 10px 20px;
-      border-radius: 12px;
-      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-weight: 500;
+      font-size: 14px;
       transition: all 0.2s ease;
       display: flex;
       align-items: center;
@@ -200,9 +195,8 @@ import { AuthService } from '../../services/auth.service';
     }
 
     .nav-link.active {
-      background: rgba(139, 92, 246, 0.2);
+      background: rgba(124, 109, 240, 0.12);
       color: var(--primary);
-      box-shadow: 0 0 15px rgba(139, 92, 246, 0.1);
     }
 
     /* Main Content */

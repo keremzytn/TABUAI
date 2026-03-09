@@ -2,41 +2,41 @@
     <!-- Hero Section -->
     <section class="hero-section fade-in">
         <div class="hero-content">
-            <div class="badge-new pop-in">🤖 AI Destekli Kelime Oyunu</div>
+            <div class="badge-new pop-in">AI Destekli Kelime Oyunu</div>
             <h1 class="hero-title">
                 Prompt <br>
                 <span class="text-gradient">Engineering</span>
             </h1>
             <p class="hero-description">
-                Yapay zeka ile iletişim kurma sanatını bir oyuna dönüştürdük.
-                Yasaklı kelimeleri kullanmadan AI'ya hedefi anlatabilir misin?
+                Yapay zeka ile iletisim kurma sanatini bir oyuna donusturduk.
+                Yasakli kelimeleri kullanmadan AI'ya hedefi anlatabilir misin?
             </p>
             <div class="hero-actions">
                 <a routerLink="/game" class="btn btn-primary btn-lg pulse-hover">
-                    🎮 Oyuna Başla
+                    Oyuna Basla
                 </a>
 
                 <a routerLink="/leaderboard" class="btn btn-secondary btn-lg">
-                    🏆 Liderler
+                    Liderler
                 </a>
 
                 <!-- Logged In -->
                 <ng-container *ngIf="(isLoggedIn$ | async); else guestTemplate">
                     <a routerLink="/profile" class="btn btn-secondary btn-lg profile-btn">
-                        👤 Profil
+                        Profil
                     </a>
                     <button (click)="logout()" class="btn btn-secondary btn-lg logout-btn">
-                        🚪 Çıkış
+                        Cikis
                     </button>
                 </ng-container>
 
                 <!-- Guest -->
                 <ng-template #guestTemplate>
                     <a routerLink="/login" class="btn btn-secondary btn-lg">
-                        🔑 Giriş Yap
+                        Giris Yap
                     </a>
                     <a routerLink="/register" class="btn btn-secondary btn-lg register-btn">
-                        ✨ Kayıt Ol
+                        Kayit Ol
                     </a>
                 </ng-template>
 
@@ -48,21 +48,27 @@
     <section class="features-section">
         <div class="features-grid">
             <div class="feature-card glass-card">
-                <div class="card-icon gradient-1">🤖</div>
+                <div class="card-icon gradient-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+                </div>
                 <h3>AI Hakem</h3>
-                <p>Promptlarınız saniyeler içinde analiz edilir ve puanlanır.</p>
+                <p>Promptlariniz saniyeler icinde analiz edilir ve puanlanir.</p>
             </div>
 
             <div class="feature-card glass-card">
-                <div class="card-icon gradient-2">🎯</div>
-                <h3>Zorlu Görevler</h3>
-                <p>Her seviyede daha zorlu yasaklı kelimeler ve karmaşık hedefler.</p>
+                <div class="card-icon gradient-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                </div>
+                <h3>Zorlu Gorevler</h3>
+                <p>Her seviyede daha zorlu yasakli kelimeler ve karmasik hedefler.</p>
             </div>
 
             <div class="feature-card glass-card">
-                <div class="card-icon gradient-3">📈</div>
-                <h3>Gelişim</h3>
-                <p>Prompt yazma becerinizi geliştirin ve seviye atlayın.</p>
+                <div class="card-icon gradient-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                </div>
+                <h3>Gelisim</h3>
+                <p>Prompt yazma becerinizi gelistirin ve seviye atlayin.</p>
             </div>
         </div>
     </section>
@@ -83,21 +89,21 @@
                 <div class="stat-label">Zorluk Seviyesi</div>
             </div>
             <div class="stat-card glass-card">
-                <div class="stat-value text-gradient">∞</div>
-                <div class="stat-label">Eğlence</div>
+                <div class="stat-value text-gradient">&infin;</div>
+                <div class="stat-label">Eglence</div>
             </div>
         </div>
     </section>
 
     <!-- How to Play -->
     <section class="how-section glass-card">
-        <h2 class="section-title">Nasıl Oynanır?</h2>
+        <h2 class="section-title">Nasil Oynanir?</h2>
         <div class="steps-container">
             <div class="step-item">
                 <div class="step-number">1</div>
                 <div class="step-text">
-                    <h4>Hedef Kartı Al</h4>
-                    <p>Yasaklı kelimelere dikkat et.</p>
+                    <h4>Hedef Karti Al</h4>
+                    <p>Yasakli kelimelere dikkat et.</p>
                 </div>
             </div>
             <div class="step-line"></div>
@@ -105,7 +111,7 @@
                 <div class="step-number">2</div>
                 <div class="step-text">
                     <h4>Prompt Yaz</h4>
-                    <p>AI'yı doğru kelimeye yönlendir.</p>
+                    <p>AI'yi dogru kelimeye yonlendir.</p>
                 </div>
             </div>
             <div class="step-line"></div>
@@ -113,7 +119,7 @@
                 <div class="step-number">3</div>
                 <div class="step-text">
                     <h4>Puan Topla</h4>
-                    <p>Liderlik tablosuna tırman.</p>
+                    <p>Liderlik tablosuna tirman.</p>
                 </div>
             </div>
         </div>

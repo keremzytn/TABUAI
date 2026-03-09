@@ -1,7 +1,7 @@
 <div class="container packs-container">
     <div class="packs-header">
         <button class="back-btn" (click)="router.navigate(['/game'])">← Geri</button>
-        <h1>📦 Kelime Paketleri</h1>
+        <h1>Kelime Paketleri</h1>
         <p class="text-muted">Topluluk tarafından oluşturulan kelime paketleri</p>
     </div>
 
@@ -33,9 +33,9 @@
             </div>
             <p class="pack-desc">{{ pack.description }}</p>
             <div class="pack-meta">
-                <span>📝 {{ pack.wordCount }} kelime</span>
-                <span>🎮 {{ pack.playCount }} oyun</span>
-                <span class="like-btn" (click)="likePack(pack)">❤️ {{ pack.likeCount }}</span>
+                <span>{{ pack.wordCount }} kelime</span>
+                <span>{{ pack.playCount }} oyun</span>
+                <span class="like-btn" (click)="likePack(pack)">Begen {{ pack.likeCount }}</span>
             </div>
             <div class="pack-author">{{ pack.createdByUsername }}</div>
         </div>
@@ -52,13 +52,13 @@
             <div class="pack-header">
                 <h3>{{ pack.name }}</h3>
                 <span class="pack-status" [class.approved]="pack.isApproved">
-                    {{ pack.isApproved ? '✅ Onaylı' : '⏳ Onay Bekliyor' }}
+                    {{ pack.isApproved ? 'Onayli' : 'Onay Bekliyor' }}
                 </span>
             </div>
             <p class="pack-desc">{{ pack.description }}</p>
             <div class="pack-meta">
-                <span>📝 {{ pack.wordCount }} kelime</span>
-                <span>❤️ {{ pack.likeCount }}</span>
+                <span>{{ pack.wordCount }} kelime</span>
+                <span>Begen {{ pack.likeCount }}</span>
             </div>
             <button class="btn-delete" (click)="deletePack(pack)">Sil</button>
         </div>

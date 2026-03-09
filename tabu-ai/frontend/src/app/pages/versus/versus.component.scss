@@ -673,3 +673,20 @@
 .text-center { text-align: center; }
 .mt-3 { margin-top: 12px; }
 .mt-4 { margin-top: 16px; }
+
+@media (max-width: 480px) {
+  .lobby-panel { padding: 16px; }
+  .lobby-header h1 { font-size: 22px; }
+  .lobby-btn { padding: 12px 14px; gap: 12px; }
+  .lobby-btn .btn-icon { font-size: 22px; }
+  .lobby-btn .btn-title { font-size: 14px; }
+  .room-code { font-size: 28px; letter-spacing: 6px; }
+  .room-code-input { font-size: 20px; width: 180px; }
+  .versus-header { padding: 12px; }
+  .player-info .player-score { font-size: 22px; }
+  .target-word { font-size: 24px; }
+  .result-player { padding: 12px 16px; min-width: 100px; }
+  .result-player .rp-score { font-size: 24px; }
+  .result-title { font-size: 28px; }
+  .result-icon { font-size: 48px; }
+}

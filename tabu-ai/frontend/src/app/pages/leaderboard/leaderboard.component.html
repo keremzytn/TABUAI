@@ -1,7 +1,7 @@
 <div class="container leaderboard-container">
     <div class="header-section text-center fade-in">
         <h1 class="page-title">
-            🏆 <span class="text-gradient">Liderlik Tablosu</span>
+            <span class="text-gradient">Liderlik Tablosu</span>
         </h1>
         <p class="text-muted">En başarılı prompt yazarları</p>
     </div>
@@ -37,7 +37,7 @@
 
             <!-- 1st Place -->
             <div *ngIf="topThree.length >= 1" class="podium-card glass-card first pop-in">
-                <div class="crown">👑</div>
+                <div class="crown"></div>
                 <div class="rank-badge gold">🥇</div>
                 <div class="player-info">
                     <h3>{{ topThree[0].displayName || topThree[0].username }}</h3>
@@ -102,7 +102,7 @@
 
         <!-- Empty State -->
         <div *ngIf="allEntries.length === 0" class="empty-state glass-card fade-in text-center">
-            <div class="empty-icon">🏆</div>
+            <div class="empty-icon"></div>
             <h3>Henüz oyuncu yok!</h3>
             <p class="text-muted">İlk sırayı almak için hemen oyna.</p>
             <a routerLink="/game" class="btn btn-primary mt-4">Oyna</a>
@@ -116,7 +116,7 @@
 
     <div class="action-area text-center mt-4 fade-in">
         <a routerLink="/game" class="btn btn-primary pulse">
-            🎮 Sıralamaya Gir
+            Sıralamaya Gir
         </a>
     </div>
 </div>

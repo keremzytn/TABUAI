@@ -283,3 +283,13 @@
     width: 100%;
     margin-top: 8px;
 }
+
+@media (max-width: 480px) {
+  .packs-container { padding: 16px 12px 60px; }
+  .packs-header h1 { font-size: 1.3rem; }
+  .tab { font-size: 0.8rem; padding: 8px; }
+  .tabu-inputs { grid-template-columns: 1fr; }
+  .form-row { flex-direction: column; gap: 8px; }
+  .pack-card { padding: 14px; }
+  .pack-meta { flex-wrap: wrap; gap: 10px; }
+}

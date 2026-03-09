@@ -10,7 +10,7 @@
     <!-- Balance Card -->
     <div class="balance-card glass-card" *ngIf="balance">
       <div class="coin-display">
-        <span class="coin-icon">🪙</span>
+        <span class="coin-icon"></span>
         <span class="coin-amount">{{ balance.balance }}</span>
         <span class="coin-label">PromptCoin</span>
       </div>
@@ -29,7 +29,7 @@
         <div class="streak-meta">
           <span class="meta-item">En iyi: {{ balance.bestStreak }} gün</span>
           <span class="meta-item multiplier">{{ balance.streakMultiplier }}x çarpan</span>
-          <span class="meta-item shield" *ngIf="inventory?.hasStreakShield">🛡️ Kalkan aktif</span>
+          <span class="meta-item shield" *ngIf="inventory?.hasStreakShield">Kalkan aktif</span>
         </div>
       </div>
     </div>
@@ -39,11 +39,11 @@
       <h3 class="section-title">Aktif Güçlendirmeler</h3>
       <div class="boost-list">
         <div class="boost-item" *ngIf="inventory.hasStreakShield">
-          <span class="boost-icon">🛡️</span>
+          <span class="boost-icon"></span>
           <span class="boost-text">Seri Kalkanı aktif</span>
         </div>
         <div class="boost-item" *ngIf="inventory.doubleCoinGamesLeft > 0">
-          <span class="boost-icon">⚡</span>
+          <span class="boost-icon"></span>
           <span class="boost-text">2x Coin ({{ inventory.doubleCoinGamesLeft }} oyun kaldı)</span>
         </div>
       </div>
@@ -51,10 +51,10 @@
 
     <!-- Tabs -->
     <div class="tabs glass-card">
-      <button class="tab" [class.active]="activeTab === 'wallet'" (click)="switchTab('wallet')">🪙 Özet</button>
-      <button class="tab" [class.active]="activeTab === 'shop'" (click)="switchTab('shop')">🛒 Mağaza</button>
-      <button class="tab" [class.active]="activeTab === 'inventory'" (click)="switchTab('inventory')">🎒 Envanter</button>
-      <button class="tab" [class.active]="activeTab === 'history'" (click)="switchTab('history')">📜 Geçmiş</button>
+      <button class="tab" [class.active]="activeTab === 'wallet'" (click)="switchTab('wallet')">Ozet</button>
+      <button class="tab" [class.active]="activeTab === 'shop'" (click)="switchTab('shop')">Magaza</button>
+      <button class="tab" [class.active]="activeTab === 'inventory'" (click)="switchTab('inventory')">Envanter</button>
+      <button class="tab" [class.active]="activeTab === 'history'" (click)="switchTab('history')">Gecmis</button>
     </div>
 
     <!-- Loading -->
@@ -69,39 +69,39 @@
         <h3 class="section-title">Nasıl Kazanılır?</h3>
         <div class="earn-list">
           <div class="earn-item">
-            <span class="ei-icon">🎮</span>
+            <span class="ei-icon"></span>
             <span class="ei-text">Oyun kazan</span>
-            <span class="ei-val">+10-30 🪙</span>
+            <span class="ei-val">+10-30</span>
           </div>
           <div class="earn-item">
-            <span class="ei-icon">🔥</span>
+            <span class="ei-icon"></span>
             <span class="ei-text">3+ gün seri</span>
             <span class="ei-val">1.25x çarpan</span>
           </div>
           <div class="earn-item">
-            <span class="ei-icon">💥</span>
+            <span class="ei-icon"></span>
             <span class="ei-text">7+ gün seri</span>
             <span class="ei-val">2x çarpan</span>
           </div>
           <div class="earn-item">
-            <span class="ei-icon">🌋</span>
+            <span class="ei-icon"></span>
             <span class="ei-text">30+ gün seri</span>
             <span class="ei-val">3x çarpan</span>
           </div>
           <div class="earn-item">
-            <span class="ei-icon">🎁</span>
+            <span class="ei-icon"></span>
             <span class="ei-text">Seri milestoneları (5,10,15...)</span>
-            <span class="ei-val">+50-1000 🪙</span>
+            <span class="ei-val">+50-1000</span>
           </div>
           <div class="earn-item">
-            <span class="ei-icon">📅</span>
+            <span class="ei-icon"></span>
             <span class="ei-text">Günlük meydan okuma</span>
-            <span class="ei-val">+25 🪙</span>
+            <span class="ei-val">+25</span>
           </div>
           <div class="earn-item">
-            <span class="ei-icon">⬆️</span>
+            <span class="ei-icon"></span>
             <span class="ei-text">Seviye atla</span>
-            <span class="ei-val">+100-300 🪙</span>
+            <span class="ei-val">+100-300</span>
           </div>
         </div>
       </div>
@@ -123,7 +123,7 @@
           <h4 class="sc-name">{{ item.name }}</h4>
           <p class="sc-desc">{{ item.description }}</p>
           <div class="sc-price">
-            <span class="sc-cost">{{ item.price }} 🪙</span>
+            <span class="sc-cost">{{ item.price }}</span>
             <button class="sc-buy"
                     *ngIf="!item.isOwned"
                     [disabled]="!balance || balance.balance < item.price || purchasingItem === item.id"
