@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using TabuAI.Domain.Interfaces;
 
 namespace TabuAI.Application.Features.Admin.Queries;
@@ -14,24 +15,19 @@ public class GetGameSessionsQueryHandler : IRequestHandler<GetGameSessionsQuery,
 
     public async Task<PagedResultDto<GameSessionAdminDto>> Handle(GetGameSessionsQuery request, CancellationToken cancellationToken)
     {
-        var allSessions = await _unitOfWork.GameSessions.GetAllAsync();
-        var users = await _unitOfWork.Users.GetAllAsync();
-        var words = await _unitOfWork.Words.GetAllAsync();
+        var query = _unitOfWork.GameSessions.AsQueryable()
+            .OrderByDescending(s => s.StartedAt);
 
-        var userDict = users.ToDictionary(u => u.Id, u => u.Username);
-        var wordDict = words.ToDictionary(w => w.Id, w => w.TargetWord);
+        var totalCount = await query.CountAsync(cancellationToken);
 
-        var ordered = allSessions.OrderByDescending(s => s.StartedAt).ToList();
-        var totalCount = ordered.Count;
-
-        var items = ordered
+        var items = await query
             .Skip((request.Page - 1) * request.Limit)
             .Take(request.Limit)
             .Select(s => new GameSessionAdminDto
             {
                 Id = s.Id,
-                Username = userDict.ContainsKey(s.UserId) ? userDict[s.UserId] : "",
-                TargetWord = wordDict.ContainsKey(s.WordId) ? wordDict[s.WordId] : "",
+                Username = s.User != null ? s.User.Username : "",
+                TargetWord = s.Word != null ? s.Word.TargetWord : "",
                 Mode = s.Mode.ToString(),
                 Status = s.Status.ToString(),
                 IsCorrectGuess = s.IsCorrectGuess,
@@ -39,7 +35,8 @@ public class GetGameSessionsQueryHandler : IRequestHandler<GetGameSessionsQuery,
                 AttemptNumber = s.AttemptNumber,
                 StartedAt = s.StartedAt,
                 CompletedAt = s.CompletedAt
-            }).ToList();
+            })
+            .ToListAsync(cancellationToken);
 
         return new PagedResultDto<GameSessionAdminDto>
         {

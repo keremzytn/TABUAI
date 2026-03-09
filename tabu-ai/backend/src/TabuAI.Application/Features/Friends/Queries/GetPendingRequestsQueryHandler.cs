@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using TabuAI.Application.Features.Friends.DTOs;
 using TabuAI.Domain.Enums;
 using TabuAI.Domain.Interfaces;
@@ -16,27 +17,17 @@ public class GetPendingRequestsQueryHandler : IRequestHandler<GetPendingRequests
 
     public async Task<List<FriendRequestDto>> Handle(GetPendingRequestsQuery request, CancellationToken cancellationToken)
     {
-        var pendingRequests = await _unitOfWork.Friendships.FindAsync(
-            f => f.AddresseeId == request.UserId && f.Status == FriendshipStatus.Pending);
-
-        var result = new List<FriendRequestDto>();
-
-        foreach (var friendship in pendingRequests)
-        {
-            var requester = await _unitOfWork.Users.GetByIdAsync(friendship.RequesterId);
-            if (requester != null)
+        return await _unitOfWork.Friendships.AsQueryable()
+            .Where(f => f.AddresseeId == request.UserId && f.Status == FriendshipStatus.Pending)
+            .OrderByDescending(f => f.CreatedAt)
+            .Select(f => new FriendRequestDto
             {
-                result.Add(new FriendRequestDto
-                {
-                    RequestId = friendship.Id,
-                    FromUserId = requester.Id,
-                    FromUsername = requester.Username,
-                    FromDisplayName = requester.DisplayName,
-                    SentAt = friendship.CreatedAt
-                });
-            }
-        }
-
-        return result.OrderByDescending(r => r.SentAt).ToList();
+                RequestId = f.Id,
+                FromUserId = f.RequesterId,
+                FromUsername = f.Requester != null ? f.Requester.Username : "",
+                FromDisplayName = f.Requester != null ? f.Requester.DisplayName : null,
+                SentAt = f.CreatedAt
+            })
+            .ToListAsync(cancellationToken);
     }
 }

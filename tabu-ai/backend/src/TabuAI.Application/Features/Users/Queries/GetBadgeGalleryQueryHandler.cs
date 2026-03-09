@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using TabuAI.Application.Features.Users.DTOs;
 using TabuAI.Domain.Entities;
 using TabuAI.Domain.Interfaces;
@@ -16,18 +17,36 @@ public class GetBadgeGalleryQueryHandler : IRequestHandler<GetBadgeGalleryQuery,
 
     public async Task<BadgeGalleryDto> Handle(GetBadgeGalleryQuery request, CancellationToken cancellationToken)
     {
-        var allBadges = await _unitOfWork.Badges.GetAllAsync();
-        var userBadges = await _unitOfWork.UserBadges.FindAsync(ub => ub.UserId == request.UserId);
-        var user = await _unitOfWork.Users.GetByIdAsync(request.UserId);
-        var sessions = await _unitOfWork.GameSessions.FindAsync(s => s.UserId == request.UserId);
+        var badgesTask = _unitOfWork.Badges.AsQueryable()
+            .Where(b => b.IsActive)
+            .ToListAsync(cancellationToken);
 
-        var badgesList = allBadges.Where(b => b.IsActive).ToList();
-        var userBadgesList = userBadges.ToList();
-        var sessionsList = sessions.ToList();
+        var userBadgesTask = _unitOfWork.UserBadges.AsQueryable()
+            .Where(ub => ub.UserId == request.UserId)
+            .ToListAsync(cancellationToken);
 
-        var allUserBadges = await _unitOfWork.UserBadges.GetAllAsync();
-        var totalUsers = (await _unitOfWork.Users.GetAllAsync()).Count();
-        var badgeOwnerCounts = allUserBadges.GroupBy(ub => ub.BadgeId).ToDictionary(g => g.Key, g => g.Count());
+        var userTask = _unitOfWork.Users.FindFirstNoTrackingAsync(u => u.Id == request.UserId);
+
+        var sessionStatsTask = _unitOfWork.GameSessions.AsQueryable()
+            .Where(s => s.UserId == request.UserId)
+            .Select(s => new { s.Score, s.TimeSpent, s.IsCorrectGuess })
+            .ToListAsync(cancellationToken);
+
+        var badgeOwnerCountsTask = _unitOfWork.UserBadges.AsQueryable()
+            .GroupBy(ub => ub.BadgeId)
+            .Select(g => new { BadgeId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.BadgeId, x => x.Count, cancellationToken);
+
+        var totalUsersTask = _unitOfWork.Users.AsQueryable().CountAsync(cancellationToken);
+
+        await Task.WhenAll(badgesTask, userBadgesTask, userTask, sessionStatsTask, badgeOwnerCountsTask, totalUsersTask);
+
+        var badgesList = badgesTask.Result;
+        var userBadgeSet = userBadgesTask.Result.ToDictionary(ub => ub.BadgeId);
+        var user = userTask.Result;
+        var sessions = sessionStatsTask.Result;
+        var badgeOwnerCounts = badgeOwnerCountsTask.Result;
+        var totalUsers = totalUsersTask.Result;
 
         int GetCurrentProgress(Badge badge)
         {
@@ -35,9 +54,9 @@ public class GetBadgeGalleryQueryHandler : IRequestHandler<GetBadgeGalleryQuery,
             return badge.Type switch
             {
                 BadgeType.GamesWon => user.GamesWon,
-                BadgeType.PerfectPrompts => sessionsList.Count(s => s.Score >= 90),
-                BadgeType.FastCompleter => sessionsList.Count(s => s.TimeSpent.TotalSeconds < 30),
-                BadgeType.TabuAvoidance => sessionsList.Count(s => s.IsCorrectGuess),
+                BadgeType.PerfectPrompts => sessions.Count(s => s.Score >= 90),
+                BadgeType.FastCompleter => sessions.Count(s => s.TimeSpent.TotalSeconds < 30),
+                BadgeType.TabuAvoidance => sessions.Count(s => s.IsCorrectGuess),
                 BadgeType.HighScore => user.TotalScore,
                 BadgeType.Dedication => user.GamesPlayed,
                 _ => 0
@@ -47,16 +66,8 @@ public class GetBadgeGalleryQueryHandler : IRequestHandler<GetBadgeGalleryQuery,
         string GetRarity(Guid badgeId)
         {
             if (totalUsers <= 0) return "Common";
-            var ownerCount = badgeOwnerCounts.GetValueOrDefault(badgeId, 0);
-            var pct = (double)ownerCount / totalUsers * 100;
-            return pct switch
-            {
-                < 5 => "Legendary",
-                < 15 => "Epic",
-                < 30 => "Rare",
-                < 60 => "Uncommon",
-                _ => "Common"
-            };
+            var pct = (double)badgeOwnerCounts.GetValueOrDefault(badgeId, 0) / totalUsers * 100;
+            return pct switch { < 5 => "Legendary", < 15 => "Epic", < 30 => "Rare", < 60 => "Uncommon", _ => "Common" };
         }
 
         var earned = new List<BadgeShowcaseDto>();
@@ -64,9 +75,9 @@ public class GetBadgeGalleryQueryHandler : IRequestHandler<GetBadgeGalleryQuery,
 
         foreach (var badge in badgesList)
         {
-            var userBadge = userBadgesList.FirstOrDefault(ub => ub.BadgeId == badge.Id);
             var progress = GetCurrentProgress(badge);
             var progressPct = badge.RequiredValue > 0 ? Math.Min(100, (double)progress / badge.RequiredValue * 100) : 0;
+            var isEarned = userBadgeSet.TryGetValue(badge.Id, out var userBadge);
 
             var dto = new BadgeShowcaseDto
             {
@@ -79,14 +90,12 @@ public class GetBadgeGalleryQueryHandler : IRequestHandler<GetBadgeGalleryQuery,
                 CurrentProgress = progress,
                 ProgressPercentage = progressPct,
                 EarnedAt = userBadge?.EarnedAt,
-                IsEarned = userBadge != null,
+                IsEarned = isEarned,
                 Rarity = GetRarity(badge.Id)
             };
 
-            if (userBadge != null)
-                earned.Add(dto);
-            else
-                locked.Add(dto);
+            if (isEarned) earned.Add(dto);
+            else locked.Add(dto);
         }
 
         return new BadgeGalleryDto

@@ -18,7 +18,7 @@ public class GetAllWordsQueryHandler : IRequestHandler<GetAllWordsQuery, IEnumer
 
     public async Task<IEnumerable<WordDto>> Handle(GetAllWordsQuery request, CancellationToken cancellationToken)
     {
-        var words = await _unitOfWork.Words.GetAllAsync();
+        var words = await _unitOfWork.Words.GetAllNoTrackingAsync();
         return _mapper.Map<IEnumerable<WordDto>>(words);
     }
 }

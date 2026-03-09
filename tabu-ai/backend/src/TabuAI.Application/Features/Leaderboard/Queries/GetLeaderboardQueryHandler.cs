@@ -1,6 +1,6 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using TabuAI.Application.Features.Leaderboard.DTOs;
-using TabuAI.Domain.Entities;
 using TabuAI.Domain.Interfaces;
 
 namespace TabuAI.Application.Features.Leaderboard.Queries;
@@ -8,66 +8,99 @@ namespace TabuAI.Application.Features.Leaderboard.Queries;
 public class GetLeaderboardQueryHandler : IRequestHandler<GetLeaderboardQuery, LeaderboardResponse>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICacheService _cache;
+    private static readonly TimeSpan LeaderboardCacheTtl = TimeSpan.FromMinutes(2);
 
-    public GetLeaderboardQueryHandler(IUnitOfWork unitOfWork)
+    public GetLeaderboardQueryHandler(IUnitOfWork unitOfWork, ICacheService cache)
     {
         _unitOfWork = unitOfWork;
+        _cache = cache;
     }
 
     public async Task<LeaderboardResponse> Handle(GetLeaderboardQuery request, CancellationToken cancellationToken)
     {
-        // Get all users with scores
-        var allUsers = await _unitOfWork.Users.GetAllAsync();
-        var users = allUsers
-            .Where(u => u.IsActive && u.GamesPlayed > 0)
-            .OrderByDescending(u => u.TotalScore)
-            .ToList();
-
-        var totalPlayers = users.Count;
-
-        // Map to DTOs with rank
-        var entries = users.Take(request.Top).Select((user, index) => new LeaderboardEntryDto
+        var cacheKey = $"leaderboard:{request.Period}:{request.Top}";
+        var cached = await _cache.GetAsync<LeaderboardResponse>(cacheKey);
+        if (cached != null)
         {
-            Rank = index + 1,
-            UserId = user.Id,
-            Username = user.Username,
-            DisplayName = user.DisplayName,
-            Level = user.Level.ToString(),
-            TotalScore = user.TotalScore,
-            GamesPlayed = user.GamesPlayed,
-            GamesWon = user.GamesWon,
-            WinRate = user.WinRate
-        }).ToList();
+            if (request.CurrentUserId.HasValue)
+                cached.CurrentUser = cached.Entries.FirstOrDefault(e => e.UserId == request.CurrentUserId.Value);
+            return cached;
+        }
 
-        // Find current user's position
+        var baseQuery = _unitOfWork.Users.AsQueryable()
+            .Where(u => u.IsActive && u.GamesPlayed > 0)
+            .OrderByDescending(u => u.TotalScore);
+
+        var totalPlayers = await baseQuery.CountAsync(cancellationToken);
+
+        var topUsers = await baseQuery
+            .Take(request.Top)
+            .Select(u => new LeaderboardEntryDto
+            {
+                UserId = u.Id,
+                Username = u.Username,
+                DisplayName = u.DisplayName,
+                Level = u.Level.ToString(),
+                TotalScore = u.TotalScore,
+                GamesPlayed = u.GamesPlayed,
+                GamesWon = u.GamesWon,
+                WinRate = u.WinRate
+            })
+            .ToListAsync(cancellationToken);
+
+        for (int i = 0; i < topUsers.Count; i++)
+            topUsers[i].Rank = i + 1;
+
         LeaderboardEntryDto? currentUser = null;
         if (request.CurrentUserId.HasValue)
         {
-            var userIndex = users.FindIndex(u => u.Id == request.CurrentUserId.Value);
-            if (userIndex >= 0)
+            var existingEntry = topUsers.FirstOrDefault(u => u.UserId == request.CurrentUserId.Value);
+            if (existingEntry != null)
             {
-                var user = users[userIndex];
-                currentUser = new LeaderboardEntryDto
-                {
-                    Rank = userIndex + 1,
-                    UserId = user.Id,
-                    Username = user.Username,
-                    DisplayName = user.DisplayName,
-                    Level = user.Level.ToString(),
-                    TotalScore = user.TotalScore,
-                    GamesPlayed = user.GamesPlayed,
-                    GamesWon = user.GamesWon,
-                    WinRate = user.WinRate
-                };
+                currentUser = existingEntry;
+            }
+            else
+            {
+                var userScore = await _unitOfWork.Users.AsQueryable()
+                    .Where(x => x.Id == request.CurrentUserId.Value)
+                    .Select(x => x.TotalScore)
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                var rank = await baseQuery
+                    .Where(u => u.TotalScore > userScore)
+                    .CountAsync(cancellationToken) + 1;
+
+                var cu = await _unitOfWork.Users.AsQueryable()
+                    .Where(u => u.Id == request.CurrentUserId.Value && u.IsActive)
+                    .Select(u => new LeaderboardEntryDto
+                    {
+                        Rank = rank,
+                        UserId = u.Id,
+                        Username = u.Username,
+                        DisplayName = u.DisplayName,
+                        Level = u.Level.ToString(),
+                        TotalScore = u.TotalScore,
+                        GamesPlayed = u.GamesPlayed,
+                        GamesWon = u.GamesWon,
+                        WinRate = u.WinRate
+                    })
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                currentUser = cu;
             }
         }
 
-        return new LeaderboardResponse
+        var response = new LeaderboardResponse
         {
-            Entries = entries,
+            Entries = topUsers,
             CurrentUser = currentUser,
             Period = request.Period,
             TotalPlayers = totalPlayers
         };
+
+        await _cache.SetAsync(cacheKey, response, LeaderboardCacheTtl);
+
+        return response;
     }
 }

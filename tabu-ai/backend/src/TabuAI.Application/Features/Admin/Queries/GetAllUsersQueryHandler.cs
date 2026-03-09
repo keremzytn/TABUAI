@@ -18,7 +18,7 @@ public class GetAllUsersQueryHandler : IRequestHandler<GetAllUsersQuery, IEnumer
 
     public async Task<IEnumerable<UserProfileDto>> Handle(GetAllUsersQuery request, CancellationToken cancellationToken)
     {
-        var users = await _unitOfWork.Users.GetAllAsync();
+        var users = await _unitOfWork.Users.GetAllNoTrackingAsync();
         return _mapper.Map<IEnumerable<UserProfileDto>>(users);
     }
 }

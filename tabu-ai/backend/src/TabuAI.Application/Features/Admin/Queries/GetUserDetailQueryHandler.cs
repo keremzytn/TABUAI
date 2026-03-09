@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using TabuAI.Domain.Interfaces;
 
 namespace TabuAI.Application.Features.Admin.Queries;
@@ -14,43 +15,40 @@ public class GetUserDetailQueryHandler : IRequestHandler<GetUserDetailQuery, Use
 
     public async Task<UserDetailDto?> Handle(GetUserDetailQuery request, CancellationToken cancellationToken)
     {
-        var user = await _unitOfWork.Users.GetByIdAsync(request.UserId);
+        var user = await _unitOfWork.Users.FindFirstNoTrackingAsync(u => u.Id == request.UserId);
         if (user == null) return null;
 
-        // Rozetler
-        var userBadges = await _unitOfWork.UserBadges.FindAsync(ub => ub.UserId == request.UserId);
-        var allBadges = await _unitOfWork.Badges.GetAllAsync();
-        var badgeDict = allBadges.ToDictionary(b => b.Id);
+        var badgesTask = _unitOfWork.UserBadges.AsQueryable()
+            .Where(ub => ub.UserId == request.UserId)
+            .Select(ub => new UserDetailBadgeDto
+            {
+                BadgeId = ub.BadgeId,
+                Name = ub.Badge != null ? ub.Badge.Name : "",
+                Description = ub.Badge != null ? ub.Badge.Description : "",
+                IconUrl = ub.Badge != null ? ub.Badge.IconUrl : "",
+                EarnedAt = ub.EarnedAt
+            })
+            .ToListAsync(cancellationToken);
 
-        var badges = userBadges.Select(ub => new UserDetailBadgeDto
-        {
-            BadgeId = ub.BadgeId,
-            Name = badgeDict.ContainsKey(ub.BadgeId) ? badgeDict[ub.BadgeId].Name : "",
-            Description = badgeDict.ContainsKey(ub.BadgeId) ? badgeDict[ub.BadgeId].Description : "",
-            IconUrl = badgeDict.ContainsKey(ub.BadgeId) ? badgeDict[ub.BadgeId].IconUrl : "",
-            EarnedAt = ub.EarnedAt
-        }).ToList();
-
-        // Son 10 oyun
-        var gameSessions = await _unitOfWork.GameSessions.FindAsync(gs => gs.UserId == request.UserId);
-        var recentGames = gameSessions
+        var recentGamesTask = _unitOfWork.GameSessions.AsQueryable()
+            .Where(gs => gs.UserId == request.UserId)
             .OrderByDescending(gs => gs.StartedAt)
             .Take(10)
             .Select(gs => new UserDetailGameSessionDto
             {
                 Id = gs.Id,
-                TargetWord = gs.Word?.TargetWord ?? "",
+                TargetWord = gs.Word != null ? gs.Word.TargetWord : "",
                 Mode = gs.Mode.ToString(),
                 Status = gs.Status.ToString(),
                 IsCorrectGuess = gs.IsCorrectGuess,
                 Score = gs.Score,
                 AttemptNumber = gs.AttemptNumber,
                 StartedAt = gs.StartedAt
-            }).ToList();
+            })
+            .ToListAsync(cancellationToken);
 
-        // Coin işlemleri
-        var coinTransactions = await _unitOfWork.CoinTransactions.FindAsync(ct => ct.UserId == request.UserId);
-        var recentTransactions = coinTransactions
+        var recentTransactionsTask = _unitOfWork.CoinTransactions.AsQueryable()
+            .Where(ct => ct.UserId == request.UserId)
             .OrderByDescending(ct => ct.CreatedAt)
             .Take(20)
             .Select(ct => new UserDetailCoinTransactionDto
@@ -60,7 +58,10 @@ public class GetUserDetailQueryHandler : IRequestHandler<GetUserDetailQuery, Use
                 Type = ct.Type.ToString(),
                 Description = ct.Description,
                 CreatedAt = ct.CreatedAt
-            }).ToList();
+            })
+            .ToListAsync(cancellationToken);
+
+        await Task.WhenAll(badgesTask, recentGamesTask, recentTransactionsTask);
 
         return new UserDetailDto
         {
@@ -81,9 +82,9 @@ public class GetUserDetailQueryHandler : IRequestHandler<GetUserDetailQuery, Use
             CreatedAt = user.CreatedAt,
             SelectedAvatar = user.SelectedAvatar,
             SelectedCardDesign = user.SelectedCardDesign,
-            Badges = badges,
-            RecentGames = recentGames,
-            CoinTransactions = recentTransactions
+            Badges = badgesTask.Result,
+            RecentGames = recentGamesTask.Result,
+            CoinTransactions = recentTransactionsTask.Result
         };
     }
 }

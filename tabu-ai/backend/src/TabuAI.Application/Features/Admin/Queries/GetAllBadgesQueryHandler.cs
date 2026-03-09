@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using TabuAI.Domain.Interfaces;
 
 namespace TabuAI.Application.Features.Admin.Queries;
@@ -14,9 +15,12 @@ public class GetAllBadgesQueryHandler : IRequestHandler<GetAllBadgesQuery, IEnum
 
     public async Task<IEnumerable<BadgeDto>> Handle(GetAllBadgesQuery request, CancellationToken cancellationToken)
     {
-        var badges = await _unitOfWork.Badges.GetAllAsync();
-        var userBadges = await _unitOfWork.UserBadges.GetAllAsync();
-        var userBadgeCounts = userBadges.GroupBy(ub => ub.BadgeId).ToDictionary(g => g.Key, g => g.Count());
+        var userBadgeCounts = await _unitOfWork.UserBadges.AsQueryable()
+            .GroupBy(ub => ub.BadgeId)
+            .Select(g => new { BadgeId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.BadgeId, x => x.Count, cancellationToken);
+
+        var badges = await _unitOfWork.Badges.GetAllNoTrackingAsync();
 
         return badges.Select(b => new BadgeDto
         {
@@ -28,7 +32,7 @@ public class GetAllBadgesQueryHandler : IRequestHandler<GetAllBadgesQuery, IEnum
             RequiredValue = b.RequiredValue,
             IsActive = b.IsActive,
             CreatedAt = b.CreatedAt,
-            UserCount = userBadgeCounts.ContainsKey(b.Id) ? userBadgeCounts[b.Id] : 0
+            UserCount = userBadgeCounts.GetValueOrDefault(b.Id, 0)
         });
     }
 }

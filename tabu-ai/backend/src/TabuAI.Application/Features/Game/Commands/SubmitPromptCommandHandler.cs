@@ -42,9 +42,8 @@ public class SubmitPromptCommandHandler : IRequestHandler<SubmitPromptCommand, G
             throw new InvalidOperationException("Game session is already completed");
         }
 
-        // Get attempts count
-        var currentAttempts = await _unitOfWork.GameAttempts.FindAsync(a => a.GameSessionId == gameSessionId);
-        int attemptCount = currentAttempts.Count();
+        // Get attempts count (DB-side COUNT, no data transfer)
+        int attemptCount = await _unitOfWork.GameAttempts.CountAsync(a => a.GameSessionId == gameSessionId);
 
         if (attemptCount >= 3)
         {
@@ -236,8 +235,8 @@ public class SubmitPromptCommandHandler : IRequestHandler<SubmitPromptCommand, G
             }
         }
 
-        // Get all attempts for history
-        var allAttempts = (await _unitOfWork.GameAttempts.FindAsync(a => a.GameSessionId == gameSessionId))
+        // Build attempt history from already-fetched data (avoid extra DB round-trip)
+        var allAttempts = (await _unitOfWork.GameAttempts.FindNoTrackingAsync(a => a.GameSessionId == gameSessionId))
             .OrderBy(a => a.AttemptNumber)
             .ToList();
 
@@ -295,11 +294,12 @@ public class SubmitPromptCommandHandler : IRequestHandler<SubmitPromptCommand, G
 
     private async Task UpdateDetailedStatsAsync(User user)
     {
-        // 1. Update Success Rate
-        var successRateStat = (await _unitOfWork.UserStatistics
-            .FindAsync(s => s.UserId == user.Id && s.Type == StatisticType.SuccessRate))
-            .FirstOrDefault();
+        var userStats = (await _unitOfWork.UserStatistics
+            .FindAsync(s => s.UserId == user.Id &&
+                           (s.Type == StatisticType.SuccessRate || s.Type == StatisticType.TotalScore)))
+            .ToList();
 
+        var successRateStat = userStats.FirstOrDefault(s => s.Type == StatisticType.SuccessRate);
         if (successRateStat == null)
         {
             await _unitOfWork.UserStatistics.AddAsync(new UserStatistic
@@ -319,11 +319,7 @@ public class SubmitPromptCommandHandler : IRequestHandler<SubmitPromptCommand, G
             await _unitOfWork.UserStatistics.UpdateAsync(successRateStat);
         }
 
-        // 2. Update Total Games
-        var gamesPlayedStat = (await _unitOfWork.UserStatistics
-            .FindAsync(s => s.UserId == user.Id && s.Type == StatisticType.TotalScore)) 
-            .FirstOrDefault(s => s.MetricName == "Oyun Sayısı");
-
+        var gamesPlayedStat = userStats.FirstOrDefault(s => s.Type == StatisticType.TotalScore && s.MetricName == "Oyun Sayısı");
         if (gamesPlayedStat == null)
         {
             await _unitOfWork.UserStatistics.AddAsync(new UserStatistic
@@ -342,8 +338,7 @@ public class SubmitPromptCommandHandler : IRequestHandler<SubmitPromptCommand, G
             gamesPlayedStat.RecordedAt = DateTime.UtcNow;
             await _unitOfWork.UserStatistics.UpdateAsync(gamesPlayedStat);
         }
-
-        await _unitOfWork.SaveChangesAsync();
+        // SaveChangesAsync removed - caller's SaveChangesAsync handles this
     }
 
     private async Task UpdateStreakAsync(User user)

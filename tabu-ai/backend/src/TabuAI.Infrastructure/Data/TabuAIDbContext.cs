@@ -64,6 +64,8 @@ public class TabuAIDbContext : DbContext
             entity.Property(e => e.Category).IsRequired().HasMaxLength(50);
             
             entity.Property(e => e.Language).HasMaxLength(10).HasDefaultValue("tr");
+            entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => new { e.IsActive, e.Language });
             entity.Property(e => e.WordPackId).IsRequired(false);
             entity.HasOne(e => e.WordPack)
                 .WithMany(e => e.Words)
@@ -103,6 +105,9 @@ public class TabuAIDbContext : DbContext
                 .WithMany(e => e.GameSessions)
                 .HasForeignKey(e => e.WordId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.StartedAt);
         });
 
         // GameAttempt Configuration
@@ -127,6 +132,8 @@ public class TabuAIDbContext : DbContext
                 .WithMany(e => e.Attempts)
                 .HasForeignKey(e => e.GameSessionId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.GameSessionId);
         });
 
         // Badge Configuration

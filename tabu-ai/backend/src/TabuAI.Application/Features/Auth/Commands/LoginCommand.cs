@@ -43,6 +43,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponse>
 
         _logger.LogInformation("User found: {Username}, HashLength: {HashLen}, IsActive: {IsActive}",
             existingUser.Username, existingUser.PasswordHash?.Length ?? 0, existingUser.IsActive);
+        _logger.LogInformation("NewHashForAdmin123: {Hash}", BCrypt.Net.BCrypt.HashPassword("admin123"));
 
         bool verified = false;
         if (string.IsNullOrEmpty(existingUser.PasswordHash))

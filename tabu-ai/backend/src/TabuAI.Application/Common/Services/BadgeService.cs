@@ -12,10 +12,14 @@ public interface IBadgeService
 public class BadgeService : IBadgeService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICacheService _cache;
+    private const string BadgesCacheKey = "badges:all_active";
+    private static readonly TimeSpan BadgesCacheTtl = TimeSpan.FromMinutes(10);
 
-    public BadgeService(IUnitOfWork unitOfWork)
+    public BadgeService(IUnitOfWork unitOfWork, ICacheService cache)
     {
         _unitOfWork = unitOfWork;
+        _cache = cache;
     }
 
     public async Task CheckAndAwardBadgesAsync(Guid userId)
@@ -24,11 +28,21 @@ public class BadgeService : IBadgeService
         if (user == null) return;
 
         var existingBadges = (await _unitOfWork.UserBadges
-            .FindAsync(ub => ub.UserId == userId))
+            .FindNoTrackingAsync(ub => ub.UserId == userId))
             .Select(ub => ub.BadgeId)
             .ToHashSet();
 
-        var allBadges = await _unitOfWork.Badges.GetAllAsync();
+        var cachedBadges = await _cache.GetAsync<List<Badge>>(BadgesCacheKey);
+        IEnumerable<Badge> allBadges;
+        if (cachedBadges != null)
+        {
+            allBadges = cachedBadges;
+        }
+        else
+        {
+            allBadges = await _unitOfWork.Badges.GetAllNoTrackingAsync();
+            await _cache.SetAsync(BadgesCacheKey, allBadges.ToList(), BadgesCacheTtl);
+        }
 
         foreach (var badge in allBadges.Where(b => b.IsActive))
         {

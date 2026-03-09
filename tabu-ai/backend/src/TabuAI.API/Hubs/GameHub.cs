@@ -111,7 +111,7 @@ public class GameHub : Hub
             // Skip stale, cancelled, disconnected or same user
             if (candidate.UserId == userId) continue;
             if (!_userConnections.ContainsKey(candidate.UserId)) continue;
-            if (_cancelledMatchmaking.ContainsKey(candidate.UserId)) continue;
+            if (_cancelledMatchmaking.TryRemove(candidate.UserId, out _)) continue;
             if (DateTime.UtcNow - candidate.JoinedAt > matchmakingTtl) continue;
             opponent = candidate;
             break;
@@ -432,21 +432,28 @@ public class GameHub : Hub
         var parsedUserId = Guid.Parse(userId);
         var parsedOpponentId = Guid.Parse(opponent.UserId);
 
-        // Pick a random word
-        var wordsQuery = await _unitOfWork.Words.FindAsync(w => w.IsActive);
-        var words = wordsQuery.ToList();
+        // Pick a random word (DB-side filtering)
+        var wordFilter = opponent.Category != null
+            ? _unitOfWork.Words.AsQueryable().Where(w => w.IsActive && w.Category.ToLower() == opponent.Category.ToLower())
+            : _unitOfWork.Words.AsQueryable().Where(w => w.IsActive);
 
-        if (opponent.Category != null)
-            words = words.Where(w => w.Category.Equals(opponent.Category, StringComparison.OrdinalIgnoreCase)).ToList();
-
-        if (!words.Any())
+        var wordCount = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(wordFilter);
+        if (wordCount == 0)
         {
             await Clients.Caller.SendAsync("MatchmakingError", "Uygun kelime bulunamadı.");
             return;
         }
 
         var random = new Random();
-        var selectedWord = words[random.Next(words.Count)];
+        var skip = random.Next(wordCount);
+        var selectedWord = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions
+            .FirstOrDefaultAsync(wordFilter.Skip(skip));
+
+        if (selectedWord == null)
+        {
+            await Clients.Caller.SendAsync("MatchmakingError", "Uygun kelime bulunamadı.");
+            return;
+        }
 
         var roomCode = GenerateRoomCode();
 

@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using TabuAI.Domain.Interfaces;
 
 namespace TabuAI.Application.Features.Admin.Queries;
@@ -6,38 +7,38 @@ namespace TabuAI.Application.Features.Admin.Queries;
 public class GetDashboardStatsQueryHandler : IRequestHandler<GetDashboardStatsQuery, DashboardStatsDto>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICacheService _cache;
+    private const string DashboardCacheKey = "admin:dashboard_stats";
+    private static readonly TimeSpan DashboardCacheTtl = TimeSpan.FromMinutes(5);
 
-    public GetDashboardStatsQueryHandler(IUnitOfWork unitOfWork)
+    public GetDashboardStatsQueryHandler(IUnitOfWork unitOfWork, ICacheService cache)
     {
         _unitOfWork = unitOfWork;
+        _cache = cache;
     }
 
     public async Task<DashboardStatsDto> Handle(GetDashboardStatsQuery request, CancellationToken cancellationToken)
     {
-        var users = await _unitOfWork.Users.GetAllAsync();
-        var userList = users.ToList();
-
-        var games = await _unitOfWork.GameSessions.GetAllAsync();
-        var gameList = games.ToList();
-
-        var words = await _unitOfWork.Words.GetAllAsync();
-        var wordList = words.ToList();
+        var cached = await _cache.GetAsync<DashboardStatsDto>(DashboardCacheKey);
+        if (cached != null) return cached;
 
         var today = DateTime.UtcNow.Date;
+        var sevenDaysAgo = today.AddDays(-6);
 
-        // Son 7 gün kayıt istatistikleri
-        var last7Days = Enumerable.Range(0, 7)
-            .Select(i => today.AddDays(-i))
-            .Reverse()
-            .Select(date => new DailyRegistrationDto
-            {
-                Date = date.ToString("yyyy-MM-dd"),
-                Count = userList.Count(u => u.CreatedAt.Date == date)
-            })
-            .ToList();
+        var userQuery = _unitOfWork.Users.AsQueryable();
+        var gameQuery = _unitOfWork.GameSessions.AsQueryable();
+        var wordQuery = _unitOfWork.Words.AsQueryable();
 
-        // En aktif 5 kullanıcı (skora göre)
-        var topUsers = userList
+        var totalUsersTask = userQuery.CountAsync(cancellationToken);
+        var activeUsersTask = userQuery.CountAsync(u => u.IsActive, cancellationToken);
+        var totalGamesTask = gameQuery.CountAsync(cancellationToken);
+        var todayGamesTask = gameQuery.CountAsync(g => g.StartedAt >= today, cancellationToken);
+        var totalWordsTask = wordQuery.CountAsync(cancellationToken);
+        var activeWordsTask = wordQuery.CountAsync(w => w.IsActive, cancellationToken);
+        var badgeCountTask = _unitOfWork.Badges.CountAsync();
+        var wordPackCountTask = _unitOfWork.WordPacks.CountAsync();
+
+        var topUsersTask = userQuery
             .OrderByDescending(u => u.TotalScore)
             .Take(5)
             .Select(u => new TopUserDto
@@ -49,25 +50,53 @@ public class GetDashboardStatsQueryHandler : IRequestHandler<GetDashboardStatsQu
                 GamesPlayed = u.GamesPlayed,
                 GamesWon = u.GamesWon
             })
+            .ToListAsync(cancellationToken);
+
+        var dailyRegistrationsTask = userQuery
+            .Where(u => u.CreatedAt >= sevenDaysAgo)
+            .GroupBy(u => u.CreatedAt.Date)
+            .Select(g => new { Date = g.Key, Count = g.Count() })
+            .ToListAsync(cancellationToken);
+
+        await Task.WhenAll(
+            totalUsersTask, activeUsersTask, totalGamesTask, todayGamesTask,
+            totalWordsTask, activeWordsTask, badgeCountTask, wordPackCountTask,
+            topUsersTask, dailyRegistrationsTask);
+
+        var registrationsByDate = dailyRegistrationsTask.Result.ToDictionary(x => x.Date, x => x.Count);
+
+        var last7Days = Enumerable.Range(0, 7)
+            .Select(i => sevenDaysAgo.AddDays(i))
+            .Select(date => new DailyRegistrationDto
+            {
+                Date = date.ToString("yyyy-MM-dd"),
+                Count = registrationsByDate.TryGetValue(date, out var c) ? c : 0
+            })
             .ToList();
 
-        var badgeCount = await _unitOfWork.Badges.CountAsync();
-        var wordPackCount = await _unitOfWork.WordPacks.CountAsync();
+        var totalUsers = totalUsersTask.Result;
+        var activeUsers = activeUsersTask.Result;
+        var totalWords = totalWordsTask.Result;
+        var activeWords = activeWordsTask.Result;
 
-        return new DashboardStatsDto
+        var result = new DashboardStatsDto
         {
-            TotalUsers = userList.Count,
-            ActiveUsers = userList.Count(u => u.IsActive),
-            InactiveUsers = userList.Count(u => !u.IsActive),
-            TotalGames = gameList.Count,
-            TodayGames = gameList.Count(g => g.StartedAt.Date == today),
-            TotalWords = wordList.Count,
-            ActiveWords = wordList.Count(w => w.IsActive),
-            InactiveWords = wordList.Count(w => !w.IsActive),
-            TotalBadges = badgeCount,
-            TotalWordPacks = wordPackCount,
+            TotalUsers = totalUsers,
+            ActiveUsers = activeUsers,
+            InactiveUsers = totalUsers - activeUsers,
+            TotalGames = totalGamesTask.Result,
+            TodayGames = todayGamesTask.Result,
+            TotalWords = totalWords,
+            ActiveWords = activeWords,
+            InactiveWords = totalWords - activeWords,
+            TotalBadges = badgeCountTask.Result,
+            TotalWordPacks = wordPackCountTask.Result,
             Last7DaysRegistrations = last7Days,
-            TopUsers = topUsers
+            TopUsers = topUsersTask.Result
         };
+
+        await _cache.SetAsync(DashboardCacheKey, result, DashboardCacheTtl);
+
+        return result;
     }
 }

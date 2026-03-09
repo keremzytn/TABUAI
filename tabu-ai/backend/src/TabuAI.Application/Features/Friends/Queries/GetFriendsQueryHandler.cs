@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using TabuAI.Application.Features.Friends.DTOs;
 using TabuAI.Domain.Enums;
 using TabuAI.Domain.Interfaces;
@@ -16,58 +17,33 @@ public class GetFriendsQueryHandler : IRequestHandler<GetFriendsQuery, List<Frie
 
     public async Task<List<FriendDto>> Handle(GetFriendsQuery request, CancellationToken cancellationToken)
     {
-        // Get friendships where user is requester or addressee AND status is Accepted
-        var sentAccepted = await _unitOfWork.Friendships.FindAsync(
-            f => f.RequesterId == request.UserId && f.Status == FriendshipStatus.Accepted);
-        
-        var receivedAccepted = await _unitOfWork.Friendships.FindAsync(
-            f => f.AddresseeId == request.UserId && f.Status == FriendshipStatus.Accepted);
+        var userId = request.UserId;
 
-        var friends = new List<FriendDto>();
+        var friendships = await _unitOfWork.Friendships.AsQueryable()
+            .Where(f => f.Status == FriendshipStatus.Accepted &&
+                        (f.RequesterId == userId || f.AddresseeId == userId))
+            .Include(f => f.Requester)
+            .Include(f => f.Addressee)
+            .ToListAsync(cancellationToken);
 
-        foreach (var f in sentAccepted)
+        var friends = friendships.Select(f =>
         {
-            var user = await _unitOfWork.Users.GetByIdAsync(f.AddresseeId);
-            if (user != null)
+            var friendUser = f.RequesterId == userId ? f.Addressee : f.Requester;
+            return new FriendDto
             {
-                friends.Add(new FriendDto
-                {
-                    FriendshipId = f.Id,
-                    UserId = user.Id,
-                    Username = user.Username,
-                    DisplayName = user.DisplayName,
-                    Level = user.Level.ToString(),
-                    TotalScore = user.TotalScore,
-                    GamesPlayed = user.GamesPlayed,
-                    GamesWon = user.GamesWon,
-                    WinRate = user.WinRate,
-                    FriendSince = f.UpdatedAt ?? f.CreatedAt,
-                    CreatedAt = user.CreatedAt
-                });
-            }
-        }
-
-        foreach (var f in receivedAccepted)
-        {
-            var user = await _unitOfWork.Users.GetByIdAsync(f.RequesterId);
-            if (user != null)
-            {
-                friends.Add(new FriendDto
-                {
-                    FriendshipId = f.Id,
-                    UserId = user.Id,
-                    Username = user.Username,
-                    DisplayName = user.DisplayName,
-                    Level = user.Level.ToString(),
-                    TotalScore = user.TotalScore,
-                    GamesPlayed = user.GamesPlayed,
-                    GamesWon = user.GamesWon,
-                    WinRate = user.WinRate,
-                    FriendSince = f.UpdatedAt ?? f.CreatedAt,
-                    CreatedAt = user.CreatedAt
-                });
-            }
-        }
+                FriendshipId = f.Id,
+                UserId = friendUser.Id,
+                Username = friendUser.Username,
+                DisplayName = friendUser.DisplayName,
+                Level = friendUser.Level.ToString(),
+                TotalScore = friendUser.TotalScore,
+                GamesPlayed = friendUser.GamesPlayed,
+                GamesWon = friendUser.GamesWon,
+                WinRate = friendUser.WinRate,
+                FriendSince = f.UpdatedAt ?? f.CreatedAt,
+                CreatedAt = friendUser.CreatedAt
+            };
+        });
 
         return friends.OrderBy(f => f.Username).ToList();
     }
