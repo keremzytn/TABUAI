@@ -114,9 +114,10 @@
             <div class="actions mt-4 text-center">
                 <button class="btn btn-primary btn-lg start-btn" (click)="startGame()">
                     <span class="btn-text">OYUNA BASLA</span>
-                    <span class="btn-arrow">&rarr;</span>
+                    <i class="fa-solid fa-arrow-right btn-arrow"></i>
                 </button>
                 <button class="btn btn-outline btn-lg community-btn" (click)="router.navigate(['/word-packs'])">
+                    <i class="fa-solid fa-box-open"></i>
                     <span class="btn-text">Kelime Paketleri</span>
                 </button>
             </div>
@@ -160,7 +161,7 @@
 
                 <div class="tabu-section">
                     <div class="tabu-label">
-                        <span class="tabu-x">&times;</span> YASAKLI KELIMELER
+                        <i class="fa-solid fa-ban"></i> YASAKLI KELIMELER
                     </div>
                     <div class="tabu-list">
                         <div *ngFor="let tabu of currentGame.word.tabuWords; let i = index" class="tabu-item"
@@ -184,8 +185,8 @@
                 <div class="history-ai">
                     <span class="ai-label">AI Tahmini:</span>
                     <span class="ai-guess">"{{ attempt.aiGuess }}"</span>
-                    <span *ngIf="attempt.isCorrect" class="success-icon">&check;</span>
-                    <span *ngIf="!attempt.isCorrect" class="fail-icon">&times;</span>
+                    <span *ngIf="attempt.isCorrect" class="success-icon"><i class="fa-solid fa-circle-check"></i></span>
+                    <span *ngIf="!attempt.isCorrect" class="fail-icon"><i class="fa-solid fa-circle-xmark"></i></span>
                 </div>
                 <p class="ai-feedback">{{ attempt.aiFeedback }}</p>
             </div>
@@ -195,9 +196,7 @@
         <div class="input-area glass-card" [class.input-error]="inputError" *ngIf="!submitting && !lastResult">
             <button *ngIf="speechSupported" class="btn btn-voice" [class.listening]="isListening"
                 (click)="toggleVoiceInput()" title="Sesli giris">
-                <span class="voice-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
-                </span>
+                <i class="fa-solid fa-microphone voice-icon"></i>
             </button>
 
             <textarea #promptInput [(ngModel)]="currentPrompt" class="game-input"
@@ -206,7 +205,7 @@
 
             <button class="btn btn-send" (click)="submitPrompt()"
                 [disabled]="!currentPrompt.trim() || submitting || currentGame.attemptNumber >= 3">
-                <span *ngIf="!submitting" class="send-icon">&rarr;</span>
+                <i *ngIf="!submitting" class="fa-solid fa-paper-plane send-icon"></i>
                 <div *ngIf="submitting" class="loading-spinner small"></div>
             </button>
         </div>
@@ -234,7 +233,7 @@
             <div class="modal-mini-header">
                 <div class="header-main">
                     <span class="mini-icon result-status-icon" [class.win]="lastResult.isCorrect" [class.lose]="!lastResult.isCorrect">
-                        {{ lastResult.isCorrect ? '&#10003;' : '&times;' }}
+                        <i [class]="lastResult.isCorrect ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-xmark'"></i>
                     </span>
                     <div class="title-group">
                         <h2 class="mini-title">{{ lastResult.isCorrect ? 'BASARILI!' : (currentGame?.attemptNumber === 3
@@ -276,8 +275,8 @@
                 <!-- Quality & Feedback combined -->
                 <div class="feedback-compact">
                     <div class="quality-mini">
-                        <span *ngFor="let s of [1,2,3,4,5]" class="mini-star"
-                            [class.active]="s <= lastResult.promptQuality">&#9733;</span>
+                        <i *ngFor="let s of [1,2,3,4,5]" class="fa-solid fa-star mini-star"
+                            [class.active]="s <= lastResult.promptQuality"></i>
                     </div>
                     <p class="mini-feedback-text">"{{ lastResult.aiFeedback }}"</p>
                 </div>
@@ -313,7 +312,7 @@
                     <h2>Prompt Analiz Kocu</h2>
                     <p class="coach-subtitle">Prompt muhendisligi degerlendirmen</p>
                 </div>
-                <button class="coach-close" (click)="closeCoachModal()">&times;</button>
+                <button class="coach-close" (click)="closeCoachModal()"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
             <div class="coach-score-section">

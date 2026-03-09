@@ -7,7 +7,7 @@
       <!-- Menu -->
       <div *ngIf="lobbyMode === 'menu'">
         <div class="lobby-header">
-          <div class="lobby-icon">&#9876;</div>
+          <div class="lobby-icon"><i class="fa-solid fa-swords"></i></div>
           <h1>Duello Modu</h1>
           <p class="text-muted">Arkadaşlarınla veya rastgele rakiplerle yarış!</p>
         </div>
@@ -26,7 +26,7 @@
 
         <div class="lobby-actions">
           <button class="btn btn-primary btn-lg lobby-btn" (click)="startMatchmaking()">
-            <span class="btn-icon">&#128270;</span>
+            <i class="fa-solid fa-bolt btn-icon"></i>
             <div class="btn-content">
               <span class="btn-title">Rastgele Rakip Bul</span>
               <span class="btn-desc">Otomatik eslesme</span>
@@ -34,7 +34,7 @@
           </button>
 
           <button class="btn btn-secondary btn-lg lobby-btn" (click)="createRoom()">
-            <span class="btn-icon">&#127968;</span>
+            <i class="fa-solid fa-plus btn-icon"></i>
             <div class="btn-content">
               <span class="btn-title">Oda Olustur</span>
               <span class="btn-desc">Arkadaşını davet et</span>
@@ -42,7 +42,7 @@
           </button>
 
           <button class="btn btn-outline btn-lg lobby-btn" (click)="lobbyMode = 'join-room'">
-            <span class="btn-icon">&#128279;</span>
+            <i class="fa-solid fa-right-to-bracket btn-icon"></i>
             <div class="btn-content">
               <span class="btn-title">Odaya Katıl</span>
               <span class="btn-desc">Oda kodu ile katıl</span>
@@ -53,7 +53,7 @@
 
       <!-- Create Room -->
       <div *ngIf="lobbyMode === 'create-room'" class="room-created">
-        <div class="lobby-icon">&#127968;</div>
+        <div class="lobby-icon"><i class="fa-solid fa-door-open"></i></div>
         <h2>Oda Olusturuldu!</h2>
         <p class="text-muted">Bu kodu arkadaşınla paylaş:</p>
         <div class="room-code-display" (click)="copyRoomCode()">
@@ -69,7 +69,7 @@
 
       <!-- Join Room -->
       <div *ngIf="lobbyMode === 'join-room'" class="join-room">
-        <div class="lobby-icon">&#128279;</div>
+        <div class="lobby-icon"><i class="fa-solid fa-link"></i></div>
         <h2>Odaya Katıl</h2>
         <p class="text-muted">Arkadaşından aldığın kodu gir:</p>
         <input type="text" class="room-code-input" [(ngModel)]="joinRoomCode"
@@ -136,7 +136,7 @@
           <h2 class="target-word">{{ word.targetWord }}</h2>
         </div>
         <div class="tabu-section">
-          <div class="tabu-label">&#128683; YASAKLI KELIMELER</div>
+          <div class="tabu-label"><i class="fa-solid fa-ban"></i> YASAKLI KELIMELER</div>
           <div class="tabu-list">
             <div *ngFor="let tabu of word.tabuWords" class="tabu-item">{{ tabu }}</div>
           </div>
@@ -155,8 +155,8 @@
         <div class="history-ai">
           <span class="ai-label">AI Tahmini:</span>
           <span class="ai-guess">"{{ attempt.aiGuess }}"</span>
-          <span *ngIf="attempt.isCorrect" class="success-icon">&#9989;</span>
-          <span *ngIf="!attempt.isCorrect" class="fail-icon">&#10060;</span>
+          <span *ngIf="attempt.isCorrect" class="success-icon"><i class="fa-solid fa-circle-check"></i></span>
+          <span *ngIf="!attempt.isCorrect" class="fail-icon"><i class="fa-solid fa-circle-xmark"></i></span>
         </div>
       </div>
     </div>
@@ -173,9 +173,9 @@
         [disabled]="submitting"
         (keydown.enter)="onEnter($event)"
         (input)="checkTabuWords()" rows="1"></textarea>
-      <button class="btn btn-send" (click)="submitPrompt()"
+        <button class="btn btn-send" (click)="submitPrompt()"
         [disabled]="!currentPrompt.trim() || submitting">
-        <span class="send-icon">&#10148;</span>
+        <i class="fa-solid fa-paper-plane send-icon"></i>
       </button>
     </div>
 
@@ -187,7 +187,7 @@
 
     <!-- Tabu Warning -->
     <div *ngIf="detectedTabuWord" class="tabu-warning slide-up">
-      &#9888; "<strong>{{ detectedTabuWord }}</strong>" yasaklı kelime!
+      <i class="fa-solid fa-triangle-exclamation"></i> "<strong>{{ detectedTabuWord }}</strong>" yasaklı kelime!
     </div>
 
     <!-- Waiting for opponent after I'm done -->

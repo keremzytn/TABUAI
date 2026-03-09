@@ -27,7 +27,7 @@
 
       <div *ngFor="let c of pendingChallenges" class="challenge-card glass-card">
         <div class="challenge-info">
-          <div class="challenger-avatar">&#9876;</div>
+          <div class="challenger-avatar"><i class="fa-solid fa-swords"></i></div>
           <div class="challenge-details">
             <span class="challenger-name">{{ c.challenger.displayName || c.challenger.username }}</span>
             <span class="challenge-meta">{{ c.word.category }} | {{ getTimeAgo(c.createdAt) }}</span>
@@ -49,7 +49,7 @@
 
       <div *ngFor="let c of sentChallenges" class="challenge-card glass-card">
         <div class="challenge-info">
-          <div class="challenger-avatar">&#127919;</div>
+          <div class="challenger-avatar"><i class="fa-solid fa-bullseye"></i></div>
           <div class="challenge-details">
             <span class="challenger-name">{{ c.challenged.displayName || c.challenged.username }}</span>
             <span class="challenge-meta">{{ c.word.category }} | {{ getTimeAgo(c.createdAt) }}</span>

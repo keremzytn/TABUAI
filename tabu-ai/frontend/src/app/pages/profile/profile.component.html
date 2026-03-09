@@ -64,24 +64,24 @@
 
       <!-- Friends Link -->
       <a routerLink="/friends" class="friends-link glass-card">
-        <span class="fl-icon"></span>
+        <i class="fa-solid fa-user-group fl-icon"></i>
         <span class="fl-text">Arkadaşlar</span>
-        <span class="fl-arrow">→</span>
+        <i class="fa-solid fa-chevron-right fl-arrow"></i>
       </a>
 
       <!-- Stats Link -->
       <a routerLink="/stats" class="friends-link glass-card">
-        <span class="fl-icon"></span>
+        <i class="fa-solid fa-chart-bar fl-icon"></i>
         <span class="fl-text">Detaylı İstatistikler</span>
-        <span class="fl-arrow">→</span>
+        <i class="fa-solid fa-chevron-right fl-arrow"></i>
       </a>
 
       <!-- Wallet Link -->
       <a routerLink="/wallet" class="friends-link glass-card wallet-link">
-        <span class="fl-icon"></span>
+        <i class="fa-solid fa-wallet fl-icon"></i>
         <span class="fl-text">Cüzdan & Mağaza</span>
         <span class="wallet-balance" *ngIf="profile.promptCoins > 0">{{ profile.promptCoins }} coin</span>
-        <span class="fl-arrow">→</span>
+        <i class="fa-solid fa-chevron-right fl-arrow"></i>
       </a>
 
       <!-- Badges -->
@@ -108,7 +108,7 @@
             (click)="openGamePopup(g)">
             <span class="h-word">{{ g.targetWord }}</span>
             <span class="h-score">{{ g.score }}</span>
-            <span class="h-badge" [class.w]="g.isWin" [class.l]="!g.isWin">{{ g.isWin ? '✓' : '✗' }}</span>
+            <span class="h-badge" [class.w]="g.isWin" [class.l]="!g.isWin"><i [class]="g.isWin ? 'fa-solid fa-check' : 'fa-solid fa-xmark'"></i></span>
           </div>
         </div>
         <p class="empty-text" *ngIf="gameHistory.length === 0">Henüz oyun yok.</p>
@@ -129,12 +129,12 @@
 <div class="popup-overlay" *ngIf="selectedGame" (click)="closeGamePopup()">
   <div class="popup-card" (click)="$event.stopPropagation()">
     <!-- Close Button -->
-    <button class="popup-close" (click)="closeGamePopup()">✕</button>
+    <button class="popup-close" (click)="closeGamePopup()"><i class="fa-solid fa-xmark"></i></button>
 
     <!-- Popup Header -->
     <div class="popup-header" [class.win]="selectedGame.isWin" [class.loss]="!selectedGame.isWin">
       <div class="popup-result-icon" [class.w]="selectedGame.isWin" [class.l]="!selectedGame.isWin">
-        {{ selectedGame.isWin ? '&#10003;' : '&#10007;' }}
+        <i [class]="selectedGame.isWin ? 'fa-solid fa-check' : 'fa-solid fa-xmark'"></i>
       </div>
       <h2 class="popup-word">{{ selectedGame.targetWord }}</h2>
       <span class="popup-result-text" [class.w]="selectedGame.isWin" [class.l]="!selectedGame.isWin">

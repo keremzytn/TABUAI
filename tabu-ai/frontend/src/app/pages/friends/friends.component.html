@@ -49,10 +49,7 @@
                         </span>
                     </div>
                     <div class="card-arrow">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="9 18 15 12 9 6"></polyline>
-                        </svg>
+                        <i class="fa-solid fa-chevron-right"></i>
                     </div>
                 </div>
             </div>
@@ -73,9 +70,9 @@
                     </div>
                     <div class="request-actions">
                         <button class="action-btn accept" (click)="acceptRequest(req.requestId)"
-                            title="Kabul Et">✓</button>
+                            title="Kabul Et"><i class="fa-solid fa-check"></i></button>
                         <button class="action-btn reject" (click)="rejectRequest(req.requestId)"
-                            title="Reddet">✕</button>
+                            title="Reddet"><i class="fa-solid fa-xmark"></i></button>
                     </div>
                 </div>
             </div>
@@ -84,10 +81,7 @@
         <!-- Search Tab -->
         <div class="tab-content" *ngIf="activeTab === 'search'">
             <div class="search-box glass-card">
-                <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                </svg>
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
                 <input type="text" [(ngModel)]="searchTerm" (input)="onSearchInput()"
                     placeholder="Kullanıcı adı ile ara..." class="search-input" autocomplete="off" />
             </div>
@@ -121,7 +115,7 @@
                             Bekliyor
                         </span>
                         <span *ngIf="user.friendshipStatus === 'Accepted'" class="status-badge accepted">
-                            Arkadaş ✓
+                            Arkadaş <i class="fa-solid fa-check"></i>
                         </span>
                     </div>
                 </div>
@@ -139,7 +133,7 @@
 <div class="popup-overlay" *ngIf="selectedFriend" (click)="closeFriendPopup()">
     <div class="popup-card pop-in" (click)="$event.stopPropagation()">
         <!-- Close Button -->
-        <button class="popup-close" (click)="closeFriendPopup()">✕</button>
+        <button class="popup-close" (click)="closeFriendPopup()"><i class="fa-solid fa-xmark"></i></button>
 
         <!-- Popup Header -->
         <div class="popup-header">
