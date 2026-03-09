@@ -77,9 +77,10 @@
       </a>
 
       <!-- Wallet Link -->
-      <a routerLink="/wallet" class="friends-link glass-card">
+      <a routerLink="/wallet" class="friends-link glass-card wallet-link">
         <span class="fl-icon">🪙</span>
         <span class="fl-text">Cüzdan & Mağaza</span>
+        <span class="wallet-balance" *ngIf="profile.promptCoins > 0">{{ profile.promptCoins }} coin</span>
         <span class="fl-arrow">→</span>
       </a>
 

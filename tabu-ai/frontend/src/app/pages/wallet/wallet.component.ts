@@ -164,6 +164,37 @@ export class WalletComponent implements OnInit {
         return this.inventory.selectedAvatar === itemId || this.inventory.selectedCardDesign === itemId;
     }
 
+    get avatarItems() {
+        return this.inventory?.ownedItems.filter(i => i.itemId.startsWith('avatar_')) ?? [];
+    }
+
+    get cardItems() {
+        return this.inventory?.ownedItems.filter(i => i.itemId.startsWith('card_')) ?? [];
+    }
+
+    getItemIcon(itemId: string): string {
+        const icons: Record<string, string> = {
+            'avatar_flame': '🔥',
+            'avatar_star': '⭐',
+            'avatar_diamond': '💎',
+            'avatar_crown': '👑',
+            'card_neon': '💜',
+            'card_gold': '✨',
+            'card_galaxy': '🌌'
+        };
+        return icons[itemId] || '🎁';
+    }
+
+    toggleEquipAvatar(itemId: string) {
+        const newId = this.isItemEquipped(itemId) ? null : itemId;
+        this.equipItem('avatar', newId);
+    }
+
+    toggleEquipCard(itemId: string) {
+        const newId = this.isItemEquipped(itemId) ? null : itemId;
+        this.equipItem('card', newId);
+    }
+
     switchTab(tab: 'wallet' | 'shop' | 'inventory' | 'history') {
         this.activeTab = tab;
     }

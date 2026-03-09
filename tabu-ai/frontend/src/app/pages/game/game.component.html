@@ -250,6 +250,17 @@
                         <span class="ms-label">PUAN</span>
                         <span class="ms-value score">+{{ lastResult.score }}</span>
                     </div>
+                    <div *ngIf="lastResult.coinsEarned > 0" class="mini-stat-item">
+                        <span class="ms-label">COIN</span>
+                        <span class="ms-value coin">+{{ lastResult.coinsEarned }} 🪙</span>
+                    </div>
+                    <div *ngIf="lastResult.newStreak > 0" class="mini-stat-item">
+                        <span class="ms-label">SERİ</span>
+                        <span class="ms-value streak">{{ lastResult.newStreak }} 🔥</span>
+                    </div>
+                </div>
+                <div *ngIf="lastResult.coinsEarned > 0" class="coin-earned-banner">
+                    <span class="coin-earned-text">🪙 {{ lastResult.totalCoins }} PromptCoin</span>
                 </div>
             </div>
 

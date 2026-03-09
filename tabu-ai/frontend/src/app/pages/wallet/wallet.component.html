@@ -141,29 +141,31 @@
       <div class="inv-section glass-card">
         <h3 class="section-title">Avatarlar</h3>
         <div class="inv-grid">
-          <div class="inv-item" *ngFor="let item of inventory.ownedItems"
-               [class.equipped]="isItemEquipped(item.itemId)"
-               (click)="item.itemId.startsWith('avatar_') ? equipItem('avatar', isItemEquipped(item.itemId) ? null : item.itemId) : null"
-               *ngIf="item.itemId.startsWith('avatar_')">
-            <span class="inv-icon">{{ item.itemId === 'avatar_flame' ? '🔥' : item.itemId === 'avatar_star' ? '⭐' : item.itemId === 'avatar_diamond' ? '💎' : '👑' }}</span>
-            <span class="inv-name">{{ item.itemName }}</span>
-            <span class="inv-badge" *ngIf="isItemEquipped(item.itemId)">Aktif</span>
-          </div>
-          <p class="empty-inv" *ngIf="!inventory.ownedItems.some(i => i.itemId.startsWith('avatar_'))">Henüz avatar yok. Mağazadan al!</p>
+          <ng-container *ngFor="let item of avatarItems">
+            <div class="inv-item"
+                 [class.equipped]="isItemEquipped(item.itemId)"
+                 (click)="toggleEquipAvatar(item.itemId)">
+              <span class="inv-icon">{{ getItemIcon(item.itemId) }}</span>
+              <span class="inv-name">{{ item.itemName }}</span>
+              <span class="inv-badge" *ngIf="isItemEquipped(item.itemId)">Aktif</span>
+            </div>
+          </ng-container>
+          <p class="empty-inv" *ngIf="avatarItems.length === 0">Henüz avatar yok. Mağazadan al!</p>
         </div>
       </div>
       <div class="inv-section glass-card">
         <h3 class="section-title">Kart Tasarımları</h3>
         <div class="inv-grid">
-          <div class="inv-item" *ngFor="let item of inventory.ownedItems"
-               [class.equipped]="isItemEquipped(item.itemId)"
-               (click)="item.itemId.startsWith('card_') ? equipItem('card', isItemEquipped(item.itemId) ? null : item.itemId) : null"
-               *ngIf="item.itemId.startsWith('card_')">
-            <span class="inv-icon">{{ item.itemId === 'card_neon' ? '💜' : item.itemId === 'card_gold' ? '✨' : '🌌' }}</span>
-            <span class="inv-name">{{ item.itemName }}</span>
-            <span class="inv-badge" *ngIf="isItemEquipped(item.itemId)">Aktif</span>
-          </div>
-          <p class="empty-inv" *ngIf="!inventory.ownedItems.some(i => i.itemId.startsWith('card_'))">Henüz kart tasarımı yok. Mağazadan al!</p>
+          <ng-container *ngFor="let item of cardItems">
+            <div class="inv-item"
+                 [class.equipped]="isItemEquipped(item.itemId)"
+                 (click)="toggleEquipCard(item.itemId)">
+              <span class="inv-icon">{{ getItemIcon(item.itemId) }}</span>
+              <span class="inv-name">{{ item.itemName }}</span>
+              <span class="inv-badge" *ngIf="isItemEquipped(item.itemId)">Aktif</span>
+            </div>
+          </ng-container>
+          <p class="empty-inv" *ngIf="cardItems.length === 0">Henüz kart tasarımı yok. Mağazadan al!</p>
         </div>
       </div>
     </div>

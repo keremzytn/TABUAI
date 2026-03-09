@@ -79,6 +79,9 @@ export interface GameResult {
   history: GameAttempt[];
   aiReaction?: string;
   promptCoach?: PromptCoachResult;
+  coinsEarned: number;
+  newStreak: number;
+  totalCoins: number;
 }
 
 export interface PromptCoachResult {

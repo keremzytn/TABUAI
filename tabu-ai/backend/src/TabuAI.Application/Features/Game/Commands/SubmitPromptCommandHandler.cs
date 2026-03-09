@@ -153,6 +153,10 @@ public class SubmitPromptCommandHandler : IRequestHandler<SubmitPromptCommand, G
         gameSession.Score += score;
         gameSession.AttemptNumber = currentAttemptNumber;
         
+        int coinsEarned = 0;
+        int newStreak = 0;
+        int totalCoins = 0;
+
         if (aiResult.IsCorrect)
         {
             gameSession.CompletedAt = DateTime.UtcNow;
@@ -167,6 +171,7 @@ public class SubmitPromptCommandHandler : IRequestHandler<SubmitPromptCommand, G
                 user.GamesWon++;
 
                 await UpdateStreakAsync(user);
+                newStreak = user.CurrentStreak;
 
                 double streakMultiplier = GetStreakMultiplier(user.CurrentStreak);
 
@@ -177,23 +182,23 @@ public class SubmitPromptCommandHandler : IRequestHandler<SubmitPromptCommand, G
                     coinMultiplier *= 2;
                     user.DoubleCoinGamesLeft--;
                 }
-                int earnedCoins = (int)(baseCoins * coinMultiplier);
-                user.PromptCoins += earnedCoins;
+                coinsEarned = (int)(baseCoins * coinMultiplier);
+                user.PromptCoins += coinsEarned;
 
-                string boostInfo = user.DoubleCoinGamesLeft >= 0 && coinMultiplier > streakMultiplier
-                    ? $", 2x boost aktif" : "";
+                string boostInfo = coinMultiplier > streakMultiplier ? ", 2x boost aktif" : "";
                 await _unitOfWork.CoinTransactions.AddAsync(new CoinTransaction
                 {
                     Id = Guid.NewGuid(),
                     UserId = user.Id,
-                    Amount = earnedCoins,
+                    Amount = coinsEarned,
                     Type = CoinTransactionType.GameWin,
-                    Description = $"Oyun kazanıldı! (+{earnedCoins} coin, {streakMultiplier}x streak{boostInfo})",
+                    Description = $"Oyun kazanıldı! (+{coinsEarned} coin, {streakMultiplier}x streak{boostInfo})",
                     CreatedAt = DateTime.UtcNow
                 });
 
                 await CheckStreakMilestonesAsync(user);
 
+                totalCoins = user.PromptCoins;
                 await _unitOfWork.Users.UpdateAsync(user);
                 await UpdateDetailedStatsAsync(user);
             }
@@ -281,7 +286,10 @@ public class SubmitPromptCommandHandler : IRequestHandler<SubmitPromptCommand, G
             GameCompleted = gameCompleted,
             History = _mapper.Map<List<GameAttemptDto>>(allAttempts),
             AiReaction = aiResult.Reaction,
-            PromptCoach = promptCoach
+            PromptCoach = promptCoach,
+            CoinsEarned = coinsEarned,
+            NewStreak = newStreak,
+            TotalCoins = totalCoins
         };
     }
 

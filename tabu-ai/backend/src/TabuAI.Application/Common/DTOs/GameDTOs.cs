@@ -84,6 +84,9 @@ public class GameResultDto
     public List<GameAttemptDto> History { get; set; } = new();
     public string AiReaction { get; set; } = string.Empty;
     public PromptCoachDto? PromptCoach { get; set; }
+    public int CoinsEarned { get; set; }
+    public int NewStreak { get; set; }
+    public int TotalCoins { get; set; }
 }
 
 public class PromptCoachDto

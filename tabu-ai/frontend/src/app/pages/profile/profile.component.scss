@@ -679,6 +679,18 @@
     font-weight: 700;
 }
 
+.wallet-balance {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #fbbf24;
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(251, 191, 36, 0.1);
+    padding: 3px 10px;
+    border-radius: 8px;
+    margin-left: auto;
+    margin-right: 8px;
+}
+
 .fl-arrow {
     font-size: 1.1rem;
     color: var(--primary);
