@@ -23,6 +23,9 @@ public class TabuAIDbContext : DbContext
     public DbSet<VersusGame> VersusGames { get; set; }
     public DbSet<Challenge> Challenges { get; set; }
     public DbSet<ActivityLog> ActivityLogs { get; set; }
+    public DbSet<WordPack> WordPacks { get; set; }
+    public DbSet<DailyChallenge> DailyChallenges { get; set; }
+    public DbSet<DailyChallengeEntry> DailyChallengeEntries { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -50,6 +53,17 @@ public class TabuAIDbContext : DbContext
             entity.Property(e => e.TargetWord).IsRequired().HasMaxLength(100);
             entity.Property(e => e.Category).IsRequired().HasMaxLength(50);
             
+            entity.Property(e => e.Language).HasMaxLength(10).HasDefaultValue("tr");
+            entity.Property(e => e.WordPackId).IsRequired(false);
+            entity.HasOne(e => e.WordPack)
+                .WithMany(e => e.Words)
+                .HasForeignKey(e => e.WordPackId)
+                .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(e => e.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(e => e.CreatedByUserId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             // JSON column for TabuWords
             entity.Property(e => e.TabuWords)
                 .HasConversion(
@@ -236,6 +250,56 @@ public class TabuAIDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(e => new { e.UserId, e.CreatedAt });
+        });
+
+        // WordPack Configuration
+        modelBuilder.Entity<WordPack>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.Language).HasMaxLength(10).HasDefaultValue("tr");
+            entity.HasIndex(e => e.Language);
+
+            entity.HasOne(e => e.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(e => e.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // DailyChallenge Configuration
+        modelBuilder.Entity<DailyChallenge>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Language).HasMaxLength(10).HasDefaultValue("tr");
+            entity.HasIndex(e => new { e.ChallengeDate, e.Language }).IsUnique();
+
+            entity.HasOne(e => e.Word)
+                .WithMany()
+                .HasForeignKey(e => e.WordId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // DailyChallengeEntry Configuration
+        modelBuilder.Entity<DailyChallengeEntry>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.DailyChallengeId, e.UserId }).IsUnique();
+
+            entity.HasOne(e => e.DailyChallenge)
+                .WithMany()
+                .HasForeignKey(e => e.DailyChallengeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.GameSession)
+                .WithMany()
+                .HasForeignKey(e => e.GameSessionId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         // Seed Data
@@ -1069,7 +1133,127 @@ public class TabuAIDbContext : DbContext
                 Category = "Edebiyat",
                 Difficulty = DifficultyLevel.Easy,
                 CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
-            }
+            },
+
+            // ========== ENGLISH WORDS ==========
+            // Transportation
+            new() { Id = Guid.Parse("e1000001-0001-0001-0001-000000000001"), TargetWord = "Airplane", TabuWords = new List<string> { "fly", "wing", "pilot", "sky", "airport" }, Category = "Transportation", Difficulty = DifficultyLevel.Easy, Language = "en", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e1000001-0001-0001-0001-000000000002"), TargetWord = "Submarine", TabuWords = new List<string> { "underwater", "navy", "torpedo", "deep", "periscope" }, Category = "Transportation", Difficulty = DifficultyLevel.Medium, Language = "en", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e1000001-0001-0001-0001-000000000003"), TargetWord = "Helicopter", TabuWords = new List<string> { "rotor", "blade", "hover", "fly", "rescue" }, Category = "Transportation", Difficulty = DifficultyLevel.Easy, Language = "en", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            // Technology
+            new() { Id = Guid.Parse("e1000001-0001-0001-0001-000000000004"), TargetWord = "Computer", TabuWords = new List<string> { "screen", "keyboard", "mouse", "internet", "processor" }, Category = "Technology", Difficulty = DifficultyLevel.Easy, Language = "en", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e1000001-0001-0001-0001-000000000005"), TargetWord = "Smartphone", TabuWords = new List<string> { "call", "app", "screen", "touch", "mobile" }, Category = "Technology", Difficulty = DifficultyLevel.Easy, Language = "en", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e1000001-0001-0001-0001-000000000006"), TargetWord = "Artificial Intelligence", TabuWords = new List<string> { "AI", "machine", "learning", "robot", "algorithm" }, Category = "Technology", Difficulty = DifficultyLevel.Hard, Language = "en", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e1000001-0001-0001-0001-000000000007"), TargetWord = "Blockchain", TabuWords = new List<string> { "crypto", "bitcoin", "ledger", "decentralized", "mining" }, Category = "Technology", Difficulty = DifficultyLevel.Hard, Language = "en", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            // Science
+            new() { Id = Guid.Parse("e1000001-0001-0001-0001-000000000008"), TargetWord = "Gravity", TabuWords = new List<string> { "fall", "Newton", "force", "weight", "earth" }, Category = "Science", Difficulty = DifficultyLevel.Medium, Language = "en", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e1000001-0001-0001-0001-000000000009"), TargetWord = "Photosynthesis", TabuWords = new List<string> { "plant", "sun", "chlorophyll", "oxygen", "leaf" }, Category = "Science", Difficulty = DifficultyLevel.Hard, Language = "en", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e1000001-0001-0001-0001-000000000010"), TargetWord = "Volcano", TabuWords = new List<string> { "lava", "eruption", "mountain", "magma", "ash" }, Category = "Science", Difficulty = DifficultyLevel.Easy, Language = "en", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e1000001-0001-0001-0001-000000000011"), TargetWord = "Black Hole", TabuWords = new List<string> { "space", "gravity", "light", "star", "singularity" }, Category = "Science", Difficulty = DifficultyLevel.Hard, Language = "en", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            // Food
+            new() { Id = Guid.Parse("e1000001-0001-0001-0001-000000000012"), TargetWord = "Pizza", TabuWords = new List<string> { "cheese", "dough", "slice", "Italian", "oven" }, Category = "Food", Difficulty = DifficultyLevel.Easy, Language = "en", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e1000001-0001-0001-0001-000000000013"), TargetWord = "Sushi", TabuWords = new List<string> { "Japanese", "rice", "fish", "raw", "seaweed" }, Category = "Food", Difficulty = DifficultyLevel.Easy, Language = "en", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e1000001-0001-0001-0001-000000000014"), TargetWord = "Chocolate", TabuWords = new List<string> { "sweet", "cocoa", "candy", "brown", "milk" }, Category = "Food", Difficulty = DifficultyLevel.Easy, Language = "en", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e1000001-0001-0001-0001-000000000015"), TargetWord = "Croissant", TabuWords = new List<string> { "French", "pastry", "butter", "breakfast", "flaky" }, Category = "Food", Difficulty = DifficultyLevel.Medium, Language = "en", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            // Sports
+            new() { Id = Guid.Parse("e1000001-0001-0001-0001-000000000016"), TargetWord = "Basketball", TabuWords = new List<string> { "hoop", "ball", "dunk", "NBA", "court" }, Category = "Sports", Difficulty = DifficultyLevel.Easy, Language = "en", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e1000001-0001-0001-0001-000000000017"), TargetWord = "Marathon", TabuWords = new List<string> { "running", "42km", "endurance", "race", "finish line" }, Category = "Sports", Difficulty = DifficultyLevel.Medium, Language = "en", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e1000001-0001-0001-0001-000000000018"), TargetWord = "Olympics", TabuWords = new List<string> { "rings", "medal", "athlete", "torch", "games" }, Category = "Sports", Difficulty = DifficultyLevel.Easy, Language = "en", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            // History
+            new() { Id = Guid.Parse("e1000001-0001-0001-0001-000000000019"), TargetWord = "Pyramid", TabuWords = new List<string> { "Egypt", "pharaoh", "stone", "ancient", "tomb" }, Category = "History", Difficulty = DifficultyLevel.Easy, Language = "en", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e1000001-0001-0001-0001-000000000020"), TargetWord = "Renaissance", TabuWords = new List<string> { "art", "rebirth", "Italy", "Leonardo", "culture" }, Category = "History", Difficulty = DifficultyLevel.Hard, Language = "en", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e1000001-0001-0001-0001-000000000021"), TargetWord = "Gladiator", TabuWords = new List<string> { "Rome", "arena", "fight", "sword", "Colosseum" }, Category = "History", Difficulty = DifficultyLevel.Medium, Language = "en", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            // Nature
+            new() { Id = Guid.Parse("e1000001-0001-0001-0001-000000000022"), TargetWord = "Rainbow", TabuWords = new List<string> { "color", "rain", "sun", "seven", "arc" }, Category = "Nature", Difficulty = DifficultyLevel.Easy, Language = "en", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e1000001-0001-0001-0001-000000000023"), TargetWord = "Earthquake", TabuWords = new List<string> { "fault", "shake", "Richter", "tremor", "destruction" }, Category = "Nature", Difficulty = DifficultyLevel.Medium, Language = "en", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e1000001-0001-0001-0001-000000000024"), TargetWord = "Aurora", TabuWords = new List<string> { "northern lights", "sky", "polar", "magnetic", "green" }, Category = "Nature", Difficulty = DifficultyLevel.Hard, Language = "en", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            // Animals
+            new() { Id = Guid.Parse("e1000001-0001-0001-0001-000000000025"), TargetWord = "Dolphin", TabuWords = new List<string> { "ocean", "smart", "jump", "mammal", "fin" }, Category = "Animals", Difficulty = DifficultyLevel.Easy, Language = "en", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e1000001-0001-0001-0001-000000000026"), TargetWord = "Chameleon", TabuWords = new List<string> { "color change", "reptile", "tongue", "camouflage", "eyes" }, Category = "Animals", Difficulty = DifficultyLevel.Medium, Language = "en", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e1000001-0001-0001-0001-000000000027"), TargetWord = "Penguin", TabuWords = new List<string> { "ice", "bird", "Antarctica", "waddle", "tuxedo" }, Category = "Animals", Difficulty = DifficultyLevel.Easy, Language = "en", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            // Concepts
+            new() { Id = Guid.Parse("e1000001-0001-0001-0001-000000000028"), TargetWord = "Democracy", TabuWords = new List<string> { "vote", "people", "election", "freedom", "government" }, Category = "Concepts", Difficulty = DifficultyLevel.Medium, Language = "en", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e1000001-0001-0001-0001-000000000029"), TargetWord = "Nostalgia", TabuWords = new List<string> { "past", "memory", "longing", "old", "remember" }, Category = "Concepts", Difficulty = DifficultyLevel.Hard, Language = "en", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e1000001-0001-0001-0001-000000000030"), TargetWord = "Karma", TabuWords = new List<string> { "fate", "action", "consequence", "balance", "destiny" }, Category = "Concepts", Difficulty = DifficultyLevel.Hard, Language = "en", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+
+            // ========== GERMAN WORDS (Deutsch) ==========
+            // Verkehr (Transportation)
+            new() { Id = Guid.Parse("e2000001-0001-0001-0001-000000000001"), TargetWord = "Flugzeug", TabuWords = new List<string> { "fliegen", "Flügel", "Pilot", "Himmel", "Flughafen" }, Category = "Verkehr", Difficulty = DifficultyLevel.Easy, Language = "de", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e2000001-0001-0001-0001-000000000002"), TargetWord = "U-Boot", TabuWords = new List<string> { "Unterwasser", "Marine", "Torpedo", "tauchen", "Periskop" }, Category = "Verkehr", Difficulty = DifficultyLevel.Medium, Language = "de", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e2000001-0001-0001-0001-000000000003"), TargetWord = "Fahrrad", TabuWords = new List<string> { "Pedal", "Rad", "Kette", "Lenker", "fahren" }, Category = "Verkehr", Difficulty = DifficultyLevel.Easy, Language = "de", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            // Technologie
+            new() { Id = Guid.Parse("e2000001-0001-0001-0001-000000000004"), TargetWord = "Computer", TabuWords = new List<string> { "Bildschirm", "Tastatur", "Maus", "Internet", "Prozessor" }, Category = "Technologie", Difficulty = DifficultyLevel.Easy, Language = "de", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e2000001-0001-0001-0001-000000000005"), TargetWord = "Künstliche Intelligenz", TabuWords = new List<string> { "KI", "Maschine", "Lernen", "Roboter", "Algorithmus" }, Category = "Technologie", Difficulty = DifficultyLevel.Hard, Language = "de", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e2000001-0001-0001-0001-000000000006"), TargetWord = "Passwort", TabuWords = new List<string> { "Sicherheit", "geheim", "Zugang", "Zeichen", "Login" }, Category = "Technologie", Difficulty = DifficultyLevel.Easy, Language = "de", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            // Wissenschaft
+            new() { Id = Guid.Parse("e2000001-0001-0001-0001-000000000007"), TargetWord = "Schwerkraft", TabuWords = new List<string> { "fallen", "Newton", "Kraft", "Gewicht", "Erde" }, Category = "Wissenschaft", Difficulty = DifficultyLevel.Medium, Language = "de", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e2000001-0001-0001-0001-000000000008"), TargetWord = "Erdbeben", TabuWords = new List<string> { "Erschütterung", "Richter", "Platte", "Zerstörung", "Beben" }, Category = "Wissenschaft", Difficulty = DifficultyLevel.Medium, Language = "de", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e2000001-0001-0001-0001-000000000009"), TargetWord = "Schwarzes Loch", TabuWords = new List<string> { "Weltraum", "Gravitation", "Licht", "Stern", "Singularität" }, Category = "Wissenschaft", Difficulty = DifficultyLevel.Hard, Language = "de", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            // Essen
+            new() { Id = Guid.Parse("e2000001-0001-0001-0001-000000000010"), TargetWord = "Brezel", TabuWords = new List<string> { "Teig", "Salz", "Bayern", "Bäckerei", "Knoten" }, Category = "Essen", Difficulty = DifficultyLevel.Easy, Language = "de", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e2000001-0001-0001-0001-000000000011"), TargetWord = "Sauerkraut", TabuWords = new List<string> { "Kohl", "sauer", "fermentiert", "Beilage", "deutsch" }, Category = "Essen", Difficulty = DifficultyLevel.Easy, Language = "de", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e2000001-0001-0001-0001-000000000012"), TargetWord = "Schwarzwälder Kirschtorte", TabuWords = new List<string> { "Schokolade", "Kirsche", "Sahne", "Kuchen", "Torte" }, Category = "Essen", Difficulty = DifficultyLevel.Hard, Language = "de", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            // Sport
+            new() { Id = Guid.Parse("e2000001-0001-0001-0001-000000000013"), TargetWord = "Fußball", TabuWords = new List<string> { "Ball", "Tor", "Mannschaft", "Stadion", "Bundesliga" }, Category = "Sport", Difficulty = DifficultyLevel.Easy, Language = "de", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e2000001-0001-0001-0001-000000000014"), TargetWord = "Skifahren", TabuWords = new List<string> { "Schnee", "Berg", "Piste", "Winter", "Lift" }, Category = "Sport", Difficulty = DifficultyLevel.Easy, Language = "de", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            // Geschichte
+            new() { Id = Guid.Parse("e2000001-0001-0001-0001-000000000015"), TargetWord = "Berliner Mauer", TabuWords = new List<string> { "Teilung", "Ost", "West", "Grenze", "1989" }, Category = "Geschichte", Difficulty = DifficultyLevel.Medium, Language = "de", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e2000001-0001-0001-0001-000000000016"), TargetWord = "Ritter", TabuWords = new List<string> { "Rüstung", "Schwert", "Burg", "Mittelalter", "Pferd" }, Category = "Geschichte", Difficulty = DifficultyLevel.Easy, Language = "de", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            // Natur
+            new() { Id = Guid.Parse("e2000001-0001-0001-0001-000000000017"), TargetWord = "Regenbogen", TabuWords = new List<string> { "Farbe", "Regen", "Sonne", "sieben", "Bogen" }, Category = "Natur", Difficulty = DifficultyLevel.Easy, Language = "de", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e2000001-0001-0001-0001-000000000018"), TargetWord = "Wasserfall", TabuWords = new List<string> { "Wasser", "fallen", "Felsen", "Natur", "fließen" }, Category = "Natur", Difficulty = DifficultyLevel.Easy, Language = "de", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e2000001-0001-0001-0001-000000000019"), TargetWord = "Nordlicht", TabuWords = new List<string> { "Aurora", "Himmel", "Polar", "Magnetfeld", "grün" }, Category = "Natur", Difficulty = DifficultyLevel.Hard, Language = "de", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            // Tiere
+            new() { Id = Guid.Parse("e2000001-0001-0001-0001-000000000020"), TargetWord = "Schmetterling", TabuWords = new List<string> { "Flügel", "Raupe", "bunt", "fliegen", "Nektar" }, Category = "Tiere", Difficulty = DifficultyLevel.Easy, Language = "de", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e2000001-0001-0001-0001-000000000021"), TargetWord = "Eichhörnchen", TabuWords = new List<string> { "Nuss", "Baum", "klettern", "Schwanz", "Eiche" }, Category = "Tiere", Difficulty = DifficultyLevel.Easy, Language = "de", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            // Kultur
+            new() { Id = Guid.Parse("e2000001-0001-0001-0001-000000000022"), TargetWord = "Oktoberfest", TabuWords = new List<string> { "München", "Bier", "Fest", "Tracht", "Zelt" }, Category = "Kultur", Difficulty = DifficultyLevel.Easy, Language = "de", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e2000001-0001-0001-0001-000000000023"), TargetWord = "Kuckucksuhr", TabuWords = new List<string> { "Schwarzwald", "Uhr", "Vogel", "Holz", "Zeit" }, Category = "Kultur", Difficulty = DifficultyLevel.Medium, Language = "de", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            // Konzepte
+            new() { Id = Guid.Parse("e2000001-0001-0001-0001-000000000024"), TargetWord = "Fernweh", TabuWords = new List<string> { "Reise", "Sehnsucht", "fern", "Heimweh", "Welt" }, Category = "Konzepte", Difficulty = DifficultyLevel.Hard, Language = "de", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e2000001-0001-0001-0001-000000000025"), TargetWord = "Zeitgeist", TabuWords = new List<string> { "Epoche", "Geist", "Gesellschaft", "Trend", "Stimmung" }, Category = "Konzepte", Difficulty = DifficultyLevel.Expert, Language = "de", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+
+            // ========== FRENCH WORDS (Français) ==========
+            // Transport
+            new() { Id = Guid.Parse("e3000001-0001-0001-0001-000000000001"), TargetWord = "Avion", TabuWords = new List<string> { "voler", "aile", "pilote", "ciel", "aéroport" }, Category = "Transport", Difficulty = DifficultyLevel.Easy, Language = "fr", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e3000001-0001-0001-0001-000000000002"), TargetWord = "Métro", TabuWords = new List<string> { "souterrain", "station", "ticket", "Paris", "ligne" }, Category = "Transport", Difficulty = DifficultyLevel.Easy, Language = "fr", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e3000001-0001-0001-0001-000000000003"), TargetWord = "Vélo", TabuWords = new List<string> { "pédale", "roue", "chaîne", "guidon", "rouler" }, Category = "Transport", Difficulty = DifficultyLevel.Easy, Language = "fr", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            // Technologie
+            new() { Id = Guid.Parse("e3000001-0001-0001-0001-000000000004"), TargetWord = "Ordinateur", TabuWords = new List<string> { "écran", "clavier", "souris", "internet", "processeur" }, Category = "Technologie", Difficulty = DifficultyLevel.Easy, Language = "fr", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e3000001-0001-0001-0001-000000000005"), TargetWord = "Intelligence Artificielle", TabuWords = new List<string> { "IA", "machine", "apprentissage", "robot", "algorithme" }, Category = "Technologie", Difficulty = DifficultyLevel.Hard, Language = "fr", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e3000001-0001-0001-0001-000000000006"), TargetWord = "Mot de passe", TabuWords = new List<string> { "sécurité", "secret", "accès", "caractère", "connexion" }, Category = "Technologie", Difficulty = DifficultyLevel.Easy, Language = "fr", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            // Science
+            new() { Id = Guid.Parse("e3000001-0001-0001-0001-000000000007"), TargetWord = "Gravité", TabuWords = new List<string> { "tomber", "Newton", "force", "poids", "terre" }, Category = "Science", Difficulty = DifficultyLevel.Medium, Language = "fr", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e3000001-0001-0001-0001-000000000008"), TargetWord = "Trou noir", TabuWords = new List<string> { "espace", "gravité", "lumière", "étoile", "galaxie" }, Category = "Science", Difficulty = DifficultyLevel.Hard, Language = "fr", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e3000001-0001-0001-0001-000000000009"), TargetWord = "Volcan", TabuWords = new List<string> { "lave", "éruption", "montagne", "magma", "cendre" }, Category = "Science", Difficulty = DifficultyLevel.Easy, Language = "fr", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            // Gastronomie
+            new() { Id = Guid.Parse("e3000001-0001-0001-0001-000000000010"), TargetWord = "Croissant", TabuWords = new List<string> { "beurre", "pâte", "petit-déjeuner", "boulangerie", "feuilleté" }, Category = "Gastronomie", Difficulty = DifficultyLevel.Easy, Language = "fr", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e3000001-0001-0001-0001-000000000011"), TargetWord = "Crêpe", TabuWords = new List<string> { "pâte", "fine", "Bretagne", "sucre", "poêle" }, Category = "Gastronomie", Difficulty = DifficultyLevel.Easy, Language = "fr", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e3000001-0001-0001-0001-000000000012"), TargetWord = "Ratatouille", TabuWords = new List<string> { "légume", "Provence", "film", "aubergine", "courgette" }, Category = "Gastronomie", Difficulty = DifficultyLevel.Medium, Language = "fr", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e3000001-0001-0001-0001-000000000013"), TargetWord = "Baguette", TabuWords = new List<string> { "pain", "long", "croûte", "boulanger", "farine" }, Category = "Gastronomie", Difficulty = DifficultyLevel.Easy, Language = "fr", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e3000001-0001-0001-0001-000000000014"), TargetWord = "Fromage", TabuWords = new List<string> { "lait", "Camembert", "Brie", "vache", "affiner" }, Category = "Gastronomie", Difficulty = DifficultyLevel.Easy, Language = "fr", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            // Sport
+            new() { Id = Guid.Parse("e3000001-0001-0001-0001-000000000015"), TargetWord = "Football", TabuWords = new List<string> { "ballon", "but", "équipe", "stade", "match" }, Category = "Sport", Difficulty = DifficultyLevel.Easy, Language = "fr", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e3000001-0001-0001-0001-000000000016"), TargetWord = "Tour de France", TabuWords = new List<string> { "vélo", "cyclisme", "étape", "maillot jaune", "course" }, Category = "Sport", Difficulty = DifficultyLevel.Medium, Language = "fr", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e3000001-0001-0001-0001-000000000017"), TargetWord = "Escrime", TabuWords = new List<string> { "épée", "touche", "masque", "piste", "duel" }, Category = "Sport", Difficulty = DifficultyLevel.Medium, Language = "fr", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            // Histoire
+            new() { Id = Guid.Parse("e3000001-0001-0001-0001-000000000018"), TargetWord = "Révolution", TabuWords = new List<string> { "1789", "Bastille", "liberté", "peuple", "guillotine" }, Category = "Histoire", Difficulty = DifficultyLevel.Medium, Language = "fr", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e3000001-0001-0001-0001-000000000019"), TargetWord = "Napoléon", TabuWords = new List<string> { "empereur", "guerre", "Waterloo", "Corse", "conquête" }, Category = "Histoire", Difficulty = DifficultyLevel.Easy, Language = "fr", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e3000001-0001-0001-0001-000000000020"), TargetWord = "Versailles", TabuWords = new List<string> { "château", "roi", "jardin", "Louis", "palace" }, Category = "Histoire", Difficulty = DifficultyLevel.Medium, Language = "fr", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            // Nature
+            new() { Id = Guid.Parse("e3000001-0001-0001-0001-000000000021"), TargetWord = "Arc-en-ciel", TabuWords = new List<string> { "couleur", "pluie", "soleil", "sept", "ciel" }, Category = "Nature", Difficulty = DifficultyLevel.Easy, Language = "fr", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e3000001-0001-0001-0001-000000000022"), TargetWord = "Cascade", TabuWords = new List<string> { "eau", "tomber", "rocher", "rivière", "nature" }, Category = "Nature", Difficulty = DifficultyLevel.Easy, Language = "fr", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            // Animaux
+            new() { Id = Guid.Parse("e3000001-0001-0001-0001-000000000023"), TargetWord = "Papillon", TabuWords = new List<string> { "aile", "chenille", "coloré", "voler", "nectar" }, Category = "Animaux", Difficulty = DifficultyLevel.Easy, Language = "fr", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e3000001-0001-0001-0001-000000000024"), TargetWord = "Dauphin", TabuWords = new List<string> { "mer", "intelligent", "sauter", "mammifère", "nager" }, Category = "Animaux", Difficulty = DifficultyLevel.Easy, Language = "fr", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e3000001-0001-0001-0001-000000000025"), TargetWord = "Caméléon", TabuWords = new List<string> { "couleur", "reptile", "langue", "camouflage", "yeux" }, Category = "Animaux", Difficulty = DifficultyLevel.Medium, Language = "fr", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            // Culture
+            new() { Id = Guid.Parse("e3000001-0001-0001-0001-000000000026"), TargetWord = "Tour Eiffel", TabuWords = new List<string> { "Paris", "fer", "tour", "monument", "Gustave" }, Category = "Culture", Difficulty = DifficultyLevel.Easy, Language = "fr", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e3000001-0001-0001-0001-000000000027"), TargetWord = "Impressionnisme", TabuWords = new List<string> { "Monet", "peinture", "lumière", "art", "mouvement" }, Category = "Culture", Difficulty = DifficultyLevel.Hard, Language = "fr", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            // Concepts
+            new() { Id = Guid.Parse("e3000001-0001-0001-0001-000000000028"), TargetWord = "Démocratie", TabuWords = new List<string> { "vote", "peuple", "élection", "liberté", "gouvernement" }, Category = "Concepts", Difficulty = DifficultyLevel.Medium, Language = "fr", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e3000001-0001-0001-0001-000000000029"), TargetWord = "Joie de vivre", TabuWords = new List<string> { "bonheur", "vie", "plaisir", "enthousiasme", "vivre" }, Category = "Concepts", Difficulty = DifficultyLevel.Hard, Language = "fr", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Id = Guid.Parse("e3000001-0001-0001-0001-000000000030"), TargetWord = "Liberté", TabuWords = new List<string> { "libre", "droit", "prison", "indépendance", "révolution" }, Category = "Concepts", Difficulty = DifficultyLevel.Medium, Language = "fr", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
         };
 
         modelBuilder.Entity<Word>().HasData(words);

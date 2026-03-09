@@ -1,0 +1,142 @@
+<div class="container packs-container">
+    <div class="packs-header">
+        <button class="back-btn" (click)="router.navigate(['/game'])">← Geri</button>
+        <h1>📦 Kelime Paketleri</h1>
+        <p class="text-muted">Topluluk tarafından oluşturulan kelime paketleri</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab" [class.active]="activeTab === 'browse'" (click)="switchTab('browse')">Keşfet</button>
+        <button class="tab" [class.active]="activeTab === 'my'" (click)="switchTab('my')">Paketlerim</button>
+        <button class="tab" [class.active]="activeTab === 'create'" (click)="switchTab('create')">Oluştur</button>
+    </div>
+
+    <!-- Language Filter -->
+    <div class="lang-filter" *ngIf="activeTab === 'browse'">
+        <button *ngFor="let lang of languages" class="lang-btn" [class.active]="selectedLanguage === lang.id"
+            (click)="selectedLanguage = lang.id; loadPublicPacks()">
+            {{ lang.flag }} {{ lang.name }}
+        </button>
+    </div>
+
+    <!-- Browse Tab -->
+    <div *ngIf="activeTab === 'browse'" class="packs-grid">
+        <div *ngIf="loading" class="loading-state">Yükleniyor...</div>
+        <div *ngIf="!loading && publicPacks.length === 0" class="empty-state">
+            <p>Bu dilde henüz paket yok.</p>
+        </div>
+        <div *ngFor="let pack of publicPacks" class="pack-card glass-card">
+            <div class="pack-header">
+                <h3>{{ pack.name }}</h3>
+                <span class="pack-lang">{{ pack.language.toUpperCase() }}</span>
+            </div>
+            <p class="pack-desc">{{ pack.description }}</p>
+            <div class="pack-meta">
+                <span>📝 {{ pack.wordCount }} kelime</span>
+                <span>🎮 {{ pack.playCount }} oyun</span>
+                <span class="like-btn" (click)="likePack(pack)">❤️ {{ pack.likeCount }}</span>
+            </div>
+            <div class="pack-author">{{ pack.createdByUsername }}</div>
+        </div>
+    </div>
+
+    <!-- My Packs Tab -->
+    <div *ngIf="activeTab === 'my'" class="packs-grid">
+        <div *ngIf="loading" class="loading-state">Yükleniyor...</div>
+        <div *ngIf="!loading && myPacks.length === 0" class="empty-state">
+            <p>Henüz paket oluşturmadınız.</p>
+            <button class="btn btn-primary" (click)="switchTab('create')">İlk Paketini Oluştur</button>
+        </div>
+        <div *ngFor="let pack of myPacks" class="pack-card glass-card">
+            <div class="pack-header">
+                <h3>{{ pack.name }}</h3>
+                <span class="pack-status" [class.approved]="pack.isApproved">
+                    {{ pack.isApproved ? '✅ Onaylı' : '⏳ Onay Bekliyor' }}
+                </span>
+            </div>
+            <p class="pack-desc">{{ pack.description }}</p>
+            <div class="pack-meta">
+                <span>📝 {{ pack.wordCount }} kelime</span>
+                <span>❤️ {{ pack.likeCount }}</span>
+            </div>
+            <button class="btn-delete" (click)="deletePack(pack)">Sil</button>
+        </div>
+    </div>
+
+    <!-- Create Tab -->
+    <div *ngIf="activeTab === 'create'" class="create-section">
+        <div class="create-form glass-card">
+            <h3>Yeni Kelime Paketi</h3>
+
+            <div class="form-group">
+                <label>Paket Adı</label>
+                <input [(ngModel)]="newPack.name" placeholder="Örn: Harry Potter Evreni" class="form-input" />
+            </div>
+
+            <div class="form-group">
+                <label>Açıklama</label>
+                <textarea [(ngModel)]="newPack.description" placeholder="Bu paket hakkında kısa bir açıklama..."
+                    class="form-input" rows="2"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" [(ngModel)]="newPack.isPublic" /> Herkese Açık
+                </label>
+            </div>
+
+            <hr class="divider" />
+
+            <!-- Add Word Form -->
+            <h4>Kelime Ekle ({{ newPack.words.length }}/50)</h4>
+            <div class="add-word-form">
+                <div class="form-group">
+                    <label>Hedef Kelime</label>
+                    <input [(ngModel)]="newWord.targetWord" placeholder="Örn: Quidditch" class="form-input" />
+                </div>
+                <div class="form-group">
+                    <label>Tabu Kelimeler (en az 3)</label>
+                    <div class="tabu-inputs">
+                        <input *ngFor="let t of newWord.tabuWords; let i = index"
+                            [(ngModel)]="newWord.tabuWords[i]" [placeholder]="'Tabu ' + (i + 1)"
+                            class="form-input small" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group half">
+                        <label>Kategori</label>
+                        <input [(ngModel)]="newWord.category" placeholder="Genel" class="form-input" />
+                    </div>
+                    <div class="form-group half">
+                        <label>Zorluk (1-4)</label>
+                        <select [(ngModel)]="newWord.difficulty" class="form-input">
+                            <option [ngValue]="1">Kolay</option>
+                            <option [ngValue]="2">Orta</option>
+                            <option [ngValue]="3">Zor</option>
+                            <option [ngValue]="4">Uzman</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn btn-secondary" (click)="addWordToPack()"
+                    [disabled]="newPack.words.length >= 50">
+                    + Kelime Ekle
+                </button>
+            </div>
+
+            <!-- Word List -->
+            <div *ngIf="newPack.words.length > 0" class="word-list">
+                <div *ngFor="let w of newPack.words; let i = index" class="word-item">
+                    <span class="word-target">{{ w.targetWord }}</span>
+                    <span class="word-tabus">{{ w.tabuWords.join(', ') }}</span>
+                    <button class="btn-remove" (click)="removeWordFromPack(i)">✕</button>
+                </div>
+            </div>
+
+            <button class="btn btn-primary btn-lg" (click)="createPack()"
+                [disabled]="creating || newPack.words.length < 3">
+                {{ creating ? 'Oluşturuluyor...' : 'Paketi Oluştur' }}
+            </button>
+        </div>
+    </div>
+</div>

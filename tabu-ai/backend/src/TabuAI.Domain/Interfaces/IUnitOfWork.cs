@@ -15,6 +15,9 @@ public interface IUnitOfWork : IDisposable
     IRepository<VersusGame> VersusGames { get; }
     IRepository<Challenge> Challenges { get; }
     IRepository<ActivityLog> ActivityLogs { get; }
+    IRepository<WordPack> WordPacks { get; }
+    IRepository<DailyChallenge> DailyChallenges { get; }
+    IRepository<DailyChallengeEntry> DailyChallengeEntries { get; }
 
     Task<int> SaveChangesAsync();
     Task BeginTransactionAsync();

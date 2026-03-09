@@ -28,6 +28,15 @@ public class StartGameCommandHandler : IRequestHandler<StartGameCommand, GameSes
             words = words.Where(w => w.Category.Equals(request.Category, StringComparison.OrdinalIgnoreCase)).ToList();
         }
 
+        if (!string.IsNullOrEmpty(request.Language))
+        {
+            words = words.Where(w => w.Language == request.Language).ToList();
+        }
+        else
+        {
+            words = words.Where(w => w.Language == "tr").ToList();
+        }
+
         if (request.Difficulty.HasValue)
         {
             words = words.Where(w => (int)w.Difficulty == request.Difficulty.Value).ToList();

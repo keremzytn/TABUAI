@@ -992,6 +992,132 @@
     text-align: center;
 }
 
+/* ===== Language Selection ===== */
+.language-section {
+    margin-top: 20px;
+}
+
+.language-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.language-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-muted);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.language-chip:hover {
+    border-color: rgba(16, 185, 129, 0.4);
+    background: rgba(16, 185, 129, 0.08);
+}
+
+.language-chip.active {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: #10b981;
+    color: #6ee7b7;
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.15);
+}
+
+.lang-flag {
+    font-size: 1.2rem;
+}
+
+.lang-name {
+    font-weight: 600;
+}
+
+/* ===== Daily Challenge Banner ===== */
+.daily-challenge-banner {
+    margin-top: 20px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(217, 119, 6, 0.04));
+    border-radius: 16px;
+    transition: all 0.3s;
+}
+
+.daily-challenge-banner:hover {
+    border-color: rgba(245, 158, 11, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(245, 158, 11, 0.1);
+}
+
+.daily-challenge-banner.completed {
+    border-color: rgba(16, 185, 129, 0.2);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(16, 185, 129, 0.03));
+    cursor: default;
+}
+
+.daily-challenge-banner.completed:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.daily-icon {
+    font-size: 2rem;
+}
+
+.daily-info {
+    flex: 1;
+}
+
+.daily-info h4 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #fbbf24;
+}
+
+.daily-challenge-banner.completed .daily-info h4 {
+    color: #6ee7b7;
+}
+
+.daily-info p {
+    margin: 2px 0 0;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.daily-action {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #f59e0b;
+}
+
+/* ===== Community Button ===== */
+.community-btn {
+    margin-top: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+    border-radius: 12px;
+    padding: 12px 24px;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+}
+
+.community-btn:hover {
+    background: rgba(139, 92, 246, 0.1);
+    border-color: var(--primary);
+    color: #c4b5fd;
+}
+
 @media (max-width: 768px) {
     .mode-grid {
         grid-template-columns: 1fr;
@@ -1008,5 +1134,9 @@
     .persona-chip {
         padding: 6px 10px;
         font-size: 0.8rem;
+    }
+
+    .language-chips {
+        gap: 6px;
     }
 }

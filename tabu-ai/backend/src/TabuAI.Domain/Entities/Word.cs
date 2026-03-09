@@ -10,9 +10,14 @@ public class Word
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public bool IsActive { get; set; } = true;
+    public string Language { get; set; } = "tr";
+    public Guid? CreatedByUserId { get; set; }
+    public Guid? WordPackId { get; set; }
     
     // Navigation properties
     public ICollection<GameSession> GameSessions { get; set; } = new List<GameSession>();
+    public User? CreatedByUser { get; set; }
+    public WordPack? WordPack { get; set; }
 }
 
 public enum DifficultyLevel

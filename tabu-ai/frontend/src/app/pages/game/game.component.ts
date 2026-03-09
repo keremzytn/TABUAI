@@ -6,7 +6,8 @@ import { Subscription, interval } from 'rxjs';
 import { GameService } from '../../services/game.service';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
-import { GameSession, GameResult, AiPersona, PersonaInfo, PromptCoachResult } from '../../models/game.models';
+import { GameSession, GameResult, AiPersona, PersonaInfo, PromptCoachResult, GameLanguage, LanguageInfo, SUPPORTED_LANGUAGES, DailyChallenge } from '../../models/game.models';
+import { DailyChallengeService } from '../../services/daily-challenge.service';
 
 @Component({
   selector: 'app-game',
@@ -56,6 +57,14 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewChecked {
   showCoachModal = false;
   coachResult: PromptCoachResult | null = null;
 
+  // Language
+  selectedLanguage: GameLanguage = 'tr';
+  languages = SUPPORTED_LANGUAGES;
+
+  // Daily Challenge
+  dailyChallenge: DailyChallenge | null = null;
+  dailyChallengeLoading = false;
+
   categories = ['Ulaşım', 'Teknoloji', 'Bilim', 'Sanat', 'Yemek', 'Spor', 'Tarih', 'Doğa', 'Müzik'];
   confettiPieces: string[] = [];
 
@@ -66,10 +75,54 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewChecked {
     private gameService: GameService,
     private authService: AuthService,
     private toastService: ToastService,
-    private router: Router,
-    private ngZone: NgZone
+    public router: Router,
+    private ngZone: NgZone,
+    private dailyChallengeService: DailyChallengeService
   ) {
     this.initSpeechRecognition();
+  }
+
+  loadDailyChallenge() {
+    this.dailyChallengeLoading = true;
+    const user = this.authService.currentUserValue;
+    this.dailyChallengeService.getTodaysChallenge(this.selectedLanguage, user?.id).subscribe({
+      next: (challenge) => {
+        this.dailyChallenge = challenge;
+        this.dailyChallengeLoading = false;
+      },
+      error: () => {
+        this.dailyChallenge = null;
+        this.dailyChallengeLoading = false;
+      }
+    });
+  }
+
+  startDailyChallenge() {
+    if (!this.dailyChallenge || this.dailyChallenge.alreadyPlayed) return;
+    this.loading = true;
+    this.loadingText = 'Günün Meydan Okuması Yükleniyor...';
+
+    const user = this.authService.currentUserValue;
+    const userId = user?.id ?? 'demo-user';
+
+    const request = {
+      userId,
+      gameMode: 'DailyChallenge',
+      category: this.dailyChallenge.word.category,
+      language: this.selectedLanguage
+    };
+
+    this.gameService.startGame(request).subscribe({
+      next: (game) => {
+        this.gameService.setCurrentGame(game);
+        this.loading = false;
+        this.toastService.info(`Günün Kelimesi: "${game.word.targetWord}"`);
+      },
+      error: () => {
+        this.loading = false;
+        this.toastService.error('Günün meydan okuması başlatılamadı.');
+      }
+    });
   }
 
   private initSpeechRecognition() {
@@ -160,6 +213,8 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.gameService.currentGame$.subscribe(game => {
       this.currentGame = game;
     });
+
+    this.loadDailyChallenge();
   }
 
   ngOnDestroy() {
@@ -189,7 +244,8 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewChecked {
       userId: userId,
       gameMode: 'Solo',
       category: this.selectedCategory ?? undefined,
-      difficulty: undefined
+      difficulty: undefined,
+      language: this.selectedLanguage
     };
 
     const gameObservable = this.selectedMode === 'demo'

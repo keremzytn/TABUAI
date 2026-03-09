@@ -4,7 +4,23 @@ export interface Word {
   tabuWords: string[];
   category: string;
   difficulty: number;
+  language?: string;
 }
+
+export type GameLanguage = 'tr' | 'en' | 'de' | 'fr';
+
+export interface LanguageInfo {
+  id: GameLanguage;
+  name: string;
+  flag: string;
+}
+
+export const SUPPORTED_LANGUAGES: LanguageInfo[] = [
+  { id: 'tr', name: 'Türkçe', flag: '🇹🇷' },
+  { id: 'en', name: 'English', flag: '🇬🇧' },
+  { id: 'de', name: 'Deutsch', flag: '🇩🇪' },
+  { id: 'fr', name: 'Français', flag: '🇫🇷' }
+];
 
 export interface GameAttempt {
   attemptNumber: number;
@@ -41,6 +57,7 @@ export interface StartGameRequest {
   gameMode: string;
   category?: string;
   difficulty?: number;
+  language?: string;
 }
 
 export interface SubmitPromptRequest {
@@ -95,4 +112,62 @@ export interface ApiResponse<T> {
   data?: T;
   message?: string;
   error?: string;
+}
+
+// Word Pack (UGC)
+export interface WordPack {
+  id: string;
+  name: string;
+  description: string;
+  language: string;
+  createdByUsername: string;
+  createdByUserId: string;
+  isPublic: boolean;
+  isApproved: boolean;
+  playCount: number;
+  likeCount: number;
+  wordCount: number;
+  createdAt: string;
+  words?: Word[];
+}
+
+export interface CreateWordPackRequest {
+  name: string;
+  description: string;
+  language: string;
+  isPublic: boolean;
+  words: CreateWordInPackRequest[];
+}
+
+export interface CreateWordInPackRequest {
+  targetWord: string;
+  tabuWords: string[];
+  category: string;
+  difficulty: number;
+}
+
+// Daily Challenge
+export interface DailyChallenge {
+  id: string;
+  challengeDate: string;
+  language: string;
+  word: Word;
+  alreadyPlayed: boolean;
+  totalPlayers: number;
+}
+
+export interface DailyChallengeLeaderboard {
+  userId: string;
+  displayName: string;
+  score: number;
+  attemptsUsed: number;
+  timeTaken: string;
+  rank: number;
+}
+
+export interface DailyChallengeResult {
+  score: number;
+  rank: number;
+  totalPlayers: number;
+  topPlayers: DailyChallengeLeaderboard[];
 }

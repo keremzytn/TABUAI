@@ -37,6 +37,10 @@ export const routes: Routes = [
         canActivate: [AuthGuard]
       },
       {
+        path: 'word-packs',
+        loadComponent: () => import('./pages/word-packs/word-packs.component').then(m => m.WordPacksComponent)
+      },
+      {
         path: 'challenges',
         loadComponent: () => import('./pages/challenges/challenges.component').then(m => m.ChallengesComponent),
         canActivate: [AuthGuard]

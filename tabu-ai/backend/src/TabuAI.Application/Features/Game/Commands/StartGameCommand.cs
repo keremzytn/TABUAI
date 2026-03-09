@@ -9,4 +9,5 @@ public class StartGameCommand : IRequest<GameSessionDto>
     public string GameMode { get; set; } = "Solo";
     public string? Category { get; set; }
     public int? Difficulty { get; set; }
+    public string? Language { get; set; }
 }

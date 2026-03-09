@@ -7,6 +7,7 @@ public class WordDto
     public List<string> TabuWords { get; set; } = new();
     public string Category { get; set; } = string.Empty;
     public int Difficulty { get; set; }
+    public string Language { get; set; } = "tr";
 }
 
 public class GameAttemptDto
@@ -60,6 +61,7 @@ public class StartGameRequest
     public string GameMode { get; set; } = "Solo";
     public string? Category { get; set; }
     public int? Difficulty { get; set; }
+    public string? Language { get; set; }
 }
 
 public class SubmitPromptRequest
