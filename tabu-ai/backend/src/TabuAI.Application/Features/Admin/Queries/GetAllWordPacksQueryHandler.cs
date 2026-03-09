@@ -3,7 +3,7 @@ using TabuAI.Domain.Interfaces;
 
 namespace TabuAI.Application.Features.Admin.Queries;
 
-public class GetAllWordPacksQueryHandler : IRequestHandler<GetAllWordPacksQuery, IEnumerable<WordPackDto>>
+public class GetAllWordPacksQueryHandler : IRequestHandler<GetAllWordPacksQuery, IEnumerable<AdminWordPackDto>>
 {
     private readonly IUnitOfWork _unitOfWork;
 
@@ -12,7 +12,7 @@ public class GetAllWordPacksQueryHandler : IRequestHandler<GetAllWordPacksQuery,
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<IEnumerable<WordPackDto>> Handle(GetAllWordPacksQuery request, CancellationToken cancellationToken)
+    public async Task<IEnumerable<AdminWordPackDto>> Handle(GetAllWordPacksQuery request, CancellationToken cancellationToken)
     {
         var wordPacks = await _unitOfWork.WordPacks.GetAllAsync();
         var words = await _unitOfWork.Words.GetAllAsync();
@@ -24,7 +24,7 @@ public class GetAllWordPacksQueryHandler : IRequestHandler<GetAllWordPacksQuery,
 
         var userDict = users.ToDictionary(u => u.Id, u => u.Username);
 
-        return wordPacks.Select(wp => new WordPackDto
+        return wordPacks.Select(wp => new AdminWordPackDto
         {
             Id = wp.Id,
             Name = wp.Name,

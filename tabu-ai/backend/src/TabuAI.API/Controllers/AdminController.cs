@@ -124,7 +124,7 @@ public class AdminController : ControllerBase
     // ==================== Word Packs ====================
 
     [HttpGet("word-packs")]
-    public async Task<ActionResult<IEnumerable<WordPackDto>>> GetAllWordPacks()
+    public async Task<ActionResult<IEnumerable<AdminWordPackDto>>> GetAllWordPacks()
     {
         var result = await _mediator.Send(new GetAllWordPacksQuery());
         return Ok(result);

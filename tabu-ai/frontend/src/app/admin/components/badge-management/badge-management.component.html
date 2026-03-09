@@ -93,7 +93,7 @@
                     <div class="user-avatar-sm">{{ (user.displayName || user.username)[0].toUpperCase() }}</div>
                     <div class="user-list-info">
                         <span class="user-list-name">{{ user.displayName || user.username }}</span>
-                        <span class="user-list-username">@{{ user.username }}</span>
+                        <span class="user-list-username">{{ '@' + user.username }}</span>
                     </div>
                     <i class="fa-solid fa-check check-icon" *ngIf="assignUserId === user.id"></i>
                 </div>

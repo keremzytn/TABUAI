@@ -73,7 +73,7 @@ public class GetUserDetailQueryHandler : IRequestHandler<GetUserDetailQuery, Use
             TotalScore = user.TotalScore,
             GamesPlayed = user.GamesPlayed,
             GamesWon = user.GamesWon,
-            WinRate = user.WinRate,
+            WinRate = (double)user.WinRate,
             PromptCoins = user.PromptCoins,
             CurrentStreak = user.CurrentStreak,
             BestStreak = user.BestStreak,

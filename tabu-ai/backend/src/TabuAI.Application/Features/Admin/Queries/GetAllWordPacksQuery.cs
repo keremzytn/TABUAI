@@ -2,9 +2,9 @@ using MediatR;
 
 namespace TabuAI.Application.Features.Admin.Queries;
 
-public record GetAllWordPacksQuery : IRequest<IEnumerable<WordPackDto>>;
+public record GetAllWordPacksQuery : IRequest<IEnumerable<AdminWordPackDto>>;
 
-public class WordPackDto
+public class AdminWordPackDto
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
