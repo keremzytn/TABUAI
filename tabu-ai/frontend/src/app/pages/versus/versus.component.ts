@@ -148,7 +148,14 @@ export class VersusComponent implements OnInit, OnDestroy {
   async startMatchmaking(): Promise<void> {
     this.lobbyMode = 'matchmaking';
     this.phase = 'waiting';
-    await this.versusService.joinMatchmaking(this.selectedCategory ?? undefined);
+    try {
+      await this.versusService.joinMatchmaking(this.selectedCategory ?? undefined);
+    } catch (err) {
+      console.error('Matchmaking hatası:', err);
+      this.toastService.error('Sunucuya bağlanılamadı. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.');
+      this.phase = 'lobby';
+      this.lobbyMode = 'menu';
+    }
   }
 
   async cancelMatchmaking(): Promise<void> {
@@ -166,11 +173,18 @@ export class VersusComponent implements OnInit, OnDestroy {
         this.createdRoomCode = response.roomCode;
         this.versusGameId = response.versusGameId;
         this.lobbyMode = 'create-room';
-        this.toastService.success(`Oda olu\u015Fturuldu: ${response.roomCode}`);
-        await this.versusService.waitInRoom(response.roomCode);
+        this.toastService.success(`Oda oluşturuldu: ${response.roomCode}`);
+        try {
+          await this.versusService.waitInRoom(response.roomCode);
+        } catch (err) {
+          console.error('Oda bekleme hatası:', err);
+          this.toastService.error('Sunucuya bağlanılamadı. Lütfen tekrar deneyin.');
+          this.phase = 'lobby';
+          this.lobbyMode = 'menu';
+        }
       },
       error: () => {
-        this.toastService.error('Oda olu\u015Fturulamad\u0131.');
+        this.toastService.error('Oda oluşturulamadı.');
       }
     });
   }
@@ -178,7 +192,14 @@ export class VersusComponent implements OnInit, OnDestroy {
   async joinRoom(): Promise<void> {
     if (!this.joinRoomCode.trim()) return;
     this.phase = 'waiting';
-    await this.versusService.joinRoom(this.joinRoomCode.toUpperCase());
+    try {
+      await this.versusService.joinRoom(this.joinRoomCode.toUpperCase());
+    } catch (err) {
+      console.error('Odaya katılma hatası:', err);
+      this.toastService.error('Sunucuya bağlanılamadı. Lütfen tekrar deneyin.');
+      this.phase = 'lobby';
+      this.lobbyMode = 'menu';
+    }
   }
 
   // ---- Game Logic ----

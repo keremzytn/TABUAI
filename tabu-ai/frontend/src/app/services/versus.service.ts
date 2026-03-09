@@ -72,7 +72,7 @@ export class VersusService implements OnDestroy {
     } catch (err) {
       console.error('SignalR connection error:', err);
       this.connectionState$.next('error');
-      this.authError$.next('Sunucuya bağlanılamadı. Lütfen tekrar giriş yapın.');
+      throw err;
     }
   }
 
@@ -143,7 +143,10 @@ export class VersusService implements OnDestroy {
 
   async joinMatchmaking(category?: string, difficulty?: number): Promise<void> {
     await this.ensureConnected();
-    await this.hubConnection!.invoke('JoinMatchmaking', category ?? null, difficulty ?? null);
+    if (this.hubConnection?.state !== signalR.HubConnectionState.Connected) {
+      throw new Error('SignalR bağlantısı kurulamadı.');
+    }
+    await this.hubConnection.invoke('JoinMatchmaking', category ?? null, difficulty ?? null);
   }
 
   async leaveMatchmaking(): Promise<void> {
@@ -154,17 +157,26 @@ export class VersusService implements OnDestroy {
 
   async joinRoom(roomCode: string): Promise<void> {
     await this.ensureConnected();
-    await this.hubConnection!.invoke('JoinRoom', roomCode);
+    if (this.hubConnection?.state !== signalR.HubConnectionState.Connected) {
+      throw new Error('SignalR bağlantısı kurulamadı.');
+    }
+    await this.hubConnection.invoke('JoinRoom', roomCode);
   }
 
   async waitInRoom(roomCode: string): Promise<void> {
     await this.ensureConnected();
-    await this.hubConnection!.invoke('WaitInRoom', roomCode);
+    if (this.hubConnection?.state !== signalR.HubConnectionState.Connected) {
+      throw new Error('SignalR bağlantısı kurulamadı.');
+    }
+    await this.hubConnection.invoke('WaitInRoom', roomCode);
   }
 
   async submitVersusPrompt(versusGameId: string, gameSessionId: string, prompt: string): Promise<void> {
     await this.ensureConnected();
-    await this.hubConnection!.invoke('SubmitVersusPrompt', versusGameId, gameSessionId, prompt);
+    if (this.hubConnection?.state !== signalR.HubConnectionState.Connected) {
+      throw new Error('SignalR bağlantısı kurulamadı.');
+    }
+    await this.hubConnection.invoke('SubmitVersusPrompt', versusGameId, gameSessionId, prompt);
   }
 
   private async ensureConnected(): Promise<void> {

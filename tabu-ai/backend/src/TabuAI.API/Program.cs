@@ -167,13 +167,44 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<TabuAIDbContext>();
     try
     {
-        await context.Database.MigrateAsync();
-        app.Logger.LogInformation("Database migrations applied successfully");
+        var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
+        if (pendingMigrations.Any())
+        {
+            var appliedMigrations = await context.Database.GetAppliedMigrationsAsync();
+            if (!appliedMigrations.Any())
+            {
+                var tableExists = await context.Database.ExecuteSqlRawAsync(
+                    "SELECT 1 FROM information_schema.tables WHERE table_name = 'Users' LIMIT 1");
+                if (tableExists > 0)
+                {
+                    app.Logger.LogWarning("Database tables already exist but no migrations recorded. Marking Initial migration as applied...");
+                    await context.Database.ExecuteSqlRawAsync(
+                        "CREATE TABLE IF NOT EXISTS \"__EFMigrationsHistory\" (\"MigrationId\" varchar(150) NOT NULL, \"ProductVersion\" varchar(32) NOT NULL, CONSTRAINT \"PK___EFMigrationsHistory\" PRIMARY KEY (\"MigrationId\"))");
+                    await context.Database.ExecuteSqlRawAsync(
+                        "INSERT INTO \"__EFMigrationsHistory\" (\"MigrationId\", \"ProductVersion\") VALUES ('20260308200605_Initial', '9.0.2') ON CONFLICT DO NOTHING");
+                    app.Logger.LogInformation("Initial migration marked as applied.");
+                }
+            }
+
+            pendingMigrations = await context.Database.GetPendingMigrationsAsync();
+            if (pendingMigrations.Any())
+            {
+                await context.Database.MigrateAsync();
+                app.Logger.LogInformation("Database migrations applied successfully");
+            }
+            else
+            {
+                app.Logger.LogInformation("Database is up to date, no pending migrations.");
+            }
+        }
+        else
+        {
+            app.Logger.LogInformation("Database is up to date, no pending migrations.");
+        }
     }
     catch (Exception ex)
     {
-        app.Logger.LogError(ex, "An error occurred while ensuring the database was created");
-        // In production, we might want to continue or stop
+        app.Logger.LogError(ex, "An error occurred during database migration");
     }
 }
 
