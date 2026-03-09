@@ -167,43 +167,36 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<TabuAIDbContext>();
     try
     {
-        var pendingMigrations = (await context.Database.GetPendingMigrationsAsync()).ToList();
-        if (pendingMigrations.Any())
+        // Önce __EFMigrationsHistory tablosunu oluştur ve Initial migration'ı kaydet
+        // (tablolar zaten varsa bu sayede MigrateAsync tekrar oluşturmaya çalışmaz)
+        var conn = context.Database.GetDbConnection();
+        if (conn.State != System.Data.ConnectionState.Open)
+            await conn.OpenAsync();
+
+        app.Logger.LogInformation("Checking migration history...");
+
+        using (var cmd = conn.CreateCommand())
         {
-            var appliedMigrations = (await context.Database.GetAppliedMigrationsAsync()).ToList();
-            if (!appliedMigrations.Any())
-            {
-                var conn = context.Database.GetDbConnection();
-                if (conn.State != System.Data.ConnectionState.Open)
-                    await conn.OpenAsync();
+            cmd.CommandText = @"
+                CREATE TABLE IF NOT EXISTS ""__EFMigrationsHistory"" (
+                    ""MigrationId"" varchar(150) NOT NULL,
+                    ""ProductVersion"" varchar(32) NOT NULL,
+                    CONSTRAINT ""PK___EFMigrationsHistory"" PRIMARY KEY (""MigrationId"")
+                );
+                INSERT INTO ""__EFMigrationsHistory"" (""MigrationId"", ""ProductVersion"")
+                VALUES ('20260308200605_Initial', '9.0.2')
+                ON CONFLICT (""MigrationId"") DO NOTHING;";
+            var affected = await cmd.ExecuteNonQueryAsync();
+            app.Logger.LogInformation("Migration history check complete. Rows affected: {Affected}", affected);
+        }
 
-                using var cmd = conn.CreateCommand();
-                cmd.CommandText = "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'Users'";
-                var result = await cmd.ExecuteScalarAsync();
-                var tableExists = Convert.ToInt64(result) > 0;
+        var pending = (await context.Database.GetPendingMigrationsAsync()).ToList();
+        app.Logger.LogInformation("Pending migrations: {Count} - {Migrations}", pending.Count, string.Join(", ", pending));
 
-                if (tableExists)
-                {
-                    app.Logger.LogWarning("Database tables already exist but no migrations recorded. Marking Initial migration as applied...");
-                    await context.Database.ExecuteSqlRawAsync(
-                        "CREATE TABLE IF NOT EXISTS \"__EFMigrationsHistory\" (\"MigrationId\" varchar(150) NOT NULL, \"ProductVersion\" varchar(32) NOT NULL, CONSTRAINT \"PK___EFMigrationsHistory\" PRIMARY KEY (\"MigrationId\"))");
-                    await context.Database.ExecuteSqlRawAsync(
-                        "INSERT INTO \"__EFMigrationsHistory\" (\"MigrationId\", \"ProductVersion\") VALUES ('20260308200605_Initial', '9.0.2') ON CONFLICT DO NOTHING");
-                    app.Logger.LogInformation("Initial migration marked as applied.");
-
-                    pendingMigrations = (await context.Database.GetPendingMigrationsAsync()).ToList();
-                }
-            }
-
-            if (pendingMigrations.Any())
-            {
-                await context.Database.MigrateAsync();
-                app.Logger.LogInformation("Database migrations applied successfully");
-            }
-            else
-            {
-                app.Logger.LogInformation("Database is up to date, no pending migrations.");
-            }
+        if (pending.Any())
+        {
+            await context.Database.MigrateAsync();
+            app.Logger.LogInformation("Database migrations applied successfully");
         }
         else
         {
