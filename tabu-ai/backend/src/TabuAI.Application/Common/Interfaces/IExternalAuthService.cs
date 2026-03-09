@@ -4,6 +4,7 @@ public interface IExternalAuthService
 {
     Task<ExternalAuthUser?> VerifyGoogleTokenAsync(string idToken);
     Task<ExternalAuthUser?> VerifyFacebookTokenAsync(string accessToken);
+    Task<ExternalAuthUser?> VerifyMicrosoftTokenAsync(string idToken);
 }
 
 public class ExternalAuthUser

@@ -91,8 +91,24 @@
     }
 }
 
+/* ===== Coin Badge ===== */
+.coin-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fbbf24;
+  font-family: 'JetBrains Mono', monospace;
+}
+
 /* ===== Start Screen ===== */
 .start-panel {
+  position: relative;
     padding: 40px;
     max-width: 650px;
     margin: 40px auto;

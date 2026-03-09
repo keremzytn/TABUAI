@@ -8,6 +8,7 @@ import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
 import { GameSession, GameResult, AiPersona, PersonaInfo, PromptCoachResult, GameLanguage, LanguageInfo, SUPPORTED_LANGUAGES, DailyChallenge } from '../../models/game.models';
 import { DailyChallengeService } from '../../services/daily-challenge.service';
+import { EconomyService } from '../../services/economy.service';
 
 @Component({
   selector: 'app-game',
@@ -65,6 +66,8 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewChecked {
   dailyChallenge: DailyChallenge | null = null;
   dailyChallengeLoading = false;
 
+  coinBalance: number = 0;
+
   categories = ['Ulaşım', 'Teknoloji', 'Bilim', 'Sanat', 'Yemek', 'Spor', 'Tarih', 'Doğa', 'Müzik'];
   confettiPieces: string[] = [];
 
@@ -77,7 +80,8 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewChecked {
     private toastService: ToastService,
     public router: Router,
     private ngZone: NgZone,
-    private dailyChallengeService: DailyChallengeService
+    private dailyChallengeService: DailyChallengeService,
+    private economyService: EconomyService
   ) {
     this.initSpeechRecognition();
   }
@@ -215,6 +219,11 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewChecked {
     });
 
     this.loadDailyChallenge();
+
+    this.economyService.getBalance().subscribe({
+      next: (b) => this.coinBalance = b.balance,
+      error: () => {}
+    });
   }
 
   ngOnDestroy() {

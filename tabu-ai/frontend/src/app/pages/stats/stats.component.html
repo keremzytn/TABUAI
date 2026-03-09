@@ -1,0 +1,180 @@
+<div class="stats-page fade-in">
+  <div class="stats-wrapper">
+
+    <!-- Header -->
+    <div class="stats-header glass-card">
+      <a routerLink="/profile" class="back-btn">← Profil</a>
+      <h1>İstatistikler</h1>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs glass-card">
+      <button class="tab" [class.active]="activeTab === 'chart'" (click)="switchTab('chart')">📊 Prompt Analizi</button>
+      <button class="tab" [class.active]="activeTab === 'style'" (click)="switchTab('style')">🎭 Stil Analizi</button>
+      <button class="tab" [class.active]="activeTab === 'gallery'" (click)="switchTab('gallery')">🏅 Başarı Galerisi</button>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Yükleniyor...</p>
+    </div>
+
+    <!-- CHART TAB -->
+    <div *ngIf="!isLoading && activeTab === 'chart'" class="tab-content">
+
+      <!-- Period Selector -->
+      <div class="filter-row">
+        <button class="filter-btn" [class.active]="chartDays === 7" (click)="changeChartDays(7)">7 Gün</button>
+        <button class="filter-btn" [class.active]="chartDays === 14" (click)="changeChartDays(14)">14 Gün</button>
+        <button class="filter-btn" [class.active]="chartDays === 30" (click)="changeChartDays(30)">30 Gün</button>
+        <button class="filter-btn" [class.active]="chartDays === 90" (click)="changeChartDays(90)">90 Gün</button>
+      </div>
+
+      <!-- Metric Selector -->
+      <div class="metric-row">
+        <button class="metric-btn" [class.active]="chartMetric === 'successRate'" (click)="changeMetric('successRate')">🎯 Başarı</button>
+        <button class="metric-btn" [class.active]="chartMetric === 'averagePromptLength'" (click)="changeMetric('averagePromptLength')">📝 Uzunluk</button>
+        <button class="metric-btn" [class.active]="chartMetric === 'uniqueWordsUsed'" (click)="changeMetric('uniqueWordsUsed')">📚 Kelime</button>
+        <button class="metric-btn" [class.active]="chartMetric === 'averageScore'" (click)="changeMetric('averageScore')">⭐ Skor</button>
+      </div>
+
+      <!-- Chart -->
+      <div class="chart-container glass-card">
+        <h3 class="chart-title">{{ getMetricLabel() }}</h3>
+        <canvas #chartCanvas class="chart-canvas"></canvas>
+        <p *ngIf="!chartData || chartData.dataPoints.length === 0" class="empty-chart">
+          Henüz yeterli veri yok. Oynamaya devam et!
+        </p>
+      </div>
+
+      <!-- Summary Cards -->
+      <div class="summary-row" *ngIf="chartData && chartData.dataPoints.length > 0">
+        <div class="summary-card glass-card">
+          <span class="sc-val">{{ chartData.dataPoints.length }}</span>
+          <span class="sc-lbl">Aktif Gün</span>
+        </div>
+        <div class="summary-card glass-card">
+          <span class="sc-val">{{ getTotalGames() }}</span>
+          <span class="sc-lbl">Toplam Oyun</span>
+        </div>
+        <div class="summary-card glass-card">
+          <span class="sc-val">{{ getAvgSuccess() | number:'1.0-0' }}%</span>
+          <span class="sc-lbl">Ort. Başarı</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- STYLE TAB -->
+    <div *ngIf="!isLoading && activeTab === 'style'" class="tab-content">
+      <div *ngIf="styleAnalysis" class="style-content">
+
+        <!-- Player Title Card -->
+        <div class="title-card glass-card">
+          <span class="tc-emoji">{{ styleAnalysis.titleEmoji }}</span>
+          <h2 class="tc-title">{{ styleAnalysis.playerTitle }}</h2>
+          <p class="tc-desc">{{ styleAnalysis.description }}</p>
+        </div>
+
+        <!-- Prompt Style Summary -->
+        <div class="style-summary glass-card">
+          <h3 class="section-title">Prompt Tarzın</h3>
+          <div class="style-grid">
+            <div class="sg-item">
+              <span class="sg-val">{{ styleAnalysis.promptStyle.averageLength | number:'1.0-0' }}</span>
+              <span class="sg-lbl">Ort. Karakter</span>
+            </div>
+            <div class="sg-item">
+              <span class="sg-val">{{ styleAnalysis.promptStyle.dominantStyle }}</span>
+              <span class="sg-lbl">Baskın Tarz</span>
+            </div>
+            <div class="sg-item">
+              <span class="sg-val">%{{ styleAnalysis.promptStyle.uniqueWordRatio | number:'1.0-0' }}</span>
+              <span class="sg-lbl">Kelime Zenginliği</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Traits -->
+        <div class="traits-section glass-card">
+          <h3 class="section-title">Özellik Haritası</h3>
+          <div class="trait-list">
+            <div class="trait-item" *ngFor="let trait of styleAnalysis.traits">
+              <div class="trait-header">
+                <span class="trait-emoji">{{ trait.emoji }}</span>
+                <span class="trait-name">{{ trait.name }}</span>
+                <span class="trait-val">{{ trait.value | number:'1.0-0' }}</span>
+              </div>
+              <div class="trait-bar">
+                <div class="trait-fill" [style.width.%]="trait.value"></div>
+              </div>
+              <span class="trait-desc">{{ trait.description }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Categories -->
+        <div class="categories-section glass-card" *ngIf="styleAnalysis.topCategories.length > 0">
+          <h3 class="section-title">En İyi Kategoriler</h3>
+          <div class="category-list">
+            <div class="cat-item" *ngFor="let cat of styleAnalysis.topCategories; let i = index">
+              <span class="cat-rank">#{{ i + 1 }}</span>
+              <span class="cat-name">{{ cat.category }}</span>
+              <span class="cat-rate">%{{ cat.successRate | number:'1.0-0' }}</span>
+              <span class="cat-games">{{ cat.gamesPlayed }} oyun</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GALLERY TAB -->
+    <div *ngIf="!isLoading && activeTab === 'gallery'" class="tab-content">
+      <div *ngIf="badgeGallery" class="gallery-content">
+
+        <!-- Progress Header -->
+        <div class="gallery-header glass-card">
+          <div class="gh-progress">
+            <div class="gh-ring">
+              <svg viewBox="0 0 36 36">
+                <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path class="ring-fill" [attr.stroke-dasharray]="badgeGallery.completionPercentage + ', 100'" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              </svg>
+              <span class="gh-pct">{{ badgeGallery.completionPercentage | number:'1.0-0' }}%</span>
+            </div>
+          </div>
+          <div class="gh-info">
+            <h3>{{ badgeGallery.earnedCount }} / {{ badgeGallery.totalBadges }}</h3>
+            <p>Rozet Kazanıldı</p>
+          </div>
+        </div>
+
+        <!-- Filter -->
+        <div class="filter-row">
+          <button class="filter-btn" [class.active]="galleryFilter === 'all'" (click)="galleryFilter = 'all'">Tümü</button>
+          <button class="filter-btn" [class.active]="galleryFilter === 'earned'" (click)="galleryFilter = 'earned'">Kazanılan</button>
+          <button class="filter-btn" [class.active]="galleryFilter === 'locked'" (click)="galleryFilter = 'locked'">Kilitli</button>
+        </div>
+
+        <!-- Badge Grid -->
+        <div class="badge-grid">
+          <div class="badge-card glass-card" *ngFor="let badge of getFilteredBadges()" [class.earned]="badge.isEarned" [class.locked]="!badge.isEarned">
+            <div class="bc-rarity" [style.color]="getRarityColor(badge.rarity)">{{ getRarityLabel(badge.rarity) }}</div>
+            <div class="bc-icon" [class.dim]="!badge.isEarned">{{ getBadgeEmoji(badge.name) }}</div>
+            <h4 class="bc-name">{{ badge.name }}</h4>
+            <p class="bc-desc">{{ badge.description }}</p>
+            <div class="bc-progress" *ngIf="!badge.isEarned">
+              <div class="bc-bar">
+                <div class="bc-fill" [style.width.%]="badge.progressPercentage"></div>
+              </div>
+              <span class="bc-pct">{{ badge.currentProgress }}/{{ badge.requiredValue }}</span>
+            </div>
+            <span class="bc-date" *ngIf="badge.isEarned && badge.earnedAt">
+              {{ badge.earnedAt | date:'dd MMM yyyy' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

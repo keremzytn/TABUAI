@@ -45,6 +45,10 @@ public class ExternalLoginCommandHandler : IRequestHandler<ExternalLoginCommand,
         {
             externalUser = await _externalAuthService.VerifyFacebookTokenAsync(request.IdToken);
         }
+        else if (request.Provider.ToUpper() is "MICROSOFT" or "AZURE_AD")
+        {
+            externalUser = await _externalAuthService.VerifyMicrosoftTokenAsync(request.IdToken);
+        }
 
         if (externalUser == null)
         {
@@ -56,6 +60,10 @@ public class ExternalLoginCommandHandler : IRequestHandler<ExternalLoginCommand,
         if (request.Provider.ToUpper() == "GOOGLE")
         {
             user = await _unitOfWork.Users.FindFirstAsync(u => u.GoogleId == externalUser.ExternalId);
+        }
+        else if (request.Provider.ToUpper() is "MICROSOFT" or "AZURE_AD")
+        {
+            user = await _unitOfWork.Users.FindFirstAsync(u => u.MicrosoftId == externalUser.ExternalId);
         }
         else
         {
@@ -71,6 +79,7 @@ public class ExternalLoginCommandHandler : IRequestHandler<ExternalLoginCommand,
             {
                 // Link account
                 if (request.Provider.ToUpper() == "GOOGLE") user.GoogleId = externalUser.ExternalId;
+                else if (request.Provider.ToUpper() is "MICROSOFT" or "AZURE_AD") user.MicrosoftId = externalUser.ExternalId;
                 else user.FacebookId = externalUser.ExternalId;
                 
                 await _unitOfWork.Users.UpdateAsync(user);
@@ -100,7 +109,8 @@ public class ExternalLoginCommandHandler : IRequestHandler<ExternalLoginCommand,
                 IsActive = true,
                 PasswordHash = string.Empty, // No password for social users
                 GoogleId = request.Provider.ToUpper() == "GOOGLE" ? externalUser.ExternalId : null,
-                FacebookId = request.Provider.ToUpper() == "FACEBOOK" ? externalUser.ExternalId : null
+                FacebookId = request.Provider.ToUpper() == "FACEBOOK" ? externalUser.ExternalId : null,
+                MicrosoftId = request.Provider.ToUpper() is "MICROSOFT" or "AZURE_AD" ? externalUser.ExternalId : null
             };
 
             await _unitOfWork.Users.AddAsync(user);

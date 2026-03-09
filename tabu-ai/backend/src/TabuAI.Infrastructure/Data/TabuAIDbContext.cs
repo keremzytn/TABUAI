@@ -26,6 +26,7 @@ public class TabuAIDbContext : DbContext
     public DbSet<WordPack> WordPacks { get; set; }
     public DbSet<DailyChallenge> DailyChallenges { get; set; }
     public DbSet<DailyChallengeEntry> DailyChallengeEntries { get; set; }
+    public DbSet<CoinTransaction> CoinTransactions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -44,6 +45,10 @@ public class TabuAIDbContext : DbContext
             entity.HasIndex(e => e.Email).IsUnique();
             entity.HasIndex(e => e.GoogleId).IsUnique();
             entity.HasIndex(e => e.FacebookId).IsUnique();
+            entity.HasIndex(e => e.MicrosoftId).IsUnique();
+            entity.Property(e => e.PromptCoins).HasDefaultValue(0);
+            entity.Property(e => e.CurrentStreak).HasDefaultValue(0);
+            entity.Property(e => e.BestStreak).HasDefaultValue(0);
         });
 
         // Word Configuration
@@ -300,6 +305,18 @@ public class TabuAIDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.GameSessionId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // CoinTransaction Configuration
+        modelBuilder.Entity<CoinTransaction>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => new { e.UserId, e.CreatedAt });
         });
 
         // Seed Data

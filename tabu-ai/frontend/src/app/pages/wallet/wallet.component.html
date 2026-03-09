@@ -1,0 +1,119 @@
+<div class="wallet-page fade-in">
+  <div class="wallet-wrapper">
+
+    <!-- Header -->
+    <div class="wallet-header glass-card">
+      <a routerLink="/profile" class="back-btn">← Profil</a>
+      <h1>Cüzdan</h1>
+    </div>
+
+    <!-- Balance Card -->
+    <div class="balance-card glass-card" *ngIf="balance">
+      <div class="coin-display">
+        <span class="coin-icon">🪙</span>
+        <span class="coin-amount">{{ balance.balance }}</span>
+        <span class="coin-label">PromptCoin</span>
+      </div>
+      <div class="streak-display">
+        <div class="streak-info">
+          <span class="streak-emoji">{{ getStreakEmoji() }}</span>
+          <div class="streak-text">
+            <span class="streak-count">{{ balance.currentStreak }} Gün Seri</span>
+            <span class="streak-msg">{{ getStreakMessage() }}</span>
+          </div>
+        </div>
+        <div class="streak-meta">
+          <span class="meta-item">En iyi: {{ balance.bestStreak }} gün</span>
+          <span class="meta-item multiplier">{{ balance.streakMultiplier }}x çarpan</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs glass-card">
+      <button class="tab" [class.active]="activeTab === 'wallet'" (click)="switchTab('wallet')">🪙 Özet</button>
+      <button class="tab" [class.active]="activeTab === 'shop'" (click)="switchTab('shop')">🛒 Mağaza</button>
+      <button class="tab" [class.active]="activeTab === 'history'" (click)="switchTab('history')">📜 Geçmiş</button>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Yükleniyor...</p>
+    </div>
+
+    <!-- WALLET TAB -->
+    <div *ngIf="!isLoading && activeTab === 'wallet' && balance" class="tab-content">
+      <div class="earn-section glass-card">
+        <h3 class="section-title">Nasıl Kazanılır?</h3>
+        <div class="earn-list">
+          <div class="earn-item">
+            <span class="ei-icon">🎮</span>
+            <span class="ei-text">Oyun kazan</span>
+            <span class="ei-val">+10-30 🪙</span>
+          </div>
+          <div class="earn-item">
+            <span class="ei-icon">🔥</span>
+            <span class="ei-text">3+ gün seri</span>
+            <span class="ei-val">1.25x çarpan</span>
+          </div>
+          <div class="earn-item">
+            <span class="ei-icon">💥</span>
+            <span class="ei-text">7+ gün seri</span>
+            <span class="ei-val">2x çarpan</span>
+          </div>
+          <div class="earn-item">
+            <span class="ei-icon">🌋</span>
+            <span class="ei-text">30+ gün seri</span>
+            <span class="ei-val">3x çarpan</span>
+          </div>
+          <div class="earn-item">
+            <span class="ei-icon">🎁</span>
+            <span class="ei-text">Her 5 gün bonus</span>
+            <span class="ei-val">+50-300 🪙</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SHOP TAB -->
+    <div *ngIf="!isLoading && activeTab === 'shop'" class="tab-content">
+      <div class="shop-grid">
+        <div class="shop-card glass-card" *ngFor="let item of shopItems">
+          <span class="sc-emoji">{{ item.emoji }}</span>
+          <h4 class="sc-name">{{ item.name }}</h4>
+          <p class="sc-desc">{{ item.description }}</p>
+          <div class="sc-price">
+            <span class="sc-cost">{{ item.price }} 🪙</span>
+            <button class="sc-buy" [disabled]="!balance || balance.balance < item.price">Satın Al</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY TAB -->
+    <div *ngIf="!isLoading && activeTab === 'history' && balance" class="tab-content">
+      <div class="history-section glass-card" *ngIf="balance.recentTransactions.length > 0">
+        <div class="tx-item" *ngFor="let tx of balance.recentTransactions" [class.positive]="tx.amount > 0" [class.negative]="tx.amount < 0">
+          <span class="tx-icon">{{ getTransactionIcon(tx.type) }}</span>
+          <div class="tx-info">
+            <span class="tx-desc">{{ tx.description }}</span>
+            <span class="tx-date">{{ tx.createdAt | date:'dd MMM, HH:mm' }}</span>
+          </div>
+          <span class="tx-amount" [class.plus]="tx.amount > 0" [class.minus]="tx.amount < 0">
+            {{ tx.amount > 0 ? '+' : '' }}{{ tx.amount }}
+          </span>
+        </div>
+      </div>
+      <p class="empty-text glass-card" *ngIf="balance.recentTransactions.length === 0">
+        Henüz işlem yok. Oyna ve kazan!
+      </p>
+    </div>
+
+    <!-- Not logged in -->
+    <div *ngIf="!isLoading && !balance" class="error-state glass-card">
+      <p>Cüzdanı görmek için giriş yapmalısın.</p>
+      <a routerLink="/login" class="btn-login">Giriş Yap</a>
+    </div>
+  </div>
+</div>

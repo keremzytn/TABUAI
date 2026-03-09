@@ -3,6 +3,7 @@ namespace TabuAI.Domain.Interfaces;
 public interface IAiService
 {
     Task<AiGuessResult> GuessWordAsync(string prompt, string targetWord, List<string> tabuWords, string? persona = null);
+    Task<AiGuessResult> GuessWordWithModelAsync(string prompt, string targetWord, List<string> tabuWords, string? persona = null, string? modelOverride = null);
     Task<PromptAnalysisResult> AnalyzePromptAsync(string prompt, string targetWord, List<string> tabuWords);
     Task<List<string>> GenerateImprovementSuggestionsAsync(string prompt, string targetWord, List<string> tabuWords, bool wasCorrect);
     Task<PromptCoachResult> GeneratePromptCoachAnalysisAsync(string targetWord, List<string> tabuWords, List<PromptAttemptInfo> attempts);

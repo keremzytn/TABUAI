@@ -57,6 +57,10 @@ builder.Services.AddScoped<TabuAI.Application.Common.Interfaces.ITokenService, T
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<TabuAI.Application.Common.Interfaces.IExternalAuthService, TabuAI.Infrastructure.Services.ExternalAuthService>();
 
+// Memory Cache (swap for Redis in production)
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<TabuAI.Domain.Interfaces.ICacheService, TabuAI.Infrastructure.Services.MemoryCacheService>();
+
 // Authentication
 builder.Services.AddAuthentication(options =>
 {

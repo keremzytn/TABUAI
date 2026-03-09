@@ -16,6 +16,10 @@
     <!-- GAME START SCREEN -->
     <div *ngIf="gameState === 'idle' && !loading" class="game-start fade-in">
         <div class="glass-card start-panel">
+            <!-- Coin Display -->
+            <div class="coin-badge" *ngIf="coinBalance > 0">
+              <span>🪙 {{ coinBalance }}</span>
+            </div>
             <div class="start-header">
                 <div class="start-icon pop-in">🎯</div>
                 <h1 class="text-center">Mod Seç</h1>

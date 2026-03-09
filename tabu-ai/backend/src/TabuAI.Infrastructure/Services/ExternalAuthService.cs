@@ -83,6 +83,46 @@ public class ExternalAuthService : IExternalAuthService
         }
     }
 
+    public async Task<ExternalAuthUser?> VerifyMicrosoftTokenAsync(string idToken)
+    {
+        try
+        {
+            var url = "https://graph.microsoft.com/v1.0/me";
+            var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", idToken);
+            
+            var response = await _httpClient.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("Microsoft Graph API returned error: {StatusCode}", response.StatusCode);
+                return null;
+            }
+
+            var msUser = await response.Content.ReadFromJsonAsync<MicrosoftUserResponse>();
+            if (msUser == null) return null;
+
+            return new ExternalAuthUser
+            {
+                ExternalId = msUser.Id,
+                Email = msUser.Mail ?? msUser.UserPrincipalName ?? $"{msUser.Id}@microsoft.com",
+                DisplayName = msUser.DisplayName
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Microsoft token verification failed");
+            return null;
+        }
+    }
+
+    private class MicrosoftUserResponse
+    {
+        public string Id { get; set; } = string.Empty;
+        public string? DisplayName { get; set; }
+        public string? Mail { get; set; }
+        public string? UserPrincipalName { get; set; }
+    }
+
     private class FacebookUserResponse
     {
         public string Id { get; set; } = string.Empty;

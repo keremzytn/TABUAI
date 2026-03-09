@@ -58,12 +58,14 @@ export interface StartGameRequest {
   category?: string;
   difficulty?: number;
   language?: string;
+  aiModel?: string;
 }
 
 export interface SubmitPromptRequest {
   gameSessionId: string;
   prompt: string;
   persona?: string;
+  aiModel?: string;
 }
 
 export interface GameResult {
@@ -170,4 +172,36 @@ export interface DailyChallengeResult {
   rank: number;
   totalPlayers: number;
   topPlayers: DailyChallengeLeaderboard[];
+}
+
+export interface CoinBalance {
+  balance: number;
+  currentStreak: number;
+  bestStreak: number;
+  streakMultiplier: number;
+  recentTransactions: CoinTransaction[];
+}
+
+export interface CoinTransaction {
+  amount: number;
+  type: string;
+  description: string;
+  createdAt: string;
+}
+
+export interface PurchaseHintResult {
+  success: boolean;
+  hint?: string;
+  remainingCoins: number;
+  errorMessage?: string;
+}
+
+export interface ShopItem {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  emoji: string;
+  isOwned: boolean;
 }

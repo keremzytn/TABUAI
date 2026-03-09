@@ -19,6 +19,8 @@ public class GroqService : IAiService
     private readonly OpenAIClient _groqClient;
     private readonly ILogger<GroqService> _logger;
     private readonly string _model;
+    private readonly string _premiumModel;
+    private readonly ICacheService _cacheService;
     private readonly AsyncRetryPolicy _retryPolicy;
 
     // Türkçe karakter normalizasyon tablosu
@@ -65,11 +67,12 @@ public class GroqService : IAiService
         "yla", "yle",
     };
 
-    public GroqService(IConfiguration configuration, ILogger<GroqService> logger)
+    public GroqService(IConfiguration configuration, ILogger<GroqService> logger, ICacheService cacheService)
     {
         var apiKey = configuration["Groq:ApiKey"] ?? throw new ArgumentNullException(nameof(configuration), "Groq API key is not configured");
         var baseUrl = configuration["Groq:BaseUrl"] ?? "https://api.groq.com/openai/v1";
         _model = configuration["Groq:Model"] ?? "llama-3.1-8b-instant";
+        _premiumModel = configuration["Groq:PremiumModel"] ?? "llama-3.3-70b-versatile";
 
         var options = new OpenAIClientOptions
         {
@@ -78,6 +81,7 @@ public class GroqService : IAiService
 
         _groqClient = new OpenAIClient(new ApiKeyCredential(apiKey), options);
         _logger = logger;
+        _cacheService = cacheService;
 
         // Retry policy: 3 deneme, exponential backoff (1s, 2s, 4s)
         _retryPolicy = Policy
@@ -112,10 +116,24 @@ Tahminden SONRA dramatik bir tepki ekle." },
 Tahminden SONRA felsefi bir yorum ekle." }
     };
 
-    public async Task<AiGuessResult> GuessWordAsync(string prompt, string targetWord, List<string> tabuWords, string? persona = null)
+    public Task<AiGuessResult> GuessWordAsync(string prompt, string targetWord, List<string> tabuWords, string? persona = null)
+    {
+        return GuessWordInternalAsync(prompt, targetWord, tabuWords, persona, _model);
+    }
+
+    public Task<AiGuessResult> GuessWordWithModelAsync(string prompt, string targetWord, List<string> tabuWords, string? persona = null, string? modelOverride = null)
+    {
+        return GuessWordInternalAsync(prompt, targetWord, tabuWords, persona, modelOverride ?? _premiumModel);
+    }
+
+    private async Task<AiGuessResult> GuessWordInternalAsync(string prompt, string targetWord, List<string> tabuWords, string? persona, string model)
     {
         try
         {
+            var cacheKey = $"ai_guess:{Convert.ToBase64String(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes($"{prompt}:{targetWord}:{model}")))}";
+            var cached = await _cacheService.GetAsync<AiGuessResult>(cacheKey);
+            if (cached != null) return cached;
+
             var personaExtra = "";
             if (!string.IsNullOrEmpty(persona) && PersonaPrompts.TryGetValue(persona.ToLower(), out var personaPrompt))
             {
@@ -146,7 +164,7 @@ Confidence seviyeleri:
             string content = null!;
             await _retryPolicy.ExecuteAsync(async () =>
             {
-                var chatClient = _groqClient.GetChatClient(_model);
+                var chatClient = _groqClient.GetChatClient(model);
                 var response = await chatClient.CompleteChatAsync(
                     new ChatMessage[]
                     {
@@ -156,7 +174,7 @@ Confidence seviyeleri:
                 content = response.Value.Content[0].Text;
             });
 
-            _logger.LogInformation("AI Response: {Response}", content);
+            _logger.LogInformation("AI Response (model={Model}): {Response}", model, content);
 
             // Extract and parse JSON
             var jsonContent = ExtractJson(content);
@@ -173,7 +191,7 @@ Confidence seviyeleri:
                     var isCorrect = IsWordMatch(guessedWord, targetWord);
                     var reaction = jsonResponse.Reaction?.Trim();
 
-                    return new AiGuessResult
+                    var result = new AiGuessResult
                     {
                         GuessedWord = guessedWord,
                         IsCorrect = isCorrect,
@@ -181,12 +199,14 @@ Confidence seviyeleri:
                         Reasoning = $"AI tahmini: {guessedWord} (Güven: {jsonResponse.Confidence:P0})",
                         Reaction = reaction ?? ""
                     };
+
+                    await _cacheService.SetAsync(cacheKey, result, TimeSpan.FromHours(1));
+                    return result;
                 }
             }
             catch (JsonException ex)
             {
                 _logger.LogWarning(ex, "Failed to parse AI guess JSON response. Using fallback.");
-                // Fallback logic
                 var cleanedResponse = content.Trim().Trim('"');
                 if (cleanedResponse.Length > 50) cleanedResponse = cleanedResponse[..50];
 

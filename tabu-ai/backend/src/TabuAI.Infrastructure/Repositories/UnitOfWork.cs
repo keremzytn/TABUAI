@@ -24,6 +24,7 @@ public class UnitOfWork : IUnitOfWork
     private IRepository<WordPack>? _wordPacks;
     private IRepository<DailyChallenge>? _dailyChallenges;
     private IRepository<DailyChallengeEntry>? _dailyChallengeEntries;
+    private IRepository<CoinTransaction>? _coinTransactions;
 
     public UnitOfWork(TabuAIDbContext context)
     {
@@ -44,6 +45,7 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<WordPack> WordPacks => _wordPacks ??= new Repository<WordPack>(_context);
     public IRepository<DailyChallenge> DailyChallenges => _dailyChallenges ??= new Repository<DailyChallenge>(_context);
     public IRepository<DailyChallengeEntry> DailyChallengeEntries => _dailyChallengeEntries ??= new Repository<DailyChallengeEntry>(_context);
+    public IRepository<CoinTransaction> CoinTransactions => _coinTransactions ??= new Repository<CoinTransaction>(_context);
 
     public async Task<int> SaveChangesAsync()
     {

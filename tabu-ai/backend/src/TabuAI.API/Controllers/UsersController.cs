@@ -39,4 +39,28 @@ public class UsersController : ControllerBase
         var result = await _mediator.Send(query);
         return Ok(result);
     }
+
+    [HttpGet("{userId}/prompt-analysis")]
+    public async Task<ActionResult<PromptAnalysisChartDto>> GetPromptAnalysis(Guid userId, [FromQuery] int days = 30)
+    {
+        var query = new GetPromptAnalysisChartQuery(userId, days);
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
+
+    [HttpGet("{userId}/style-analysis")]
+    public async Task<ActionResult<StyleAnalysisDto>> GetStyleAnalysis(Guid userId)
+    {
+        var query = new GetStyleAnalysisQuery(userId);
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
+
+    [HttpGet("{userId}/badge-gallery")]
+    public async Task<ActionResult<BadgeGalleryDto>> GetBadgeGallery(Guid userId)
+    {
+        var query = new GetBadgeGalleryQuery(userId);
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
 }

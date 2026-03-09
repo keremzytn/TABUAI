@@ -85,8 +85,34 @@ public class SubmitPromptCommandHandler : IRequestHandler<SubmitPromptCommand, G
             };
         }
 
+        // Premium model costs coins
+        if (request.AiModel == "premium")
+        {
+            var premiumUser = await _unitOfWork.Users.GetByIdAsync(gameSession.UserId);
+            if (premiumUser != null && premiumUser.PromptCoins >= 25)
+            {
+                premiumUser.PromptCoins -= 25;
+                await _unitOfWork.Users.UpdateAsync(premiumUser);
+                await _unitOfWork.CoinTransactions.AddAsync(new CoinTransaction
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = premiumUser.Id,
+                    Amount = -25,
+                    Type = CoinTransactionType.HintPurchase,
+                    Description = "Premium AI modeli kullanıldı",
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+            else
+            {
+                request.AiModel = null;
+            }
+        }
+
         // Get AI guess (with persona if specified)
-        var aiResult = await _aiService.GuessWordAsync(request.Prompt, word.TargetWord, word.TabuWords, request.Persona);
+        var aiResult = request.AiModel == "premium"
+            ? await _aiService.GuessWordWithModelAsync(request.Prompt, word.TargetWord, word.TabuWords, request.Persona, null)
+            : await _aiService.GuessWordAsync(request.Prompt, word.TargetWord, word.TabuWords, request.Persona);
         
         // Calculate attempt number (1-based)
         int currentAttemptNumber = attemptCount + 1;
@@ -140,6 +166,60 @@ public class SubmitPromptCommandHandler : IRequestHandler<SubmitPromptCommand, G
                 user.TotalScore += score;
                 user.GamesPlayed++;
                 user.GamesWon++;
+
+                // PromptCoins & Streak
+                var now = DateTime.UtcNow;
+                if (user.LastPlayedAt.HasValue && (now.Date - user.LastPlayedAt.Value.Date).Days == 1)
+                {
+                    user.CurrentStreak++;
+                }
+                else if (!user.LastPlayedAt.HasValue || (now.Date - user.LastPlayedAt.Value.Date).Days > 1)
+                {
+                    user.CurrentStreak = 1;
+                }
+                if (user.CurrentStreak > user.BestStreak)
+                    user.BestStreak = user.CurrentStreak;
+                user.LastPlayedAt = now;
+
+                double streakMultiplier = user.CurrentStreak switch
+                {
+                    >= 30 => 3.0,
+                    >= 14 => 2.5,
+                    >= 7 => 2.0,
+                    >= 5 => 1.5,
+                    >= 3 => 1.25,
+                    _ => 1.0
+                };
+
+                int baseCoins = 10 + (score / 20);
+                int earnedCoins = (int)(baseCoins * streakMultiplier);
+                user.PromptCoins += earnedCoins;
+
+                await _unitOfWork.CoinTransactions.AddAsync(new CoinTransaction
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = user.Id,
+                    Amount = earnedCoins,
+                    Type = CoinTransactionType.GameWin,
+                    Description = $"Oyun kazanıldı! (+{earnedCoins} coin, {streakMultiplier}x streak)",
+                    CreatedAt = DateTime.UtcNow
+                });
+
+                if (user.CurrentStreak > 0 && user.CurrentStreak % 5 == 0)
+                {
+                    int streakBonus = user.CurrentStreak * 10;
+                    user.PromptCoins += streakBonus;
+                    await _unitOfWork.CoinTransactions.AddAsync(new CoinTransaction
+                    {
+                        Id = Guid.NewGuid(),
+                        UserId = user.Id,
+                        Amount = streakBonus,
+                        Type = CoinTransactionType.StreakBonus,
+                        Description = $"{user.CurrentStreak} günlük seri bonusu!",
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
+
                 await _unitOfWork.Users.UpdateAsync(user);
                 await UpdateDetailedStatsAsync(user);
             }
@@ -154,6 +234,20 @@ public class SubmitPromptCommandHandler : IRequestHandler<SubmitPromptCommand, G
             if (user != null)
             {
                 user.GamesPlayed++;
+
+                var now = DateTime.UtcNow;
+                if (user.LastPlayedAt.HasValue && (now.Date - user.LastPlayedAt.Value.Date).Days == 1)
+                {
+                    user.CurrentStreak++;
+                }
+                else if (!user.LastPlayedAt.HasValue || (now.Date - user.LastPlayedAt.Value.Date).Days > 1)
+                {
+                    user.CurrentStreak = 1;
+                }
+                if (user.CurrentStreak > user.BestStreak)
+                    user.BestStreak = user.CurrentStreak;
+                user.LastPlayedAt = now;
+
                 await _unitOfWork.Users.UpdateAsync(user);
                 await UpdateDetailedStatsAsync(user);
             }

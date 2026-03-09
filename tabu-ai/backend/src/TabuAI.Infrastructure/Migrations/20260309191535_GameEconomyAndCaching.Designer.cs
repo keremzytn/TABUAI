@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TabuAI.Infrastructure.Data;
@@ -11,9 +12,11 @@ using TabuAI.Infrastructure.Data;
 namespace TabuAI.Infrastructure.Migrations
 {
     [DbContext(typeof(TabuAIDbContext))]
-    partial class TabuAIDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260309191535_GameEconomyAndCaching")]
+    partial class GameEconomyAndCaching
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -467,9 +470,6 @@ namespace TabuAI.Infrastructure.Migrations
                         .HasColumnType("integer")
                         .HasDefaultValue(1);
 
-                    b.Property<string>("MicrosoftId")
-                        .HasColumnType("text");
-
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("text");
@@ -501,9 +501,6 @@ namespace TabuAI.Infrastructure.Migrations
                         .IsUnique();
 
                     b.HasIndex("GoogleId")
-                        .IsUnique();
-
-                    b.HasIndex("MicrosoftId")
                         .IsUnique();
 
                     b.HasIndex("Username")

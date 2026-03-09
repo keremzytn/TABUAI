@@ -20,6 +20,12 @@ public class User
     public string PasswordHash { get; set; } = string.Empty;
     public string? GoogleId { get; set; }
     public string? FacebookId { get; set; }
+    public string? MicrosoftId { get; set; }
+    
+    public int PromptCoins { get; set; } = 0;
+    public int CurrentStreak { get; set; } = 0;
+    public int BestStreak { get; set; } = 0;
+    public DateTime? LastPlayedAt { get; set; }
     
     // Navigation properties
     public ICollection<GameSession> GameSessions { get; set; } = new List<GameSession>();
