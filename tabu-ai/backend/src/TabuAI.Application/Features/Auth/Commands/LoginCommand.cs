@@ -1,5 +1,6 @@
 using MediatR;
 using AutoMapper;
+using Microsoft.Extensions.Logging;
 using TabuAI.Application.Features.Auth.DTOs;
 using TabuAI.Application.Features.Users.DTOs;
 using TabuAI.Domain.Interfaces;
@@ -18,33 +19,35 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponse>
     private readonly IUnitOfWork _unitOfWork;
     private readonly ITokenService _tokenService;
     private readonly IMapper _mapper;
+    private readonly ILogger<LoginCommandHandler> _logger;
 
-    public LoginCommandHandler(IUnitOfWork unitOfWork, ITokenService tokenService, IMapper mapper)
+    public LoginCommandHandler(IUnitOfWork unitOfWork, ITokenService tokenService, IMapper mapper, ILogger<LoginCommandHandler> logger)
     {
         _unitOfWork = unitOfWork;
         _tokenService = tokenService;
         _mapper = mapper;
+        _logger = logger;
     }
 
     public async Task<AuthResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
-        // Find user by username or email
+        _logger.LogInformation("Login attempt for: {Username}", request.Username);
+
         var existingUser = await _unitOfWork.Users.FindFirstAsync(u => u.Username == request.Username || u.Email == request.Username);
-        
-        // If password hash is empty (legacy users), deny or allow if password matches 'password' (fallback)? 
-        // Better to fail and require password reset/register new.
-        // But for dev purposes, if hash is empty, assume "demo" mode? No, insecure.
-        // Assume failure.
 
         if (existingUser == null)
         {
+            _logger.LogWarning("Login failed: user not found for {Username}", request.Username);
             throw new Exception("Invalid username or password");
         }
+
+        _logger.LogInformation("User found: {Username}, HashLength: {HashLen}, IsActive: {IsActive}",
+            existingUser.Username, existingUser.PasswordHash?.Length ?? 0, existingUser.IsActive);
 
         bool verified = false;
         if (string.IsNullOrEmpty(existingUser.PasswordHash))
         {
-            if (request.Password == "password") // Temporary migration hack
+            if (request.Password == "password")
             {
                verified = true;
                existingUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword("password");
@@ -55,11 +58,13 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponse>
         else 
         {
             verified = BCrypt.Net.BCrypt.Verify(request.Password, existingUser.PasswordHash);
+            _logger.LogInformation("BCrypt.Verify result: {Verified}", verified);
         }
 
         if (!verified)
         {
-             throw new Exception("Invalid username or password");
+            _logger.LogWarning("Login failed: wrong password for {Username}", existingUser.Username);
+            throw new Exception("Invalid username or password");
         }
 
         // Generate Token
