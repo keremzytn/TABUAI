@@ -167,15 +167,22 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<TabuAIDbContext>();
     try
     {
-        var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
+        var pendingMigrations = (await context.Database.GetPendingMigrationsAsync()).ToList();
         if (pendingMigrations.Any())
         {
-            var appliedMigrations = await context.Database.GetAppliedMigrationsAsync();
+            var appliedMigrations = (await context.Database.GetAppliedMigrationsAsync()).ToList();
             if (!appliedMigrations.Any())
             {
-                var tableExists = await context.Database.ExecuteSqlRawAsync(
-                    "SELECT 1 FROM information_schema.tables WHERE table_name = 'Users' LIMIT 1");
-                if (tableExists > 0)
+                var conn = context.Database.GetDbConnection();
+                if (conn.State != System.Data.ConnectionState.Open)
+                    await conn.OpenAsync();
+
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'Users'";
+                var result = await cmd.ExecuteScalarAsync();
+                var tableExists = Convert.ToInt64(result) > 0;
+
+                if (tableExists)
                 {
                     app.Logger.LogWarning("Database tables already exist but no migrations recorded. Marking Initial migration as applied...");
                     await context.Database.ExecuteSqlRawAsync(
@@ -183,10 +190,11 @@ using (var scope = app.Services.CreateScope())
                     await context.Database.ExecuteSqlRawAsync(
                         "INSERT INTO \"__EFMigrationsHistory\" (\"MigrationId\", \"ProductVersion\") VALUES ('20260308200605_Initial', '9.0.2') ON CONFLICT DO NOTHING");
                     app.Logger.LogInformation("Initial migration marked as applied.");
+
+                    pendingMigrations = (await context.Database.GetPendingMigrationsAsync()).ToList();
                 }
             }
 
-            pendingMigrations = await context.Database.GetPendingMigrationsAsync();
             if (pendingMigrations.Any())
             {
                 await context.Database.MigrateAsync();
