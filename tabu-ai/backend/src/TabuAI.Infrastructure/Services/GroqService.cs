@@ -93,11 +93,36 @@ public class GroqService : IAiService
                 });
     }
 
-    public async Task<AiGuessResult> GuessWordAsync(string prompt, string targetWord, List<string> tabuWords)
+    private static readonly Dictionary<string, string> PersonaPrompts = new()
+    {
+        { "sarcastic", @"Sen sarkastik ve alaycı bir TABU oyuncususun. Her tahminde iğneleyici ve komik yorumlar yaparsın.
+Örnekler: 'Vay canına, bu tanımlama ile bunu mu anlatmaya çalışıyorsun? Neyse, tahminim...', 'Aa ne güzel anlattın, hiç anlamadım ama...'
+Tahminden SONRA kısa bir sarkastik yorum ekle." },
+        { "childish", @"Sen 7 yaşında heyecanlı bir çocuksun ve TABU oynuyorsun! Her şeye aşırı seviniyorsun.
+Örnekler: 'Ohhh ben biliyorum ben biliyorum!!!', 'Yuppiiii bu çok kolaydı!', 'Hımmmm bu zor oldu ama ben çok zekiyim!'
+Tahminden SONRA çocuksu bir tepki ekle." },
+        { "meticulous", @"Sen aşırı titiz ve detaycı bir profesörsün. Her tanımlamayı akademik bir şekilde analiz edersin.
+Örnekler: 'Semantik analiz sonucunda...', 'Verilen parametrelere göre %87.3 olasılıkla...', 'Hmm, bu tanımlama 3 farklı kategoriye uyuyor, ama...'
+Tahminden SONRA akademik bir analiz ekle." },
+        { "dramatic", @"Sen aşırı dramatik bir tiyatro oyuncususun. Her tahmini büyük bir sahne gibi yaparsın.
+Örnekler: 'TANRILAR AŞKINA! Bu kelime... bu kelime...', 'Kalbim duracak gibi... tahminim...', 'Ah! Eureka anı geldi!'
+Tahminden SONRA dramatik bir tepki ekle." },
+        { "philosopher", @"Sen derin düşünen bir filozofsun. Her kelimeyi varoluşsal bir perspektiften değerlendirirsin.
+Örnekler: 'Bu tanımlama beni hayatın anlamı üzerine düşündürdü...', 'Descartes olsaydı şöyle derdi...', 'Kelimenin özü ile tanımı arasındaki boşluk...'
+Tahminden SONRA felsefi bir yorum ekle." }
+    };
+
+    public async Task<AiGuessResult> GuessWordAsync(string prompt, string targetWord, List<string> tabuWords, string? persona = null)
     {
         try
         {
-            var systemMessage = @"Sen bir TABU oyunu oyuncususun. Karşındaki kişi bir kelimeyi anlatmaya çalışıyor ve sen bu tanımlamadan kelimeyi tahmin etmelisin.
+            var personaExtra = "";
+            if (!string.IsNullOrEmpty(persona) && PersonaPrompts.TryGetValue(persona.ToLower(), out var personaPrompt))
+            {
+                personaExtra = $"\n\nKARAKTER ROLÜN:\n{personaPrompt}";
+            }
+
+            var systemMessage = $@"Sen bir TABU oyunu oyuncususun. Karşındaki kişi bir kelimeyi anlatmaya çalışıyor ve sen bu tanımlamadan kelimeyi tahmin etmelisin.
 
 ÖNEMLİ KURALLAR:
 1. SADECE kullanıcının verdiği tanımlamayı kullanarak tahmin yap. Başka hiçbir bilgin yok.
@@ -107,9 +132,9 @@ public class GroqService : IAiService
 5. Eğer tanımlama çok kısa veya anlamsızsa, genel bir tahmin yap ve çok düşük confidence ver.
 6. Sadece TEK KELİME ile cevap ver (birleşik kelimeler kabul edilir, örn: 'buzdolabı').
 7. Türkçe kelimelerle cevap ver.
-
+{personaExtra}
 Cevabını SADECE şu JSON formatında ver, başka hiçbir şey yazma:
-{""word"": ""tahmin_ettiğin_kelime"", ""confidence"": 0.85}
+{{""word"": ""tahmin_ettiğin_kelime"", ""confidence"": 0.85, ""reaction"": ""persona tepkin (varsa)""}}
 
 Confidence seviyeleri:
 - 0.9-1.0: Tanımlama çok net, kesinlikle bu kelime
@@ -146,13 +171,15 @@ Confidence seviyeleri:
                 {
                     var guessedWord = jsonResponse.Word.Trim();
                     var isCorrect = IsWordMatch(guessedWord, targetWord);
+                    var reaction = jsonResponse.Reaction?.Trim();
 
                     return new AiGuessResult
                     {
                         GuessedWord = guessedWord,
                         IsCorrect = isCorrect,
                         Confidence = jsonResponse.Confidence,
-                        Reasoning = $"AI tahmini: {guessedWord} (Güven: {jsonResponse.Confidence:P0})"
+                        Reasoning = $"AI tahmini: {guessedWord} (Güven: {jsonResponse.Confidence:P0})",
+                        Reaction = reaction ?? ""
                     };
                 }
             }
@@ -395,6 +422,99 @@ Cevabını SADECE şu JSON formatında ver, başka hiçbir şey yazma:
         }
     }
 
+    public async Task<PromptCoachResult> GeneratePromptCoachAnalysisAsync(string targetWord, List<string> tabuWords, List<PromptAttemptInfo> attempts)
+    {
+        try
+        {
+            var attemptsText = string.Join("\n", attempts.Select((a, i) => 
+                $"Deneme {i + 1}: Prompt=\"{a.UserPrompt}\" → AI Tahmini=\"{a.AiGuess}\" → {(a.IsCorrect ? "DOĞRU" : "YANLIŞ")} (Kalite: {a.PromptQuality}/5)"));
+
+            var systemMessage = $@"Sen bir Prompt Mühendisliği Koçusun. TABU oyununda kullanıcının tüm denemelerini analiz edip ona yapıcı geri bildirim vereceksin.
+
+Hedef kelime: {targetWord}
+Yasaklı (tabu) kelimeler: {string.Join(", ", tabuWords)}
+
+Kullanıcının denemeleri:
+{attemptsText}
+
+Şu formatta analiz yap:
+1. Genel bir değerlendirme (kullanıcının güçlü ve zayıf yönleri)
+2. En iyi prompt hangisiydi ve neden
+3. Bu kelimeyi anlatmak için İDEAL bir prompt örneği yaz (tabu kelimeler kullanmadan)
+4. Gelecek oyunlar için 3-4 somut prompt mühendisliği ipucu
+
+Cevabını SADECE şu JSON formatında ver:
+{{
+    ""overallAnalysis"": ""Genel değerlendirme..."",
+    ""bestPrompt"": ""En iyi prompt ve neden..."",
+    ""idealPromptExample"": ""İdeal prompt örneği..."",
+    ""tipsForNextTime"": [""İpucu 1"", ""İpucu 2"", ""İpucu 3""],
+    ""promptEngineeringScore"": 7
+}}
+
+promptEngineeringScore: 1-10 arası (kullanıcının genel prompt yazma becerisi)";
+
+            string content = null!;
+            await _retryPolicy.ExecuteAsync(async () =>
+            {
+                var chatClient = _groqClient.GetChatClient(_model);
+                var response = await chatClient.CompleteChatAsync(
+                    new ChatMessage[]
+                    {
+                        new SystemChatMessage(systemMessage),
+                        new UserChatMessage("Lütfen denemelerimi analiz et ve bana geri bildirim ver.")
+                    });
+                content = response.Value.Content[0].Text;
+            });
+
+            _logger.LogInformation("Prompt Coach Response: {Response}", content);
+
+            try
+            {
+                var jsonContent = ExtractJson(content);
+                var coachResponse = JsonSerializer.Deserialize<PromptCoachResponse>(jsonContent, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+                if (coachResponse != null)
+                {
+                    return new PromptCoachResult
+                    {
+                        OverallAnalysis = coachResponse.OverallAnalysis ?? "Analiz yapıldı.",
+                        BestPrompt = coachResponse.BestPrompt ?? "",
+                        IdealPromptExample = coachResponse.IdealPromptExample ?? "",
+                        TipsForNextTime = coachResponse.TipsForNextTime ?? new List<string>(),
+                        PromptEngineeringScore = Math.Max(1, Math.Min(10, coachResponse.PromptEngineeringScore))
+                    };
+                }
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogWarning(ex, "Failed to parse prompt coach JSON response");
+            }
+
+            return new PromptCoachResult
+            {
+                OverallAnalysis = "Analiz tamamlandı. Daha detaylı açıklamalar deneyin.",
+                BestPrompt = "",
+                IdealPromptExample = "",
+                TipsForNextTime = new List<string> { "Daha spesifik olun", "Metaforlar kullanın", "Kısa ve öz olun" },
+                PromptEngineeringScore = 5
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in GeneratePromptCoachAnalysisAsync");
+            return new PromptCoachResult
+            {
+                OverallAnalysis = "Koç analizi yapılamadı.",
+                TipsForNextTime = new List<string> { "Sistem hatası oluştu." },
+                PromptEngineeringScore = 5
+            };
+        }
+    }
+
     #region Helper Methods
 
     /// <summary>
@@ -543,6 +663,7 @@ Cevabını SADECE şu JSON formatında ver, başka hiçbir şey yazma:
     {
         public string Word { get; set; } = string.Empty;
         public double Confidence { get; set; }
+        public string? Reaction { get; set; }
     }
 
     private class PromptAnalysisResponse
@@ -556,6 +677,15 @@ Cevabını SADECE şu JSON formatında ver, başka hiçbir şey yazma:
     private class SuggestionsResponse
     {
         public List<string>? Suggestions { get; set; }
+    }
+
+    private class PromptCoachResponse
+    {
+        public string? OverallAnalysis { get; set; }
+        public string? BestPrompt { get; set; }
+        public string? IdealPromptExample { get; set; }
+        public List<string>? TipsForNextTime { get; set; }
+        public int PromptEngineeringScore { get; set; }
     }
 
     #endregion

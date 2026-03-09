@@ -46,6 +46,7 @@ export interface StartGameRequest {
 export interface SubmitPromptRequest {
   gameSessionId: string;
   prompt: string;
+  persona?: string;
 }
 
 export interface GameResult {
@@ -57,6 +58,25 @@ export interface GameResult {
   suggestions: string[];
   gameCompleted: boolean;
   history: GameAttempt[];
+  aiReaction?: string;
+  promptCoach?: PromptCoachResult;
+}
+
+export interface PromptCoachResult {
+  overallAnalysis: string;
+  bestPrompt: string;
+  idealPromptExample: string;
+  tipsForNextTime: string[];
+  promptEngineeringScore: number;
+}
+
+export type AiPersona = 'default' | 'sarcastic' | 'childish' | 'meticulous' | 'dramatic' | 'philosopher';
+
+export interface PersonaInfo {
+  id: AiPersona;
+  name: string;
+  icon: string;
+  description: string;
 }
 
 export interface User {

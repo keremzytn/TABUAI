@@ -54,6 +54,18 @@
                 </button>
             </div>
 
+            <!-- AI Persona Selection -->
+            <div class="persona-section" *ngIf="selectedMode">
+                <h4 class="section-label">AI Karakteri</h4>
+                <div class="persona-chips">
+                    <button *ngFor="let p of personas" class="persona-chip" [class.active]="selectedPersona === p.id"
+                        (click)="selectedPersona = p.id">
+                        <span class="persona-icon">{{ p.icon }}</span>
+                        <span class="persona-name">{{ p.name }}</span>
+                    </button>
+                </div>
+            </div>
+
             <!-- Category Selection -->
             <div class="category-section" *ngIf="selectedMode">
                 <h4 class="section-label">Kategori (Opsiyonel)</h4>
@@ -144,6 +156,11 @@
 
         <!-- Input Area -->
         <div class="input-area glass-card" [class.input-error]="inputError" *ngIf="!submitting && !lastResult">
+            <button *ngIf="speechSupported" class="btn btn-voice" [class.listening]="isListening"
+                (click)="toggleVoiceInput()" title="Sesli giriş">
+                <span class="voice-icon">{{ isListening ? '🔴' : '🎤' }}</span>
+            </button>
+
             <textarea #promptInput [(ngModel)]="currentPrompt" class="game-input"
                 placeholder="Yasaklı kelimeler kullanmadan hedefini anlat..." [disabled]="submitting"
                 (keydown.enter)="onEnter($event)" (input)="checkTabuWords()" rows="1"></textarea>
@@ -153,6 +170,11 @@
                 <span *ngIf="!submitting" class="send-icon">➤</span>
                 <div *ngIf="submitting" class="loading-spinner small"></div>
             </button>
+        </div>
+
+        <!-- Listening Indicator -->
+        <div *ngIf="isListening" class="listening-indicator slide-up">
+            <span class="pulse-dot"></span> Dinleniyor...
         </div>
 
         <!-- Tabu Warning -->
@@ -194,6 +216,12 @@
             </div>
 
             <div class="mini-content">
+                <!-- AI Persona Reaction -->
+                <div *ngIf="lastResult.aiReaction" class="ai-reaction-bubble fade-in">
+                    <span class="reaction-persona-icon">{{ personas[0].icon }}</span>
+                    <p class="reaction-text">"{{ lastResult.aiReaction }}"</p>
+                </div>
+
                 <!-- Quality & Feedback combined -->
                 <div class="feedback-compact">
                     <div class="quality-mini">
@@ -215,8 +243,64 @@
                     class="btn-mini btn-primary" (click)="continueGame()">
                     🔄 Tekrar Dene
                 </button>
+                <button *ngIf="lastResult.gameCompleted && lastResult.promptCoach" class="btn-mini btn-coach"
+                    (click)="openCoachModal()">
+                    🎓 Prompt Koçu
+                </button>
                 <button class="btn-mini btn-secondary" (click)="startNewGame()">
                     {{ lastResult.gameCompleted ? '🎮 Yeni Oyun' : '🚪 Çık' }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROMPT COACH MODAL -->
+    <div *ngIf="showCoachModal && coachResult" class="coach-modal-backdrop fade-in" (click)="closeCoachModal()">
+        <div class="coach-modal glass-card pop-in" (click)="$event.stopPropagation()">
+            <div class="coach-header">
+                <span class="coach-icon">🎓</span>
+                <div>
+                    <h2>Prompt Analiz Koçu</h2>
+                    <p class="coach-subtitle">Prompt mühendisliği değerlendirmen</p>
+                </div>
+                <button class="coach-close" (click)="closeCoachModal()">✕</button>
+            </div>
+
+            <div class="coach-score-section">
+                <div class="coach-score-ring">
+                    <span class="coach-score-value">{{ coachResult.promptEngineeringScore }}</span>
+                    <span class="coach-score-max">/10</span>
+                </div>
+                <p class="coach-score-label">Prompt Mühendisliği Puanı</p>
+            </div>
+
+            <div class="coach-body">
+                <div class="coach-section">
+                    <h4>📊 Genel Değerlendirme</h4>
+                    <p>{{ coachResult.overallAnalysis }}</p>
+                </div>
+
+                <div class="coach-section" *ngIf="coachResult.bestPrompt">
+                    <h4>⭐ En İyi Prompt</h4>
+                    <p class="coach-highlight">{{ coachResult.bestPrompt }}</p>
+                </div>
+
+                <div class="coach-section" *ngIf="coachResult.idealPromptExample">
+                    <h4>💡 İdeal Prompt Örneği</h4>
+                    <p class="coach-ideal">"{{ coachResult.idealPromptExample }}"</p>
+                </div>
+
+                <div class="coach-section" *ngIf="coachResult.tipsForNextTime.length > 0">
+                    <h4>🚀 İpuçları</h4>
+                    <ul class="coach-tips">
+                        <li *ngFor="let tip of coachResult.tipsForNextTime">{{ tip }}</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="coach-footer">
+                <button class="btn-mini btn-primary" (click)="closeCoachModal(); startNewGame();">
+                    🎮 Yeni Oyun
                 </button>
             </div>
         </div>

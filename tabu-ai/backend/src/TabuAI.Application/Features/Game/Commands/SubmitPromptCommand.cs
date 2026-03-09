@@ -7,4 +7,5 @@ public class SubmitPromptCommand : IRequest<GameResultDto>
 {
     public string GameSessionId { get; set; } = string.Empty;
     public string Prompt { get; set; } = string.Empty;
+    public string? Persona { get; set; }
 }

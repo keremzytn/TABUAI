@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewChecked, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -6,7 +6,7 @@ import { Subscription, interval } from 'rxjs';
 import { GameService } from '../../services/game.service';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
-import { GameSession, GameResult } from '../../models/game.models';
+import { GameSession, GameResult, AiPersona, PersonaInfo, PromptCoachResult } from '../../models/game.models';
 
 @Component({
   selector: 'app-game',
@@ -36,6 +36,26 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewChecked {
   inputError = false;
   detectedTabuWord: string | null = null;
 
+  // AI Persona
+  selectedPersona: AiPersona = 'default';
+  personas: PersonaInfo[] = [
+    { id: 'default', name: 'Normal', icon: '🤖', description: 'Standart AI' },
+    { id: 'sarcastic', name: 'Sarkastik', icon: '😏', description: 'İğneleyici ve komik' },
+    { id: 'childish', name: 'Çocuksu', icon: '🧒', description: 'Heyecanlı ve sevimli' },
+    { id: 'meticulous', name: 'Titiz Profesör', icon: '🧐', description: 'Akademik ve detaycı' },
+    { id: 'dramatic', name: 'Dramatik', icon: '🎭', description: 'Tiyatrocu ruh' },
+    { id: 'philosopher', name: 'Filozof', icon: '🤔', description: 'Derin düşünür' }
+  ];
+
+  // Voice-to-Prompt
+  isListening = false;
+  speechSupported = false;
+  private recognition: any = null;
+
+  // Prompt Coach
+  showCoachModal = false;
+  coachResult: PromptCoachResult | null = null;
+
   categories = ['Ulaşım', 'Teknoloji', 'Bilim', 'Sanat', 'Yemek', 'Spor', 'Tarih', 'Doğa', 'Müzik'];
   confettiPieces: string[] = [];
 
@@ -46,8 +66,86 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewChecked {
     private gameService: GameService,
     private authService: AuthService,
     private toastService: ToastService,
-    private router: Router
-  ) { }
+    private router: Router,
+    private ngZone: NgZone
+  ) {
+    this.initSpeechRecognition();
+  }
+
+  private initSpeechRecognition() {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      this.speechSupported = true;
+      this.recognition = new SpeechRecognition();
+      this.recognition.lang = 'tr-TR';
+      this.recognition.continuous = false;
+      this.recognition.interimResults = true;
+
+      this.recognition.onresult = (event: any) => {
+        this.ngZone.run(() => {
+          let transcript = '';
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            transcript += event.results[i][0].transcript;
+          }
+          this.currentPrompt = transcript;
+          this.checkTabuWords();
+        });
+      };
+
+      this.recognition.onend = () => {
+        this.ngZone.run(() => {
+          this.isListening = false;
+        });
+      };
+
+      this.recognition.onerror = (event: any) => {
+        this.ngZone.run(() => {
+          this.isListening = false;
+          if (event.error === 'not-allowed') {
+            this.toastService.error('Mikrofon erişimi reddedildi. Lütfen tarayıcı ayarlarından izin verin.');
+          } else {
+            this.toastService.warning('Ses tanıma hatası oluştu. Tekrar deneyin.');
+          }
+        });
+      };
+    }
+  }
+
+  toggleVoiceInput() {
+    if (!this.speechSupported) {
+      this.toastService.warning('Tarayıcınız sesli girişi desteklemiyor.');
+      return;
+    }
+
+    if (this.isListening) {
+      this.recognition.stop();
+      this.isListening = false;
+    } else {
+      this.recognition.start();
+      this.isListening = true;
+      this.toastService.info('Dinleniyor... Konuşmaya başlayın.');
+    }
+  }
+
+  openCoachModal() {
+    if (this.lastResult?.promptCoach) {
+      this.coachResult = this.lastResult.promptCoach;
+      this.showCoachModal = true;
+    }
+  }
+
+  closeCoachModal() {
+    this.showCoachModal = false;
+  }
+
+  getCoachScoreStars(score: number): boolean[] {
+    const stars = [];
+    const fullStars = Math.round(score / 2);
+    for (let i = 0; i < 5; i++) {
+      stars.push(i < fullStars);
+    }
+    return stars;
+  }
 
   ngOnInit() {
     this.gameService.gameState$.subscribe(state => {
@@ -200,11 +298,13 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewChecked {
       ? this.gameService.submitDemoPrompt(
         promptToSend,
         this.currentGame.word.targetWord,
-        this.currentGame.word.tabuWords
+        this.currentGame.word.tabuWords,
+        this.selectedPersona
       )
       : this.gameService.submitPrompt({
         gameSessionId: this.currentGame.id,
-        prompt: promptToSend
+        prompt: promptToSend,
+        persona: this.selectedPersona !== 'default' ? this.selectedPersona : undefined
       });
 
     submitObservable.subscribe({

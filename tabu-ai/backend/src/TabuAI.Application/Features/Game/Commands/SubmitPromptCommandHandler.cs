@@ -85,8 +85,8 @@ public class SubmitPromptCommandHandler : IRequestHandler<SubmitPromptCommand, G
             };
         }
 
-        // Get AI guess
-        var aiResult = await _aiService.GuessWordAsync(request.Prompt, word.TargetWord, word.TabuWords);
+        // Get AI guess (with persona if specified)
+        var aiResult = await _aiService.GuessWordAsync(request.Prompt, word.TargetWord, word.TabuWords, request.Persona);
         
         // Calculate attempt number (1-based)
         int currentAttemptNumber = attemptCount + 1;
@@ -181,6 +181,40 @@ public class SubmitPromptCommandHandler : IRequestHandler<SubmitPromptCommand, G
             .OrderBy(a => a.AttemptNumber)
             .ToList();
 
+        var gameCompleted = aiResult.IsCorrect || currentAttemptNumber >= 3;
+
+        // Prompt Koçu analizi (sadece oyun bittiğinde)
+        PromptCoachDto? promptCoach = null;
+        if (gameCompleted)
+        {
+            try
+            {
+                var attemptInfos = allAttempts.Select(a => new Domain.Interfaces.PromptAttemptInfo
+                {
+                    UserPrompt = a.UserPrompt,
+                    AiGuess = a.AiGuess,
+                    IsCorrect = a.IsCorrect,
+                    PromptQuality = (int)a.PromptQuality
+                }).ToList();
+
+                var coachResult = await _aiService.GeneratePromptCoachAnalysisAsync(
+                    word.TargetWord, word.TabuWords, attemptInfos);
+
+                promptCoach = new PromptCoachDto
+                {
+                    OverallAnalysis = coachResult.OverallAnalysis,
+                    BestPrompt = coachResult.BestPrompt,
+                    IdealPromptExample = coachResult.IdealPromptExample,
+                    TipsForNextTime = coachResult.TipsForNextTime,
+                    PromptEngineeringScore = coachResult.PromptEngineeringScore
+                };
+            }
+            catch
+            {
+                // Coach failure should not break the game result
+            }
+        }
+
         return new GameResultDto
         {
             IsCorrect = aiResult.IsCorrect,
@@ -189,8 +223,10 @@ public class SubmitPromptCommandHandler : IRequestHandler<SubmitPromptCommand, G
             Score = score,
             PromptQuality = promptAnalysis.PromptQuality,
             Suggestions = suggestions,
-            GameCompleted = aiResult.IsCorrect || currentAttemptNumber >= 3,
-            History = _mapper.Map<List<GameAttemptDto>>(allAttempts)
+            GameCompleted = gameCompleted,
+            History = _mapper.Map<List<GameAttemptDto>>(allAttempts),
+            AiReaction = aiResult.Reaction,
+            PromptCoach = promptCoach
         };
     }
 

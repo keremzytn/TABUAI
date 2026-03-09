@@ -76,12 +76,52 @@ export class GameService {
   }
 
   // Demo mode için mock prompt submission
-  submitDemoPrompt(prompt: string, targetWord: string, tabuWords: string[]): Observable<GameResult> {
+  submitDemoPrompt(prompt: string, targetWord: string, tabuWords: string[], persona?: string): Observable<GameResult> {
     const containsTabu = tabuWords.some(tabu =>
       prompt.toLowerCase().includes(tabu.toLowerCase())
     );
 
-    const isCorrect = !containsTabu && Math.random() > 0.3; // %70 doğru tahmin şansı
+    const isCorrect = !containsTabu && Math.random() > 0.3;
+
+    const personaReactions: Record<string, { correct: string; wrong: string }> = {
+      'sarcastic': {
+        correct: 'Vay canına, sonunda doğru bir şey söyledin. Bravo. 👏',
+        wrong: 'Bu tanımlama ile ancak buzdolabını anlatabilirsin, onu bile zor...'
+      },
+      'childish': {
+        correct: 'YUPPIIII! Ben biliyordum ben biliyordum! Bu çok kolaydı! 🎉🎉🎉',
+        wrong: 'Hımmm bu zor oldu ama olsun, ben yine de seni seviyorum! 🥺'
+      },
+      'meticulous': {
+        correct: 'Semantik analiz sonucunda %94.7 doğruluk oranıyla sonuca ulaşıldı.',
+        wrong: 'Verilen parametrelerin yetersizliği nedeniyle doğru sonuca ulaşılamadı.'
+      },
+      'dramatic': {
+        correct: 'AH! EUREKA! Kalbim yerinden fırladı! Bu kelime... BU KELİME! 🎭',
+        wrong: 'Tanrılar aşkına... Bu acı... bu yenilgi... dayanamıyorum! 😭'
+      },
+      'philosopher': {
+        correct: 'Kelime ile tanım arasındaki boşluk kapandı. Sokrates de böyle hissederdi.',
+        wrong: 'Bilmemek erdemdir, ama yanlış bilmek trajedidir. Yeniden düşün...'
+      }
+    };
+
+    const reaction = persona && persona !== 'default' && personaReactions[persona]
+      ? (isCorrect ? personaReactions[persona].correct : personaReactions[persona].wrong)
+      : '';
+
+    const mockCoach = isCorrect || Math.random() > 0.5 ? {
+      overallAnalysis: 'Tanımlamalarınız genel olarak iyi ama daha spesifik olabilir. Metafor kullanımınız güçlü.',
+      bestPrompt: prompt,
+      idealPromptExample: `"${targetWord}" için ideal tanımlama: Bu nesne günlük hayatta sıkça kullanılır ve herkesin evinde bulunur.`,
+      tipsForNextTime: [
+        'Nesnenin fiziksel özelliklerini tanımlayın',
+        'Kullanım alanlarından bahsedin',
+        'Benzetme ve metaforları daha çok kullanın',
+        'Kısa ve öz olun, gereksiz kelimelerden kaçının'
+      ],
+      promptEngineeringScore: Math.floor(Math.random() * 4) + 5
+    } : null;
 
     const mockResult: GameResult = {
       isCorrect,
@@ -97,14 +137,16 @@ export class GameService {
         ? ['Tebrikler! Başarılı bir prompt yazdınız.', 'Farklı açılardan yaklaşmayı deneyin.']
         : ['Daha spesifik detaylar ekleyin.', 'Nesnenin kullanım alanlarını belirtin.'],
       gameCompleted: isCorrect,
-      history: [] // Simplified for demo
+      history: [],
+      aiReaction: reaction,
+      promptCoach: mockCoach ?? undefined
     };
 
     return new Observable(observer => {
       setTimeout(() => {
         observer.next(mockResult);
         observer.complete();
-      }, 2000); // AI düşünme simülasyonu
+      }, 2000);
     });
   }
 }

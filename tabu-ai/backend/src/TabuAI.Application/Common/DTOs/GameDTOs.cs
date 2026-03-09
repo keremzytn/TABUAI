@@ -66,6 +66,7 @@ public class SubmitPromptRequest
 {
     public string GameSessionId { get; set; } = string.Empty;
     public string Prompt { get; set; } = string.Empty;
+    public string? Persona { get; set; }
 }
 
 public class GameResultDto
@@ -78,4 +79,15 @@ public class GameResultDto
     public List<string> Suggestions { get; set; } = new();
     public bool GameCompleted { get; set; }
     public List<GameAttemptDto> History { get; set; } = new();
+    public string AiReaction { get; set; } = string.Empty;
+    public PromptCoachDto? PromptCoach { get; set; }
+}
+
+public class PromptCoachDto
+{
+    public string OverallAnalysis { get; set; } = string.Empty;
+    public string BestPrompt { get; set; } = string.Empty;
+    public string IdealPromptExample { get; set; } = string.Empty;
+    public List<string> TipsForNextTime { get; set; } = new();
+    public int PromptEngineeringScore { get; set; }
 }
