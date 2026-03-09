@@ -19,6 +19,7 @@ public interface IUnitOfWork : IDisposable
     IRepository<DailyChallenge> DailyChallenges { get; }
     IRepository<DailyChallengeEntry> DailyChallengeEntries { get; }
     IRepository<CoinTransaction> CoinTransactions { get; }
+    IRepository<ShopPurchase> ShopPurchases { get; }
 
     Task<int> SaveChangesAsync();
     Task BeginTransactionAsync();

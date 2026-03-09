@@ -17,6 +17,11 @@ public class UserProfileDto
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
     public List<UserBadgeDto> Badges { get; set; } = new();
+    public int PromptCoins { get; set; }
+    public int CurrentStreak { get; set; }
+    public int BestStreak { get; set; }
+    public string? SelectedAvatar { get; set; }
+    public string? SelectedCardDesign { get; set; }
 }
 
 public class UserBadgeDto

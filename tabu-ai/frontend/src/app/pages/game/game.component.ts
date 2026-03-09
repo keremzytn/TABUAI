@@ -9,6 +9,7 @@ import { ToastService } from '../../services/toast.service';
 import { GameSession, GameResult, AiPersona, PersonaInfo, PromptCoachResult, GameLanguage, LanguageInfo, SUPPORTED_LANGUAGES, DailyChallenge } from '../../models/game.models';
 import { DailyChallengeService } from '../../services/daily-challenge.service';
 import { EconomyService } from '../../services/economy.service';
+import { UserService } from '../../services/user.service';
 
 @Component({
   selector: 'app-game',
@@ -67,6 +68,7 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewChecked {
   dailyChallengeLoading = false;
 
   coinBalance: number = 0;
+  activeCardDesign: string | null = null;
 
   categories = ['Ulaşım', 'Teknoloji', 'Bilim', 'Sanat', 'Yemek', 'Spor', 'Tarih', 'Doğa', 'Müzik'];
   confettiPieces: string[] = [];
@@ -81,7 +83,8 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewChecked {
     public router: Router,
     private ngZone: NgZone,
     private dailyChallengeService: DailyChallengeService,
-    private economyService: EconomyService
+    private economyService: EconomyService,
+    private userService: UserService
   ) {
     this.initSpeechRecognition();
   }
@@ -224,6 +227,14 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewChecked {
       next: (b) => this.coinBalance = b.balance,
       error: () => {}
     });
+
+    const user = this.authService.currentUserValue;
+    if (user) {
+      this.userService.getUserProfile(user.id).subscribe({
+        next: (p) => this.activeCardDesign = p.selectedCardDesign ?? null,
+        error: () => {}
+      });
+    }
   }
 
   ngOnDestroy() {
@@ -452,6 +463,15 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewChecked {
 
   goToVersus(): void {
     this.router.navigate(['/versus']);
+  }
+
+  getCardClass(): string {
+    const map: Record<string, string> = {
+      'card_neon': 'card-neon',
+      'card_gold': 'card-gold',
+      'card_galaxy': 'card-galaxy'
+    };
+    return this.activeCardDesign ? (map[this.activeCardDesign] || '') : '';
   }
 
   getDifficultyText(level: number): string {

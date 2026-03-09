@@ -27,6 +27,12 @@ public class User
     public int BestStreak { get; set; } = 0;
     public DateTime? LastPlayedAt { get; set; }
     
+    // Gamification
+    public bool HasStreakShield { get; set; } = false;
+    public int DoubleCoinGamesLeft { get; set; } = 0;
+    public string? SelectedAvatar { get; set; }
+    public string? SelectedCardDesign { get; set; }
+    
     // Navigation properties
     public ICollection<GameSession> GameSessions { get; set; } = new List<GameSession>();
     public ICollection<UserBadge> UserBadges { get; set; } = new List<UserBadge>();
@@ -34,6 +40,7 @@ public class User
     public ICollection<Friendship> SentFriendRequests { get; set; } = new List<Friendship>();
     public ICollection<Friendship> ReceivedFriendRequests { get; set; } = new List<Friendship>();
     public ICollection<ActivityLog> ActivityLogs { get; set; } = new List<ActivityLog>();
+    public ICollection<ShopPurchase> ShopPurchases { get; set; } = new List<ShopPurchase>();
 }
 
 public enum PlayerLevel

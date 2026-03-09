@@ -159,7 +159,6 @@ public class SubmitPromptCommandHandler : IRequestHandler<SubmitPromptCommand, G
             gameSession.Status = GameStatus.Completed;
             gameSession.TimeSpent = gameSession.CompletedAt.Value - gameSession.StartedAt;
 
-            // Update user stats
             var user = await _unitOfWork.Users.GetByIdAsync(gameSession.UserId);
             if (user != null)
             {
@@ -167,58 +166,33 @@ public class SubmitPromptCommandHandler : IRequestHandler<SubmitPromptCommand, G
                 user.GamesPlayed++;
                 user.GamesWon++;
 
-                // PromptCoins & Streak
-                var now = DateTime.UtcNow;
-                if (user.LastPlayedAt.HasValue && (now.Date - user.LastPlayedAt.Value.Date).Days == 1)
-                {
-                    user.CurrentStreak++;
-                }
-                else if (!user.LastPlayedAt.HasValue || (now.Date - user.LastPlayedAt.Value.Date).Days > 1)
-                {
-                    user.CurrentStreak = 1;
-                }
-                if (user.CurrentStreak > user.BestStreak)
-                    user.BestStreak = user.CurrentStreak;
-                user.LastPlayedAt = now;
+                await UpdateStreakAsync(user);
 
-                double streakMultiplier = user.CurrentStreak switch
-                {
-                    >= 30 => 3.0,
-                    >= 14 => 2.5,
-                    >= 7 => 2.0,
-                    >= 5 => 1.5,
-                    >= 3 => 1.25,
-                    _ => 1.0
-                };
+                double streakMultiplier = GetStreakMultiplier(user.CurrentStreak);
 
                 int baseCoins = 10 + (score / 20);
-                int earnedCoins = (int)(baseCoins * streakMultiplier);
+                double coinMultiplier = streakMultiplier;
+                if (user.DoubleCoinGamesLeft > 0)
+                {
+                    coinMultiplier *= 2;
+                    user.DoubleCoinGamesLeft--;
+                }
+                int earnedCoins = (int)(baseCoins * coinMultiplier);
                 user.PromptCoins += earnedCoins;
 
+                string boostInfo = user.DoubleCoinGamesLeft >= 0 && coinMultiplier > streakMultiplier
+                    ? $", 2x boost aktif" : "";
                 await _unitOfWork.CoinTransactions.AddAsync(new CoinTransaction
                 {
                     Id = Guid.NewGuid(),
                     UserId = user.Id,
                     Amount = earnedCoins,
                     Type = CoinTransactionType.GameWin,
-                    Description = $"Oyun kazanıldı! (+{earnedCoins} coin, {streakMultiplier}x streak)",
+                    Description = $"Oyun kazanıldı! (+{earnedCoins} coin, {streakMultiplier}x streak{boostInfo})",
                     CreatedAt = DateTime.UtcNow
                 });
 
-                if (user.CurrentStreak > 0 && user.CurrentStreak % 5 == 0)
-                {
-                    int streakBonus = user.CurrentStreak * 10;
-                    user.PromptCoins += streakBonus;
-                    await _unitOfWork.CoinTransactions.AddAsync(new CoinTransaction
-                    {
-                        Id = Guid.NewGuid(),
-                        UserId = user.Id,
-                        Amount = streakBonus,
-                        Type = CoinTransactionType.StreakBonus,
-                        Description = $"{user.CurrentStreak} günlük seri bonusu!",
-                        CreatedAt = DateTime.UtcNow
-                    });
-                }
+                await CheckStreakMilestonesAsync(user);
 
                 await _unitOfWork.Users.UpdateAsync(user);
                 await UpdateDetailedStatsAsync(user);
@@ -234,20 +208,7 @@ public class SubmitPromptCommandHandler : IRequestHandler<SubmitPromptCommand, G
             if (user != null)
             {
                 user.GamesPlayed++;
-
-                var now = DateTime.UtcNow;
-                if (user.LastPlayedAt.HasValue && (now.Date - user.LastPlayedAt.Value.Date).Days == 1)
-                {
-                    user.CurrentStreak++;
-                }
-                else if (!user.LastPlayedAt.HasValue || (now.Date - user.LastPlayedAt.Value.Date).Days > 1)
-                {
-                    user.CurrentStreak = 1;
-                }
-                if (user.CurrentStreak > user.BestStreak)
-                    user.BestStreak = user.CurrentStreak;
-                user.LastPlayedAt = now;
-
+                await UpdateStreakAsync(user);
                 await _unitOfWork.Users.UpdateAsync(user);
                 await UpdateDetailedStatsAsync(user);
             }
@@ -288,7 +249,7 @@ public class SubmitPromptCommandHandler : IRequestHandler<SubmitPromptCommand, G
                     UserPrompt = a.UserPrompt,
                     AiGuess = a.AiGuess,
                     IsCorrect = a.IsCorrect,
-                    PromptQuality = (int)a.PromptQuality
+                    PromptQuality = (int)(a.PromptQuality ?? 0)
                 }).ToList();
 
                 var coachResult = await _aiService.GeneratePromptCoachAnalysisAsync(
@@ -377,13 +338,110 @@ public class SubmitPromptCommandHandler : IRequestHandler<SubmitPromptCommand, G
         await _unitOfWork.SaveChangesAsync();
     }
 
+    private async Task UpdateStreakAsync(User user)
+    {
+        var now = DateTime.UtcNow;
+        
+        if (user.LastPlayedAt.HasValue && user.LastPlayedAt.Value.Date == now.Date)
+            return;
+
+        int daysSinceLastPlay = user.LastPlayedAt.HasValue
+            ? (now.Date - user.LastPlayedAt.Value.Date).Days
+            : int.MaxValue;
+
+        if (daysSinceLastPlay == 1)
+        {
+            user.CurrentStreak++;
+        }
+        else if (daysSinceLastPlay > 1)
+        {
+            if (daysSinceLastPlay == 2 && user.HasStreakShield)
+            {
+                user.CurrentStreak++;
+                user.HasStreakShield = false;
+                await _unitOfWork.CoinTransactions.AddAsync(new CoinTransaction
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = user.Id,
+                    Amount = 0,
+                    Type = CoinTransactionType.StreakShieldUsed,
+                    Description = $"Seri Kalkanı kullanıldı! Serin korundu ({user.CurrentStreak} gün)",
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+            else
+            {
+                user.CurrentStreak = 1;
+                user.HasStreakShield = false;
+            }
+        }
+
+        if (user.CurrentStreak > user.BestStreak)
+            user.BestStreak = user.CurrentStreak;
+        user.LastPlayedAt = now;
+    }
+
+    private async Task CheckStreakMilestonesAsync(User user)
+    {
+        if (user.CurrentStreak <= 0) return;
+        
+        int[] milestones = { 5, 10, 15, 20, 25, 30, 50, 100 };
+        if (!milestones.Contains(user.CurrentStreak)) return;
+
+        int streakBonus = user.CurrentStreak * 10;
+        user.PromptCoins += streakBonus;
+        await _unitOfWork.CoinTransactions.AddAsync(new CoinTransaction
+        {
+            Id = Guid.NewGuid(),
+            UserId = user.Id,
+            Amount = streakBonus,
+            Type = CoinTransactionType.StreakBonus,
+            Description = $"{user.CurrentStreak} günlük seri bonusu!",
+            CreatedAt = DateTime.UtcNow
+        });
+
+        string? rewardDescription = user.CurrentStreak switch
+        {
+            5 => "Ateş Kartı tasarımı açıldı!",
+            10 => "Yıldız Avatarı açıldı!",
+            15 => "Neon Kartı tasarımı açıldı!",
+            30 => "Efsane Avatarı açıldı!",
+            50 => "Altın Kart tasarımı açıldı!",
+            100 => "Elmas Avatarı açıldı!",
+            _ => null
+        };
+
+        if (rewardDescription != null)
+        {
+            await _unitOfWork.CoinTransactions.AddAsync(new CoinTransaction
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                Amount = 0,
+                Type = CoinTransactionType.StreakMilestoneReward,
+                Description = $"{user.CurrentStreak} gün seri ödülü: {rewardDescription}",
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+    }
+
+    private static double GetStreakMultiplier(int streak) => streak switch
+    {
+        >= 30 => 3.0,
+        >= 14 => 2.5,
+        >= 7 => 2.0,
+        >= 5 => 1.5,
+        >= 3 => 1.25,
+        _ => 1.0
+    };
+
     private static int CalculateScore(bool isCorrect, int promptQuality, int attemptNumber)
     {
         if (!isCorrect) return 0;
 
         int baseScore = 100;
-        int qualityBonus = promptQuality * 20; // 20-100 bonus
-        int attemptPenalty = (attemptNumber - 1) * 20; // -20 for each additional attempt
+        int qualityBonus = promptQuality * 20;
+        int attemptPenalty = (attemptNumber - 1) * 20;
 
         return Math.Max(10, baseScore + qualityBonus - attemptPenalty);
     }

@@ -147,7 +147,7 @@
 
         <!-- Main Card Area -->
         <div class="card-area">
-            <div class="target-card glass-card" [class.card-shake]="cardShake">
+            <div class="target-card glass-card" [class.card-shake]="cardShake" [ngClass]="getCardClass()">
                 <div class="card-header">
                     <span class="difficulty-badge" [attr.data-level]="currentGame.word.difficulty">
                         {{ getDifficultyText(currentGame.word.difficulty) }}

@@ -6,6 +6,7 @@ import { UserProfile, UserStatistic, GameHistory } from '../../models/user.model
 import { HttpClientModule } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
+import { EconomyService } from '../../services/economy.service';
 
 @Component({
     selector: 'app-profile',
@@ -32,10 +33,24 @@ export class ProfileComponent implements OnInit {
         'GrandMaster': { min: 5000, max: 10000, next: 'GrandMaster' }
     };
 
+    private readonly avatarEmojis: Record<string, string> = {
+        'avatar_flame': '🔥',
+        'avatar_star': '⭐',
+        'avatar_diamond': '💎',
+        'avatar_crown': '👑'
+    };
+
+    private readonly cardDesignLabels: Record<string, { label: string; class: string }> = {
+        'card_neon': { label: 'Neon', class: 'card-neon' },
+        'card_gold': { label: 'Altın', class: 'card-gold' },
+        'card_galaxy': { label: 'Galaksi', class: 'card-galaxy' }
+    };
+
     constructor(
         private userService: UserService,
         private authService: AuthService,
-        private toastService: ToastService
+        private toastService: ToastService,
+        private economyService: EconomyService
     ) { }
 
     ngOnInit(): void {
@@ -165,5 +180,31 @@ export class ProfileComponent implements OnInit {
             2: 'Zorluk Modu'
         };
         return modeMap[mode] ?? 'Klasik';
+    }
+
+    getAvatarEmoji(): string {
+        if (!this.profile?.selectedAvatar) return '';
+        return this.avatarEmojis[this.profile.selectedAvatar] || '';
+    }
+
+    getCardDesignClass(): string {
+        if (!this.profile?.selectedCardDesign) return '';
+        return this.cardDesignLabels[this.profile.selectedCardDesign]?.class || '';
+    }
+
+    getCardDesignLabel(): string {
+        if (!this.profile?.selectedCardDesign) return '';
+        return this.cardDesignLabels[this.profile.selectedCardDesign]?.label || '';
+    }
+
+    getStreakEmoji(): string {
+        if (!this.profile) return '';
+        const s = this.profile.currentStreak;
+        if (s >= 30) return '🌋';
+        if (s >= 14) return '💥';
+        if (s >= 7) return '🔥';
+        if (s >= 3) return '✨';
+        if (s >= 1) return '⚡';
+        return '';
     }
 }

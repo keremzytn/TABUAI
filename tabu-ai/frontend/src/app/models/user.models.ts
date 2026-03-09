@@ -12,6 +12,11 @@ export interface UserProfile {
     isActive: boolean;
     createdAt: Date;
     badges: UserBadge[];
+    promptCoins: number;
+    currentStreak: number;
+    bestStreak: number;
+    selectedAvatar?: string | null;
+    selectedCardDesign?: string | null;
 }
 
 export interface UserBadge {

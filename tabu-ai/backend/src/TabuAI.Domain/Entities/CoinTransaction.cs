@@ -20,5 +20,9 @@ public enum CoinTransactionType
     HintPurchase = 4,
     AvatarPurchase = 5,
     BadgeShowcase = 6,
-    LevelUpBonus = 7
+    LevelUpBonus = 7,
+    ShopPurchase = 8,
+    StreakMilestoneReward = 9,
+    CardDesignPurchase = 10,
+    StreakShieldUsed = 11
 }

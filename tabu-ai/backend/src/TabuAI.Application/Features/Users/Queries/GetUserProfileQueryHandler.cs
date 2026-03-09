@@ -27,6 +27,11 @@ public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, U
         }
 
         var userProfileDto = _mapper.Map<UserProfileDto>(user);
+        userProfileDto.PromptCoins = user.PromptCoins;
+        userProfileDto.CurrentStreak = user.CurrentStreak;
+        userProfileDto.BestStreak = user.BestStreak;
+        userProfileDto.SelectedAvatar = user.SelectedAvatar;
+        userProfileDto.SelectedCardDesign = user.SelectedCardDesign;
 
         // Fetch user badges
         var userBadges = await _unitOfWork.UserBadges.FindAsync(ub => ub.UserId == request.UserId);

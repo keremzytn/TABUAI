@@ -14,11 +14,19 @@
 
     <div *ngIf="!isLoading && profile" class="content">
       <!-- Compact Header -->
-      <div class="profile-header glass-card">
-        <div class="avatar">{{ profile.username.charAt(0).toUpperCase() }}</div>
+      <div class="profile-header glass-card" [class]="getCardDesignClass()">
+        <div class="avatar" [class.has-emoji]="!!getAvatarEmoji()">
+          <span *ngIf="getAvatarEmoji(); else initials">{{ getAvatarEmoji() }}</span>
+          <ng-template #initials>{{ profile.username.charAt(0).toUpperCase() }}</ng-template>
+        </div>
         <div class="info">
           <h1>{{ profile.displayName || profile.username }}</h1>
           <span class="level-pill">{{ getLevelText(profile.level) }}</span>
+          <div class="profile-badges-row">
+            <span class="profile-coin-badge" *ngIf="profile.promptCoins > 0">🪙 {{ profile.promptCoins }}</span>
+            <span class="profile-streak-badge" *ngIf="profile.currentStreak > 0">{{ getStreakEmoji() }} {{ profile.currentStreak }} gün</span>
+            <span class="profile-card-badge" *ngIf="getCardDesignLabel()">✨ {{ getCardDesignLabel() }}</span>
+          </div>
         </div>
         <div class="header-score">
           <span class="score-num">{{ profile.totalScore }}</span>

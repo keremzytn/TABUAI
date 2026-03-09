@@ -107,6 +107,28 @@ public class DailyChallengeController : ControllerBase
             };
 
             await _unitOfWork.DailyChallengeEntries.AddAsync(entry);
+
+            // Daily Challenge bonus coin
+            if (entry.IsCompleted)
+            {
+                var user = await _unitOfWork.Users.GetByIdAsync(parsedUserId);
+                if (user != null)
+                {
+                    int bonus = 25;
+                    user.PromptCoins += bonus;
+                    await _unitOfWork.Users.UpdateAsync(user);
+                    await _unitOfWork.CoinTransactions.AddAsync(new CoinTransaction
+                    {
+                        Id = Guid.NewGuid(),
+                        UserId = parsedUserId,
+                        Amount = bonus,
+                        Type = CoinTransactionType.DailyChallengeBonus,
+                        Description = $"Günün meydan okuması tamamlandı! (+{bonus} coin)",
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
+            }
+
             await _unitOfWork.SaveChangesAsync();
 
             var allEntries = (await _unitOfWork.DailyChallengeEntries.FindAsync(

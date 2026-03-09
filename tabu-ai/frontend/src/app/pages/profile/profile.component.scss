@@ -121,6 +121,60 @@
     margin-top: 2px;
 }
 
+.profile-badges-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.profile-coin-badge,
+.profile-streak-badge,
+.profile-card-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 8px;
+}
+
+.profile-coin-badge {
+    background: rgba(251, 191, 36, 0.12);
+    color: #fbbf24;
+}
+
+.profile-streak-badge {
+    background: rgba(239, 68, 68, 0.12);
+    color: #f87171;
+}
+
+.profile-card-badge {
+    background: rgba(139, 92, 246, 0.12);
+    color: #a78bfa;
+}
+
+/* Avatar emoji mode */
+.avatar.has-emoji {
+    font-size: 1.8rem;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Card design themes on profile header */
+.profile-header.card-neon {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(99, 102, 241, 0.08));
+    border: 1px solid rgba(139, 92, 246, 0.25);
+}
+
+.profile-header.card-gold {
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.12), rgba(245, 158, 11, 0.06));
+    border: 1px solid rgba(251, 191, 36, 0.25);
+}
+
+.profile-header.card-galaxy {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(99, 102, 241, 0.1));
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
 .header-score {
     display: flex;
     flex-direction: column;

@@ -179,6 +179,8 @@ export interface CoinBalance {
   currentStreak: number;
   bestStreak: number;
   streakMultiplier: number;
+  hasStreakShield: boolean;
+  doubleCoinGamesLeft: number;
   recentTransactions: CoinTransaction[];
 }
 
@@ -204,4 +206,19 @@ export interface ShopItem {
   category: string;
   emoji: string;
   isOwned: boolean;
+}
+
+export interface PurchaseResult {
+  success: boolean;
+  remainingCoins: number;
+  message?: string;
+  errorMessage?: string;
+}
+
+export interface InventoryResponse {
+  selectedAvatar: string | null;
+  selectedCardDesign: string | null;
+  hasStreakShield: boolean;
+  doubleCoinGamesLeft: number;
+  ownedItems: { itemId: string; itemName: string; purchasedAt: string }[];
 }

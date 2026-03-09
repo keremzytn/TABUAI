@@ -27,6 +27,7 @@ public class TabuAIDbContext : DbContext
     public DbSet<DailyChallenge> DailyChallenges { get; set; }
     public DbSet<DailyChallengeEntry> DailyChallengeEntries { get; set; }
     public DbSet<CoinTransaction> CoinTransactions { get; set; }
+    public DbSet<ShopPurchase> ShopPurchases { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -49,6 +50,10 @@ public class TabuAIDbContext : DbContext
             entity.Property(e => e.PromptCoins).HasDefaultValue(0);
             entity.Property(e => e.CurrentStreak).HasDefaultValue(0);
             entity.Property(e => e.BestStreak).HasDefaultValue(0);
+            entity.Property(e => e.HasStreakShield).HasDefaultValue(false);
+            entity.Property(e => e.DoubleCoinGamesLeft).HasDefaultValue(0);
+            entity.Property(e => e.SelectedAvatar).HasMaxLength(50);
+            entity.Property(e => e.SelectedCardDesign).HasMaxLength(50);
         });
 
         // Word Configuration
@@ -317,6 +322,19 @@ public class TabuAIDbContext : DbContext
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
             entity.HasIndex(e => new { e.UserId, e.CreatedAt });
+        });
+
+        // ShopPurchase Configuration
+        modelBuilder.Entity<ShopPurchase>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ItemId).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.ItemName).IsRequired().HasMaxLength(100);
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.ShopPurchases)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => new { e.UserId, e.ItemId });
         });
 
         // Seed Data
@@ -1306,6 +1324,36 @@ public class TabuAIDbContext : DbContext
                 IconUrl = "/badges/tabu-avoidance.svg",
                 Type = BadgeType.TabuAvoidance,
                 RequiredValue = 50,
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            },
+            new()
+            {
+                Id = Guid.Parse("c1d2e3f4-7890-1234-5634-567890abcdef"),
+                Name = "Seri Başlatıcı",
+                Description = "5 günlük seri yaptın!",
+                IconUrl = "/badges/streak-5.svg",
+                Type = BadgeType.Streak,
+                RequiredValue = 5,
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            },
+            new()
+            {
+                Id = Guid.Parse("d2e3f4a5-8901-2345-6745-67890abcdef0"),
+                Name = "Seri Ustası",
+                Description = "15 günlük seri yaptın!",
+                IconUrl = "/badges/streak-15.svg",
+                Type = BadgeType.Streak,
+                RequiredValue = 15,
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            },
+            new()
+            {
+                Id = Guid.Parse("e3f4a5b6-9012-3456-7856-7890abcdef01"),
+                Name = "Seri Efsanesi",
+                Description = "30 günlük seri yaptın!",
+                IconUrl = "/badges/streak-30.svg",
+                Type = BadgeType.Streak,
+                RequiredValue = 30,
                 CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             }
         };

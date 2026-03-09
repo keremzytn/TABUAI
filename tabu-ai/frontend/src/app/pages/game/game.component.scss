@@ -1156,3 +1156,43 @@
         gap: 6px;
     }
 }
+
+/* ===== Card Design Themes ===== */
+.target-card.card-neon {
+    background: linear-gradient(145deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.08));
+    border: 1px solid rgba(139, 92, 246, 0.35);
+    box-shadow: 0 0 24px rgba(139, 92, 246, 0.15), 0 8px 32px rgba(0, 0, 0, 0.4);
+
+    .target-word {
+        background: linear-gradient(135deg, #a78bfa, #818cf8);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+}
+
+.target-card.card-gold {
+    background: linear-gradient(145deg, rgba(251, 191, 36, 0.1), rgba(245, 158, 11, 0.05));
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    box-shadow: 0 0 24px rgba(251, 191, 36, 0.1), 0 8px 32px rgba(0, 0, 0, 0.4);
+
+    .target-word {
+        background: linear-gradient(135deg, #fbbf24, #f59e0b);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+}
+
+.target-card.card-galaxy {
+    background: linear-gradient(145deg, rgba(16, 185, 129, 0.1), rgba(99, 102, 241, 0.1));
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    box-shadow: 0 0 24px rgba(16, 185, 129, 0.1), 0 8px 32px rgba(0, 0, 0, 0.4);
+
+    .target-word {
+        background: linear-gradient(135deg, #34d399, #818cf8);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+}

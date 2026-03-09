@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
-import { CoinBalance, PurchaseHintResult, ShopItem } from '../models/game.models';
+import { CoinBalance, PurchaseHintResult, PurchaseResult, ShopItem, InventoryResponse } from '../models/game.models';
 
 @Injectable({
     providedIn: 'root'
@@ -27,6 +27,27 @@ export class EconomyService {
 
     getShopItems(): Observable<ShopItem[]> {
         return this.http.get<ShopItem[]>(`${this.apiUrl}/shop`);
+    }
+
+    purchaseItem(itemId: string): Observable<PurchaseResult> {
+        return this.http.post<PurchaseResult>(`${this.apiUrl}/purchase`, { itemId }).pipe(
+            tap(result => {
+                if (result.success && this.balanceSubject.value) {
+                    this.balanceSubject.next({
+                        ...this.balanceSubject.value,
+                        balance: result.remainingCoins
+                    });
+                }
+            })
+        );
+    }
+
+    equipItem(type: string, itemId: string | null): Observable<any> {
+        return this.http.post(`${this.apiUrl}/equip`, { type, itemId });
+    }
+
+    getInventory(): Observable<InventoryResponse> {
+        return this.http.get<InventoryResponse>(`${this.apiUrl}/inventory`);
     }
 
     get currentBalance(): CoinBalance | null {

@@ -22,9 +22,29 @@
             <span class="streak-msg">{{ getStreakMessage() }}</span>
           </div>
         </div>
+        <div class="streak-progress-bar">
+          <div class="streak-fill" [style.width.%]="getStreakProgress()"></div>
+          <span class="streak-target">{{ getNextStreakMilestone() }} güne {{ getNextStreakMilestone() - balance.currentStreak }} gün</span>
+        </div>
         <div class="streak-meta">
           <span class="meta-item">En iyi: {{ balance.bestStreak }} gün</span>
           <span class="meta-item multiplier">{{ balance.streakMultiplier }}x çarpan</span>
+          <span class="meta-item shield" *ngIf="inventory?.hasStreakShield">🛡️ Kalkan aktif</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Boosts -->
+    <div class="active-boosts glass-card" *ngIf="inventory && (inventory.hasStreakShield || inventory.doubleCoinGamesLeft > 0)">
+      <h3 class="section-title">Aktif Güçlendirmeler</h3>
+      <div class="boost-list">
+        <div class="boost-item" *ngIf="inventory.hasStreakShield">
+          <span class="boost-icon">🛡️</span>
+          <span class="boost-text">Seri Kalkanı aktif</span>
+        </div>
+        <div class="boost-item" *ngIf="inventory.doubleCoinGamesLeft > 0">
+          <span class="boost-icon">⚡</span>
+          <span class="boost-text">2x Coin ({{ inventory.doubleCoinGamesLeft }} oyun kaldı)</span>
         </div>
       </div>
     </div>
@@ -33,6 +53,7 @@
     <div class="tabs glass-card">
       <button class="tab" [class.active]="activeTab === 'wallet'" (click)="switchTab('wallet')">🪙 Özet</button>
       <button class="tab" [class.active]="activeTab === 'shop'" (click)="switchTab('shop')">🛒 Mağaza</button>
+      <button class="tab" [class.active]="activeTab === 'inventory'" (click)="switchTab('inventory')">🎒 Envanter</button>
       <button class="tab" [class.active]="activeTab === 'history'" (click)="switchTab('history')">📜 Geçmiş</button>
     </div>
 
@@ -69,8 +90,18 @@
           </div>
           <div class="earn-item">
             <span class="ei-icon">🎁</span>
-            <span class="ei-text">Her 5 gün bonus</span>
-            <span class="ei-val">+50-300 🪙</span>
+            <span class="ei-text">Seri milestoneları (5,10,15...)</span>
+            <span class="ei-val">+50-1000 🪙</span>
+          </div>
+          <div class="earn-item">
+            <span class="ei-icon">📅</span>
+            <span class="ei-text">Günlük meydan okuma</span>
+            <span class="ei-val">+25 🪙</span>
+          </div>
+          <div class="earn-item">
+            <span class="ei-icon">⬆️</span>
+            <span class="ei-text">Seviye atla</span>
+            <span class="ei-val">+100-300 🪙</span>
           </div>
         </div>
       </div>
@@ -78,15 +109,61 @@
 
     <!-- SHOP TAB -->
     <div *ngIf="!isLoading && activeTab === 'shop'" class="tab-content">
+      <div class="shop-categories">
+        <button *ngFor="let cat of shopCategories"
+                class="cat-btn" [class.active]="shopCategory === cat"
+                (click)="shopCategory = cat">
+          {{ getCategoryLabel(cat) }}
+        </button>
+      </div>
       <div class="shop-grid">
-        <div class="shop-card glass-card" *ngFor="let item of shopItems">
+        <div class="shop-card glass-card" *ngFor="let item of filteredShopItems"
+             [class.owned]="item.isOwned">
           <span class="sc-emoji">{{ item.emoji }}</span>
           <h4 class="sc-name">{{ item.name }}</h4>
           <p class="sc-desc">{{ item.description }}</p>
           <div class="sc-price">
             <span class="sc-cost">{{ item.price }} 🪙</span>
-            <button class="sc-buy" [disabled]="!balance || balance.balance < item.price">Satın Al</button>
+            <button class="sc-buy"
+                    *ngIf="!item.isOwned"
+                    [disabled]="!balance || balance.balance < item.price || purchasingItem === item.id"
+                    (click)="purchaseItem(item)">
+              {{ purchasingItem === item.id ? '...' : 'Satın Al' }}
+            </button>
+            <span class="sc-owned-badge" *ngIf="item.isOwned">Sahipsin</span>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INVENTORY TAB -->
+    <div *ngIf="!isLoading && activeTab === 'inventory' && inventory" class="tab-content">
+      <div class="inv-section glass-card">
+        <h3 class="section-title">Avatarlar</h3>
+        <div class="inv-grid">
+          <div class="inv-item" *ngFor="let item of inventory.ownedItems"
+               [class.equipped]="isItemEquipped(item.itemId)"
+               (click)="item.itemId.startsWith('avatar_') ? equipItem('avatar', isItemEquipped(item.itemId) ? null : item.itemId) : null"
+               *ngIf="item.itemId.startsWith('avatar_')">
+            <span class="inv-icon">{{ item.itemId === 'avatar_flame' ? '🔥' : item.itemId === 'avatar_star' ? '⭐' : item.itemId === 'avatar_diamond' ? '💎' : '👑' }}</span>
+            <span class="inv-name">{{ item.itemName }}</span>
+            <span class="inv-badge" *ngIf="isItemEquipped(item.itemId)">Aktif</span>
+          </div>
+          <p class="empty-inv" *ngIf="!inventory.ownedItems.some(i => i.itemId.startsWith('avatar_'))">Henüz avatar yok. Mağazadan al!</p>
+        </div>
+      </div>
+      <div class="inv-section glass-card">
+        <h3 class="section-title">Kart Tasarımları</h3>
+        <div class="inv-grid">
+          <div class="inv-item" *ngFor="let item of inventory.ownedItems"
+               [class.equipped]="isItemEquipped(item.itemId)"
+               (click)="item.itemId.startsWith('card_') ? equipItem('card', isItemEquipped(item.itemId) ? null : item.itemId) : null"
+               *ngIf="item.itemId.startsWith('card_')">
+            <span class="inv-icon">{{ item.itemId === 'card_neon' ? '💜' : item.itemId === 'card_gold' ? '✨' : '🌌' }}</span>
+            <span class="inv-name">{{ item.itemName }}</span>
+            <span class="inv-badge" *ngIf="isItemEquipped(item.itemId)">Aktif</span>
+          </div>
+          <p class="empty-inv" *ngIf="!inventory.ownedItems.some(i => i.itemId.startsWith('card_'))">Henüz kart tasarımı yok. Mağazadan al!</p>
         </div>
       </div>
     </div>

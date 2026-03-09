@@ -6,7 +6,7 @@
 
 .wallet-wrapper {
   width: 100%;
-  max-width: 480px;
+  max-width: 520px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -71,7 +71,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .streak-emoji { font-size: 1.8rem; }
@@ -91,9 +91,34 @@
   color: var(--text-muted);
 }
 
+.streak-progress-bar {
+  position: relative;
+  height: 6px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 3px;
+  margin-bottom: 10px;
+  overflow: visible;
+
+  .streak-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #f59e0b, #ef4444);
+    transition: width 0.5s ease;
+  }
+
+  .streak-target {
+    position: absolute;
+    right: 0;
+    top: 10px;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+  }
+}
+
 .streak-meta {
   display: flex;
   gap: 16px;
+  margin-top: 16px;
 }
 
 .meta-item {
@@ -105,7 +130,36 @@
     color: var(--accent);
     font-weight: 700;
   }
+
+  &.shield {
+    color: #60a5fa;
+    font-weight: 700;
+  }
 }
+
+/* Active Boosts */
+.active-boosts {
+  padding: 16px 20px;
+}
+
+.boost-list {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.boost-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: rgba(139, 92, 246, 0.1);
+  border-radius: 10px;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.boost-icon { font-size: 1.1rem; }
+.boost-text { font-size: 0.8rem; font-weight: 600; color: var(--primary); }
 
 /* Tabs */
 .tabs {
@@ -116,11 +170,11 @@
 
 .tab {
   flex: 1;
-  padding: 10px 8px;
+  padding: 10px 6px;
   border: none;
   background: transparent;
   color: var(--text-muted);
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 600;
   border-radius: 10px;
   cursor: pointer;
@@ -211,6 +265,31 @@
 }
 
 /* Shop */
+.shop-categories {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.cat-btn {
+  padding: 6px 14px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &.active {
+    background: rgba(139, 92, 246, 0.15);
+    color: var(--primary);
+    border-color: rgba(139, 92, 246, 0.3);
+  }
+}
+
 .shop-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -222,6 +301,11 @@
   text-align: center;
   transition: all 0.25s;
   &:hover { transform: translateY(-2px); }
+
+  &.owned {
+    opacity: 0.7;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+  }
 }
 
 .sc-emoji { font-size: 2rem; display: block; margin-bottom: 8px; }
@@ -263,6 +347,71 @@
   }
 }
 
+.sc-owned-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #10b981;
+  padding: 4px 10px;
+  background: rgba(16, 185, 129, 0.1);
+  border-radius: 6px;
+}
+
+/* Inventory */
+.inv-section {
+  padding: 20px;
+}
+
+.inv-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.inv-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 8px;
+  background: rgba(255,255,255,0.02);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px solid transparent;
+  position: relative;
+
+  &:hover {
+    background: rgba(255,255,255,0.05);
+  }
+
+  &.equipped {
+    border-color: rgba(139, 92, 246, 0.5);
+    background: rgba(139, 92, 246, 0.08);
+  }
+}
+
+.inv-icon { font-size: 1.8rem; }
+.inv-name { font-size: 0.7rem; font-weight: 600; text-align: center; }
+.inv-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 0.55rem;
+  font-weight: 800;
+  color: var(--primary);
+  background: rgba(139, 92, 246, 0.15);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.empty-inv {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  padding: 16px;
+}
+
 /* History */
 .history-section { padding: 16px; }
 
@@ -299,4 +448,5 @@
 @media (max-width: 480px) {
   .wallet-wrapper { max-width: 100%; }
   .shop-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .inv-grid { grid-template-columns: repeat(2, 1fr); }
 }
